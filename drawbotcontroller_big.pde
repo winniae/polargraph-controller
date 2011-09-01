@@ -28,15 +28,16 @@ final int A2_HEIGHT = 594;
 final int A1_WIDTH = 594;
 final int A1_HEIGHT = 841;
 
-int pageWidth = A1_WIDTH;
-int pageHeight = A1_HEIGHT;
+int pageWidth = A2_WIDTH;
+int pageHeight = A2_HEIGHT;
 
 int pagePositionX = (machineWidth/2) - (pageWidth/2);
 int pagePositionY = 220;
 
-//PVector imageOffset = new PVector(pagePositionX+87, pagePositionY+87); // 42cm square
-PVector imageOffset = new PVector(pagePositionX, pagePositionY); // mona lisa
+PVector imageOffset = new PVector(pagePositionX, pagePositionY+87); // 42cm square
+//PVector imageOffset = new PVector(pagePositionX, pagePositionY); // mona lisa
 //PVector imageOffset = new PVector(pagePositionX+87, pagePositionY);
+//PVector imageOffset = new PVector(pagePositionX, pagePositionY); // centred
 
 PVector pictureFrameSize = new PVector(400.0, 400.0);
 PVector pictureFrameTopLeft = new PVector((machineWidth/2) - (pictureFrameSize.x/2), (pageHeight/2)+pagePositionY - (pictureFrameSize.y/2));
@@ -49,7 +50,7 @@ int panelWidth = 50;
 int panelHeight = machineHeight - panelPositionY;
 
 int buttonHeight = 30;
-int noOfButtons = 23;
+int noOfButtons = 30;
 
 int leftEdgeOfQueue = 800;
 int rightEdgeOfQueue = 1100;
@@ -59,7 +60,7 @@ int queueRowHeight = 15;
 
 
 Serial myPort;                       // The serial port
-int[] serialInArray = new int[3];    // Where we'll put what we receive
+int[] serialInArray = new int[1];    // Where we'll put what we receive
 int serialCount = 0;                 // A count of how many bytes we receive
 
 PImage bitmap;
@@ -68,10 +69,11 @@ SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy hh:mm:ss");
 
 String commandStatus = "Waiting for a click.";
 
-int rowWidth = 45;
-float startingPenWidth = 0.8;
-String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
-String testPenWidthParameters = ",0.1,0.6,0.1,END"; // starting size, finish size, size of increments
+int rowWidth = 100;
+float currentPenWidth = 0.2;
+//String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
+String testPenWidthCommand = "TESTPENWIDTHSQUARE,";
+String testPenWidthParameters = ",0.05,0.25,0.05,END"; // starting size, finish size, size of increments
 
 final int TOTAL_ROW_WIDTH = inSteps(1200);
 int rows = TOTAL_ROW_WIDTH / rowWidth;
@@ -125,7 +127,35 @@ static final int MODE_DRAW_TEST_PENWIDTH = 25;
 static final int MODE_RENDER_SCALED_SQUARE_PIXELS = 26;
 static final int MODE_RENDER_SOLID_SQUARE_PIXELS = 27;
 static final int MODE_RENDER_SCRIBBLE_PIXELS = 28;
+static final int MODE_LOAD_SD_IMAGE = 29;
+static final int MODE_START_ROVING = 30;
+static final int MODE_STOP_ROVING = 31;
+static final int MODE_SET_ROVE_AREA = 32;
+static final int MODE_CREATE_MACHINE_TEXT_BITMAP = 34;
 
+
+static final String CMD_CHANGELENGTH = "C01,";
+static final String CMD_CHANGEPENWIDTH = "C02,";
+static final String CMD_CHANGEMOTORSPEED = "C03,";
+static final String CMD_CHANGEMOTORACCEL = "C04,";
+static final String CMD_DRAWPIXEL = "C05,";
+static final String CMD_DRAWSCRIBBLEPIXEL = "C06,";
+static final String CMD_DRAWRECT = "C07,";
+static final String CMD_CHANGEDRAWINGDIRECTION = "C08,";
+static final String CMD_SETPOSITION = "C09,";
+static final String CMD_TESTPATTERN = "C10,";
+static final String CMD_TESTPENWIDTHSQUARE = "C11,";
+static final String CMD_TESTPENWIDTHSCRIBBLE = "C12,";
+static final String CMD_PENDOWN = "C13,";
+static final String CMD_PENUP = "C14,";
+static final String CMD_DRAWSAWPIXEL = "C15,";
+static final String CMD_DRAWROUNDPIXEL = "C16";
+static final String CMD_GOTOCOORDS = "C17";
+static final String CMD_TXIMAGEBLOCK = "C18";
+static final String CMD_STARTROVE = "C19";
+static final String CMD_STOPROVE = "C20";
+static final String CMD_SETROVEAREA = "C21";
+static final String CMD_LOADMAGEFILE = "C23";
 
 Map<Integer, String> buttonLabels = buildButtonLabels();
 Map<Integer, Integer> panelButtons = buildPanelButtons();
@@ -149,6 +179,10 @@ boolean displayingSelectedCentres = false;
 boolean displayingShadedCentres = true;
 boolean displayingRowGridlines = false;
 
+static final char BITMAP_BACKGROUND_COLOUR = 0x0F;
+
+static final String filenameToLoadFromSD = "Marilyn         ";
+
 void setup()
 {
   size(machineWidth*2+panelWidth+20, 1120);
@@ -161,27 +195,20 @@ void setup()
   //read bytes into a buffer until you get a linefeed (ASCII 10):
   myPort.bufferUntil('\n');
 
-//  bitmap = loadImage("munson_A2_lite.jpg");
-//  bitmap = loadImage("munson_seps_1.jpg");
-//  bitmap = loadImage("munson_seps2_verylightface.png");
-//  bitmap = loadImage("munson_seps2_darkface2.png");
-//  bitmap = loadImage("munson_sl3.png");
-//  bitmap = loadImage("munson_seps_6.jpg"); // shirt
-//  bitmap = loadImage("munson_seps_x-colour.jpg");
+
 //  bitmap = loadImage("monalisa2_l3+4.png");
 //  bitmap = loadImage("earth2_400.jpg");
 //  bitmap = loadImage("mars1_400.jpg");
 //  bitmap = loadImage("moon2_400.jpg");
-//  bitmap = loadImage("Marilyn1.jpg");
-//  bitmap = loadImage("a2_blueballs.jpg");
-//  bitmap = loadImage("a2_pinkballs.jpg");
-  bitmap = loadImage("penguin blacl.png");
-
+  bitmap = loadImage("Marilyn1.jpg");
+//  bitmap = loadImage("portrait_330.jpg");
+//  bitmap = loadImage("IMG_1808_smallfriendly_bw_contrast.jpg");
+  
   rebuildRows();  
   
   currentMode = MODE_BEGIN;
   
-  commandQueue.add("CHANGEPENWIDTH,"+startingPenWidth+",END");
+  commandQueue.add(CMD_CHANGEPENWIDTH+currentPenWidth+",END");
 }
 
 void draw()
@@ -598,13 +625,23 @@ void keyPressed()
   else if (key == 's' || key == 'S')
     displayingSelectedCentres = (displayingSelectedCentres) ? false : true;
   else if (key == '+')
-    realtimeCommandQueue.add("CHANGEMOTORSPEED,25,END");  
+    realtimeCommandQueue.add(CMD_CHANGEMOTORSPEED+"25,END");  
   else if (key == '-')
-    realtimeCommandQueue.add("CHANGEMOTORSPEED,-25,END");  
+    realtimeCommandQueue.add(CMD_CHANGEMOTORSPEED+"-25,END");  
   else if (key == '*')
-    realtimeCommandQueue.add("CHANGEMOTORACCEL,25,END");  
+    realtimeCommandQueue.add(CMD_CHANGEMOTORACCEL+"25,END");  
   else if (key == '/')
-    realtimeCommandQueue.add("CHANGEMOTORACCEL,-25,END");  
+    realtimeCommandQueue.add(CMD_CHANGEMOTORACCEL+"-25,END");  
+  else if (key == ']')
+  {
+    currentPenWidth = currentPenWidth+0.05;
+    realtimeCommandQueue.add(CMD_CHANGEPENWIDTH+currentPenWidth+",END");
+  }
+  else if (key == '[')
+  {
+    currentPenWidth = currentPenWidth-0.05;
+    realtimeCommandQueue.add(CMD_CHANGEPENWIDTH+currentPenWidth+",END");
+  }
 }
   
 void mouseClicked()
@@ -752,6 +789,18 @@ void panelClicked()
     case MODE_SET_POSITION_HOME:
       sendSetHomePosition();
       break;
+    case MODE_START_ROVING:
+      sendStartRove();
+      break;
+    case MODE_STOP_ROVING:
+      sendStopRove();
+      break;
+    case MODE_SET_ROVE_AREA:
+      sendRoveArea();
+      break;
+    case MODE_LOAD_SD_IMAGE:
+      loadImageFromSD();
+      break;
     default:
       break;
   }
@@ -782,19 +831,122 @@ void queueClicked()
       commandQueue.remove(cmdNumber);
     }
   }
-}  
+}
 
+void sendStartRove()
+{
+  String command = CMD_STARTROVE+",END";
+  commandQueue.add(command);
+}
+
+void sendStopRove()
+{
+  String command = CMD_STOPROVE+",END";
+  commandQueue.add(command);
+}
+void sendRoveArea()
+{
+  if (isRowsSpecified())
+  {
+    String command = CMD_SETROVEAREA+","+rowsVector1.x+","+rowsVector1.y+","+rowsVector2.x+","+rowsVector2.y+",END";
+    commandQueue.add(command);
+  }
+}
+
+void loadImageFromSD()
+{
+  String command = CMD_LOADMAGEFILE+","+filenameToLoadFromSD+",END";
+  commandQueue.add(command);
+}
+
+
+void renderToFile()
+{
+  int outputWidth = machineWidth;
+  int outputHeight = machineHeight;
+  
+  int imageWidth = bitmap.width;
+  int imageHeight = bitmap.height;
+  
+  try
+  {
+    OutputStream out = createOutput("image.dat");
+      
+    int numOfPixels = 0;
+    byte[] byteArray = "POLARGRAPH_IMAGE".getBytes();
+    for (int i=0; i < byteArray.length; i++)
+    {
+      out.write(byteArray[i]);
+    }
+    byteArray = "V1.0            ".getBytes();
+    for (int i=0; i < byteArray.length; i++)
+    {
+      out.write(byteArray[i]);
+    }
+    byteArray = "Marilyn         ".getBytes();
+    for (int i=0; i < byteArray.length; i++)
+    {
+      out.write(byteArray[i]);
+    }
+    byteArray = (String.format("%08d", machineWidth)).getBytes();
+    for (int i=0; i < byteArray.length; i++)
+    {
+      out.write(byteArray[i]);
+    }
+    byteArray = (String.format("%08d", machineHeight)).getBytes();
+    for (int i=0; i < byteArray.length; i++)
+    {
+      out.write(byteArray[i]);
+    }
+
+
+
+    
+    for (int row = 0; row < machineHeight; row++)
+    {
+      println("Processing image row " + row);
+      for (int col = 0; col < machineWidth; col++)
+      {
+        if (col >= (int)imageOffset.x
+          && col < (int)imageOffset.x+imageWidth
+          && row >= (int)imageOffset.y
+          && row < (int)imageOffset.y+ imageHeight)
+        {
+          numOfPixels++;
+          int imgX = col - (int)imageOffset.x;
+          int imgY = row - (int) imageOffset.y;
+    
+          color c = bitmap.pixels[imgY*imageWidth+imgX];
+          int brightness = (int) red(c);
+          byte ch = (byte) brightness;
+          out.write(ch);
+          println("Added pixel " + row + ", " + col + " (" + ch + "), pixel " + numOfPixels);
+        }
+        else
+        {
+          out.write((byte) BITMAP_BACKGROUND_COLOUR);
+        }
+      }
+    }
+    out.close();
+  }
+  catch (IOException ioe)
+  {
+    println("gosh, exception:" + ioe.getMessage());
+  }
+    
+}
 
 
 void sendMoveToPosition()
 {
-  String command = "CHANGELENGTH,"+getALength()+","+getBLength()+",END";
+  String command = CMD_CHANGELENGTH+getALength()+","+getBLength()+",END";
   commandQueue.add(command);
 }
 
 void sendTestPattern()
 {
-  String command = "TESTPATTERN,"+int(rowWidth)+",6,END";
+  String command = CMD_TESTPATTERN+int(rowWidth)+",6,END";
   commandQueue.add(command);
 }
 
@@ -805,7 +957,7 @@ void sendTestPenWidth()
 
 void sendSetPosition()
 {
-  String command = "SETPOSITION,"+getALength()+","+getBLength()+",END";
+  String command = CMD_SETPOSITION+getALength()+","+getBLength()+",END";
   commandQueue.add(command);
 }
 
@@ -813,7 +965,7 @@ void sendSetHomePosition()
 {
   float distA = dist(0,0,machineWidth/2, pagePositionY);
   float distB = dist(machineWidth,0,machineWidth/2, pagePositionY);
-  String command = "SETPOSITION,"+inSteps(distA)+","+inSteps(distB)+",END";
+  String command = CMD_SETPOSITION+inSteps(distA)+","+inSteps(distB)+",END";
   commandQueue.add(command);
 }
 
@@ -829,7 +981,7 @@ void sendSawtoothPixels()
         int inX = int(v.x);
         int inY = int(v.y);
         Integer density = int(v.z);
-        String command = "DRAWSAWPIXEL,"+inX+","+inY+","+rowWidth+","+density+",END";
+        String command = CMD_DRAWSAWPIXEL+inX+","+inY+","+rowWidth+","+density+",END";
         commandQueue.add(command);
       }
     }
@@ -842,12 +994,12 @@ void sendSawtoothPixels()
         int inX = int(v.x);
         int inY = int(v.y);
         Integer density = int(v.z);
-        String command = "DRAWSAWPIXEL,"+inX+","+inY+","+rowWidth+","+density+",END";
+        String command = CMD_DRAWSAWPIXEL+inX+","+inY+","+rowWidth+","+density+",END";
         commandQueue.add(command);
       }
     }
     flipDirection();
-    String command = "CHANGEDRAWINGDIRECTION,A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
     commandQueue.add(command);
   }
 }
@@ -864,7 +1016,7 @@ void sendCircularPixels()
         int inX = int(v.x);
         int inY = int(v.y);
         Integer density = int(v.z);
-        String command = "DRAWROUNDPIXEL,"+inX+","+inY+","+int(rowWidth)+","+density+",END";
+        String command = CMD_DRAWROUNDPIXEL+inX+","+inY+","+int(rowWidth)+","+density+",END";
         commandQueue.add(command);
       }
     }
@@ -877,12 +1029,12 @@ void sendCircularPixels()
         int inX = int(v.x);
         int inY = int(v.y);
         Integer density = int(v.z);
-        String command = "DRAWROUNDPIXEL,"+inX+","+inY+","+int(rowWidth)+","+density+",END";
+        String command = CMD_DRAWROUNDPIXEL+inX+","+inY+","+int(rowWidth)+","+density+",END";
         commandQueue.add(command);
       }
     }
     flipDirection();
-    String command = "CHANGEDRAWINGDIRECTION,A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
     commandQueue.add(command);
   }
 }
@@ -904,7 +1056,7 @@ int scaleDensity(int inDens, int inMax, int outMax)
 
 void sendScaledSquarePixels()
 {
-  commandQueue.add("PENDOWN,END");
+  commandQueue.add(CMD_PENDOWN+"END");
   for (List<PVector> row : pixelCentresForMachine)
   {
     if (drawDirection == "LTR")
@@ -916,7 +1068,7 @@ void sendScaledSquarePixels()
         int inY = int(v.y);
         Integer density = int(v.z);
         int pixelSize = scaleDensity(density, 255, rowWidth);
-        String command = "DRAWPIXEL,"+inX+","+inY+","+(pixelSize)+",0,END";
+        String command = CMD_DRAWPIXEL+inX+","+inY+","+(pixelSize)+",0,END";
 
         commandQueue.add(command);
       }
@@ -931,22 +1083,22 @@ void sendScaledSquarePixels()
         int inY = int(v.y);
         Integer density = int(v.z);
         int pixelSize = scaleDensity(density, 255, rowWidth);
-        String command = "DRAWPIXEL,"+inX+","+inY+","+(pixelSize)+",0,END";
+        String command = CMD_DRAWPIXEL+inX+","+inY+","+(pixelSize)+",0,END";
         commandQueue.add(command);
       }
     }
     flipDirection();
-    String command = "CHANGEDRAWINGDIRECTION,A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
     commandQueue.add(command);
   }
-  commandQueue.add("PENUP,END");
+  commandQueue.add(CMD_PENUP+"END");
   numberOfPixelsTotal = commandQueue.size();
   startPixelTimer();
 }
 
 void sendSolidSquarePixels()
 {
-  commandQueue.add("PENDOWN,END");
+  commandQueue.add(CMD_PENDOWN+"END");
   for (List<PVector> row : pixelCentresForMachine)
   {
     if (drawDirection == "LTR")
@@ -956,7 +1108,7 @@ void sendSolidSquarePixels()
         // now convert to ints 
         int inX = int(v.x);
         int inY = int(v.y);
-        String command = "DRAWPIXEL,"+inX+","+inY+","+(rowWidth)+",0,END";
+        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+",0,END";
 
         commandQueue.add(command);
       }
@@ -969,22 +1121,22 @@ void sendSolidSquarePixels()
         // now convert to ints 
         int inX = int(v.x);
         int inY = int(v.y);
-        String command = "DRAWPIXEL,"+inX+","+inY+","+(rowWidth)+",0,END";
+        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+",0,END";
         commandQueue.add(command);
       }
     }
     flipDirection();
-    String command = "CHANGEDRAWINGDIRECTION,A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
     commandQueue.add(command);
   }
-  commandQueue.add("PENUP,END");
+  commandQueue.add(CMD_PENUP+"END");
   numberOfPixelsTotal = commandQueue.size();
   startPixelTimer();
 }
 
 void sendSquarePixels()
 {
-  commandQueue.add("PENDOWN,END");
+  commandQueue.add(CMD_PENDOWN+"END");
 
   for (List<PVector> row : pixelCentresForMachine)
   {
@@ -996,7 +1148,7 @@ void sendSquarePixels()
         int inX = int(v.x);
         int inY = int(v.y);
         Integer density = int(v.z);
-        String command = "DRAWPIXEL,"+inX+","+inY+","+(rowWidth)+","+density+",END";
+        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
 
         commandQueue.add(command);
       }
@@ -1010,23 +1162,23 @@ void sendSquarePixels()
         int inX = int(v.x);
         int inY = int(v.y);
         Integer density = int(v.z);
-        String command = "DRAWPIXEL,"+inX+","+inY+","+(rowWidth)+","+density+",END";
+        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
         commandQueue.add(command);
       }
     }
     flipDirection();
-    String command = "CHANGEDRAWINGDIRECTION,A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
     commandQueue.add(command);
   }
   
-  commandQueue.add("PENUP,END");
+  commandQueue.add(CMD_PENUP+"END");
   numberOfPixelsTotal = commandQueue.size();
   startPixelTimer();
 }
 
 void sendScribblePixels()
 {
-  commandQueue.add("PENDOWN,END");
+  commandQueue.add(CMD_PENDOWN+"END");
 
   for (List<PVector> row : pixelCentresForMachine)
   {
@@ -1038,7 +1190,7 @@ void sendScribblePixels()
         int inX = int(v.x);
         int inY = int(v.y);
         Integer density = int(v.z);
-        String command = "DRAWSCRIBBLEPIXEL,"+inX+","+inY+","+(rowWidth)+","+density+",END";
+        String command = CMD_DRAWSCRIBBLEPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
 
         commandQueue.add(command);
       }
@@ -1052,16 +1204,16 @@ void sendScribblePixels()
         int inX = int(v.x);
         int inY = int(v.y);
         Integer density = int(v.z);
-        String command = "DRAWSCRIBBLEPIXEL,"+inX+","+inY+","+(rowWidth)+","+density+",END";
+        String command = CMD_DRAWSCRIBBLEPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
         commandQueue.add(command);
       }
     }
     flipDirection();
-    String command = "CHANGEDRAWINGDIRECTION,A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
     commandQueue.add(command);
   }
   
-  commandQueue.add("PENUP,END");
+  commandQueue.add(CMD_PENUP+"END");
   numberOfPixelsTotal = commandQueue.size();
   startPixelTimer();
 }
@@ -1080,7 +1232,7 @@ void sendOutlineOfPixels()
       PVector startPoint = PVector.sub(v, offset);
       PVector endPoint = PVector.add(v, offset);
       // now convert to steps
-      String command = "DRAWRECT,"+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
+      String command = CMD_DRAWRECT+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
       commandQueue.add(command);
     }
   }
@@ -1100,7 +1252,7 @@ void sendOutlineOfRows()
     PVector endPoint = PVector.add(last, offset);
     
     // now convert to steps
-    String command = "DRAWRECT,"+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
+    String command = CMD_DRAWRECT+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
     commandQueue.add(command);
   }
   
@@ -1119,7 +1271,7 @@ void sendOutlineOfRows()
     PVector endPoint = PVector.add(last, offset);
     
     // now convert to steps
-    String command = "DRAWRECT,"+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
+    String command = CMD_DRAWRECT+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
     commandQueue.add(command);
   }
 
@@ -1153,11 +1305,11 @@ void sendGridOfBox()
       
     
     // goto beginning of long line (probably the shortline)
-    String command = "CHANGELENGTH,"+int(startPoint.x)+","+int(startPoint.y)+",END";
+    String command = CMD_CHANGELENGTH+","+int(startPoint.x)+","+int(startPoint.y)+",END";
     commandQueue.add(command);
     
     // draw long line
-    command="CHANGELENGTH,"+int(endPoint.x)+","+int(endPoint.y)+",END";
+    command=CMD_CHANGELENGTH+","+int(endPoint.x)+","+int(endPoint.y)+",END";
     commandQueue.add(command);
     
     if (rowDirection.equals("LTR"))
@@ -1189,11 +1341,11 @@ void sendGridOfBox()
       
     
     // goto beginning of line (probably the shortline)
-    String command = "CHANGELENGTH,"+int(startPoint.x)+","+int(startPoint.y)+",END";
+    String command = CMD_CHANGELENGTH+","+int(startPoint.x)+","+int(startPoint.y)+",END";
     commandQueue.add(command);
     
     // draw long line
-    command="CHANGELENGTH,"+int(endPoint.x)+","+int(endPoint.y)+",END";
+    command=CMD_CHANGELENGTH+","+int(endPoint.x)+","+int(endPoint.y)+",END";
     commandQueue.add(command);
     
     if (rowDirection.equals("LTR"))
@@ -1209,23 +1361,23 @@ void sendOutlineOfBox()
 {
   // convert cartesian to native format
   PVector coords = getNativeCoords(boxVector1);
-  String command = "GOTOCOORDS,"+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  String command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector2.x, boxVector1.y);
-  command = "GOTOCOORDS,"+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector2);
-  command = "GOTOCOORDS,"+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector1.x, boxVector2.y);
-  command = "GOTOCOORDS,"+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector1);
-  command = "GOTOCOORDS,"+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 }
 
@@ -1487,7 +1639,7 @@ void showText()
   text(dbReady, textPositionX, textPositionY+(tRow*tRowNo++));
     
   text(commandStatus, textPositionX, textPositionY+(tRow*tRowNo++));
-  text(drawDirection, textPositionX, textPositionY+(tRow*tRowNo++));
+  text("Last sent pen width: " + currentPenWidth, textPositionX, textPositionY+(tRow*tRowNo++));
   
   text("Mode: " + currentMode, textPositionX, textPositionY+(tRow*tRowNo++));
 
@@ -1749,7 +1901,7 @@ void respondToAckCommand(String ack)
     // that means the bot got the message!! huspag!!
     // signal the EXECUTION
     commandHistory.add(lastCommand);
-    String command = "EXECUTE";
+    String command = "EXEC";
     lastCommand = "";
     println("Dispatching confirmation command: " + command);
     myPort.write(command);
@@ -1830,7 +1982,7 @@ boolean isDrawbotReady()
 
 Map<Integer, Integer> buildPanelButtons()
 {
-  Map<Integer, Integer> result = new HashMap<Integer, Integer>(19);
+  Map<Integer, Integer> result = new HashMap<Integer, Integer>(30);
   result.put(0, MODE_BEGIN);
   result.put(1, MODE_SET_POSITION_HOME);
   result.put(2, MODE_SET_POSITION);
@@ -1850,19 +2002,20 @@ Map<Integer, Integer> buildPanelButtons()
   result.put(11, MODE_DRAW_GRID);
 
   result.put(12, MODE_RENDER_SQUARE_PIXELS);
-//  result.put(14, MODE_INPUT_SINGLE_PIXEL);
   result.put(13, MODE_RENDER_SCALED_SQUARE_PIXELS);
   result.put(14, MODE_RENDER_SOLID_SQUARE_PIXELS);
-//
-//  result.put(14, PLACE_IMAGE);
-//  result.put(15, LOAD_IMAGE);
-//  result.put(14, MODE_DRAW_TESTPATTERN);
-  result.put(15, MODE_DRAW_TEST_PENWIDTH);
-  result.put(16, MODE_INPUT_SINGLE_PIXEL);
+  result.put(15, MODE_RENDER_SCRIBBLE_PIXELS);
 
-  result.put(17, INS_INC_ROWSIZE);
-  result.put(18, INS_DEC_ROWSIZE);
-  result.put(19, MODE_RENDER_SCRIBBLE_PIXELS);
+  result.put(16, MODE_DRAW_TEST_PENWIDTH);
+  result.put(17, MODE_INPUT_SINGLE_PIXEL);
+
+  result.put(18, INS_INC_ROWSIZE);
+  result.put(19, INS_DEC_ROWSIZE);
+
+  result.put(20, MODE_LOAD_SD_IMAGE);
+  result.put(21, MODE_START_ROVING);
+  result.put(22, MODE_STOP_ROVING);
+  result.put(23, MODE_SET_ROVE_AREA);
   return result;
 }
 
@@ -1899,7 +2052,13 @@ Map<Integer, String> buildButtonLabels()
   result.put(MODE_DRAW_TEST_PENWIDTH, "Test pen widths");
   result.put(MODE_RENDER_SOLID_SQUARE_PIXELS, "Shade solid");
   result.put(MODE_RENDER_SCRIBBLE_PIXELS, "Scribble");
-  
+
+  result.put(MODE_LOAD_SD_IMAGE, "load image");
+  result.put(MODE_START_ROVING, "start rove");
+  result.put(MODE_STOP_ROVING, "stop rove");
+  result.put(MODE_SET_ROVE_AREA, "set rove");
+  result.put(MODE_CREATE_MACHINE_TEXT_BITMAP, "render as text");
+
   return result;
 }
 
