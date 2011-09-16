@@ -32,16 +32,20 @@ int pageWidth = A2_WIDTH;
 int pageHeight = A2_HEIGHT;
 
 int pagePositionX = (machineWidth/2) - (pageWidth/2);
-int pagePositionY = 220;
+int pagePositionY = 120;
 
-PVector imageOffset = new PVector(pagePositionX, pagePositionY+87); // 42cm square
+//PVector imageOffset = new PVector(pagePositionX, pagePositionY+87); // 42cm square
 //PVector imageOffset = new PVector(pagePositionX, pagePositionY); // mona lisa
 //PVector imageOffset = new PVector(pagePositionX+87, pagePositionY);
-//PVector imageOffset = new PVector(pagePositionX, pagePositionY); // centred
+PVector imageOffset = new PVector(pagePositionX, pagePositionY); // centred
 
 PVector pictureFrameSize = new PVector(400.0, 400.0);
 PVector pictureFrameTopLeft = new PVector((machineWidth/2) - (pictureFrameSize.x/2), (pageHeight/2)+pagePositionY - (pictureFrameSize.y/2));
 PVector pictureFrameBotRight = new PVector(pictureFrameTopLeft.x + pictureFrameSize.x, pictureFrameTopLeft.y+pictureFrameSize.y);
+
+//PVector pictureFrameSize = new PVector(250.0, 250.0);
+//PVector pictureFrameTopLeft = new PVector((machineWidth/2) - (pictureFrameSize.x/2), 27+pagePositionY);
+//PVector pictureFrameBotRight = new PVector(pictureFrameTopLeft.x + pictureFrameSize.x, pictureFrameTopLeft.y+pictureFrameSize.y);
 
 int panelPositionX = machineWidth + 10;
 int panelPositionY = 10;
@@ -69,7 +73,7 @@ SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy hh:mm:ss");
 
 String commandStatus = "Waiting for a click.";
 
-int rowWidth = 100;
+int rowWidth = 50;
 float currentPenWidth = 0.2;
 //String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
 String testPenWidthCommand = "TESTPENWIDTHSQUARE,";
@@ -185,7 +189,7 @@ static final String filenameToLoadFromSD = "Marilyn         ";
 
 void setup()
 {
-  size(machineWidth*2+panelWidth+20, 1120);
+  size(machineWidth*2+panelWidth+20, 1020);
 
   // Print a list of the serial ports, for debugging purposes:
   println(Serial.list());
@@ -201,9 +205,7 @@ void setup()
 //  bitmap = loadImage("mars1_400.jpg");
 //  bitmap = loadImage("moon2_400.jpg");
   bitmap = loadImage("Marilyn1.jpg");
-//  bitmap = loadImage("portrait_330.jpg");
-//  bitmap = loadImage("IMG_1808_smallfriendly_bw_contrast.jpg");
-  
+
   rebuildRows();  
   
   currentMode = MODE_BEGIN;
@@ -642,6 +644,14 @@ void keyPressed()
     currentPenWidth = currentPenWidth-0.05;
     realtimeCommandQueue.add(CMD_CHANGEPENWIDTH+currentPenWidth+",END");
   }
+  else if (key == '#')
+  {
+    realtimeCommandQueue.add(CMD_PENUP+"END");
+  }
+  else if (key == '~')
+  {
+    realtimeCommandQueue.add(CMD_PENDOWN+"END");
+  }
 }
   
 void mouseClicked()
@@ -1056,7 +1066,7 @@ int scaleDensity(int inDens, int inMax, int outMax)
 
 void sendScaledSquarePixels()
 {
-  commandQueue.add(CMD_PENDOWN+"END");
+  //commandQueue.add(CMD_PENDOWN+"END");
   for (List<PVector> row : pixelCentresForMachine)
   {
     if (drawDirection == "LTR")
@@ -1091,7 +1101,7 @@ void sendScaledSquarePixels()
     String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
     commandQueue.add(command);
   }
-  commandQueue.add(CMD_PENUP+"END");
+  //commandQueue.add(CMD_PENUP+"END");
   numberOfPixelsTotal = commandQueue.size();
   startPixelTimer();
 }
@@ -1619,7 +1629,7 @@ void showText()
   fill(255);
   int tRow = 15;
   int textPositionX = 15;
-  int textPositionY = machineHeight+tRow;
+  int textPositionY = 800+tRow;
   
   int tRowNo = 1;
   
@@ -1671,7 +1681,7 @@ void showText()
 
   // right side
   textPositionX = 600;
-  textPositionY = machineHeight+tRow;
+  textPositionY = 800+tRow;
   tRowNo = 1;
   
   text("RowsVector1: " + rowsVector1, textPositionX, textPositionY+(tRow*tRowNo++));
@@ -1679,7 +1689,7 @@ void showText()
 
   // far right side
   textPositionX = 900;
-  textPositionY = 100;
+  textPositionY = 50;
   tRowNo = 1;
 
   int commandQueuePos = textPositionY+(tRow*tRowNo++);
