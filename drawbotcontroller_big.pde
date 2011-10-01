@@ -1,10 +1,14 @@
 /**
-  Drawbot controller - written by Sandy Noble
+  Polargraph controller - written by Sandy Noble
 */
 
 import processing.serial.*;
 
 boolean drawbotReady = false;
+
+String newMachineName = "PGXXABCD";
+int newMachineWidth = 712;
+int newMachineHeight = 980;
 
 final int MACHINE_SRAM = 2048;
 float stepsPerRev = 800.00;
@@ -28,14 +32,14 @@ final int A2_HEIGHT = 594;
 final int A1_WIDTH = 594;
 final int A1_HEIGHT = 841;
 
-int pageWidth = A2_WIDTH;
-int pageHeight = A2_HEIGHT;
+int pageWidth = A1_WIDTH;
+int pageHeight = A1_HEIGHT;
 
 int pagePositionX = (machineWidth/2) - (pageWidth/2);
 int pagePositionY = 120;
 
 //PVector imageOffset = new PVector(pagePositionX, pagePositionY+87); // 42cm square
-//PVector imageOffset = new PVector(pagePositionX, pagePositionY); // mona lisa
+//PVector imageOffset = new PVector(pagePositionX, pagePositionY-50); // mona lisa
 //PVector imageOffset = new PVector(pagePositionX+87, pagePositionY);
 PVector imageOffset = new PVector(pagePositionX, pagePositionY); // centred
 
@@ -73,12 +77,8 @@ SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy hh:mm:ss");
 
 String commandStatus = "Waiting for a click.";
 
-int rowWidth = 50;
-float currentPenWidth = 0.2;
-//String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
-String testPenWidthCommand = "TESTPENWIDTHSQUARE,";
-String testPenWidthParameters = ",0.05,0.25,0.05,END"; // starting size, finish size, size of increments
-
+int rowWidth = 75;
+float currentPenWidth = 1.2;
 final int TOTAL_ROW_WIDTH = inSteps(1200);
 int rows = TOTAL_ROW_WIDTH / rowWidth;
 
@@ -136,6 +136,10 @@ static final int MODE_START_ROVING = 30;
 static final int MODE_STOP_ROVING = 31;
 static final int MODE_SET_ROVE_AREA = 32;
 static final int MODE_CREATE_MACHINE_TEXT_BITMAP = 34;
+static final int MODE_CHANGE_MACHINE_SIZE = 35;
+static final int MODE_CHANGE_MACHINE_NAME = 36;
+static final int MODE_REQUEST_MACHINE_SIZE = 37;
+static final int MODE_RESET_MACHINE = 38;
 
 
 static final String CMD_CHANGELENGTH = "C01,";
@@ -160,6 +164,14 @@ static final String CMD_STARTROVE = "C19";
 static final String CMD_STOPROVE = "C20";
 static final String CMD_SETROVEAREA = "C21";
 static final String CMD_LOADMAGEFILE = "C23";
+static final String CMD_CHANGEMACHINESIZE = "C24";
+static final String CMD_CHANGEMACHINENAME = "C25";
+static final String CMD_REQUESTMACHINESIZE = "C26";
+static final String CMD_RESETMACHINE = "C27";
+
+//String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
+String testPenWidthCommand = CMD_TESTPENWIDTHSQUARE;
+String testPenWidthParameters = ",0.6,2.0,0.1,END"; // starting size, finish size, size of increments
 
 Map<Integer, String> buttonLabels = buildButtonLabels();
 Map<Integer, Integer> panelButtons = buildPanelButtons();
@@ -200,11 +212,16 @@ void setup()
   myPort.bufferUntil('\n');
 
 
+//  bitmap = loadImage("monalisa2_l5.png");
 //  bitmap = loadImage("monalisa2_l3+4.png");
+//  bitmap = loadImage("monalisa2_l2.png");
+//  bitmap = loadImage("monalisa2_l1a.png");
+  bitmap = loadImage("liberty2.jpg");
 //  bitmap = loadImage("earth2_400.jpg");
 //  bitmap = loadImage("mars1_400.jpg");
 //  bitmap = loadImage("moon2_400.jpg");
-  bitmap = loadImage("Marilyn1.jpg");
+//  bitmap = loadImage("Marilyn1.jpg");
+//  bitmap = loadImage("portrait_330.jpg");
 
   rebuildRows();  
   
@@ -811,6 +828,18 @@ void panelClicked()
     case MODE_LOAD_SD_IMAGE:
       loadImageFromSD();
       break;
+    case MODE_CHANGE_MACHINE_SIZE:
+      sendNewMachineSize();
+      break;
+    case MODE_CHANGE_MACHINE_NAME:
+      sendNewMachineName();
+      break;
+    case MODE_REQUEST_MACHINE_SIZE:
+      sendRequestMachineSize();
+      break;
+    case MODE_RESET_MACHINE:
+      sendResetMachine();
+      break;
     default:
       break;
   }
@@ -842,6 +871,30 @@ void queueClicked()
     }
   }
 }
+
+void sendResetMachine()
+{
+  String command = CMD_RESETMACHINE + ",END";
+  commandQueue.add(command);
+}
+void sendRequestMachineSize()
+{
+  String command = CMD_REQUESTMACHINESIZE + ",END";
+  commandQueue.add(command);
+}
+void sendNewMachineSize()
+{
+  // ask for input to get the new machine size
+  String command = CMD_CHANGEMACHINESIZE+","+newMachineWidth+","+newMachineHeight+",END";
+  commandQueue.add(command);
+}
+void sendNewMachineName()
+{
+  // ask for input to get the new machine size
+  String command = CMD_CHANGEMACHINENAME+","+newMachineName+",END";
+  commandQueue.add(command);
+}
+
 
 void sendStartRove()
 {
@@ -1066,7 +1119,7 @@ int scaleDensity(int inDens, int inMax, int outMax)
 
 void sendScaledSquarePixels()
 {
-  //commandQueue.add(CMD_PENDOWN+"END");
+  commandQueue.add(CMD_PENDOWN+"END");
   for (List<PVector> row : pixelCentresForMachine)
   {
     if (drawDirection == "LTR")
@@ -1101,7 +1154,7 @@ void sendScaledSquarePixels()
     String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
     commandQueue.add(command);
   }
-  //commandQueue.add(CMD_PENUP+"END");
+  commandQueue.add(CMD_PENUP+"END");
   numberOfPixelsTotal = commandQueue.size();
   startPixelTimer();
 }
@@ -1419,7 +1472,8 @@ void extractRowsFromBox()
           boolean pixelIsChromaKey = isPixelChromaKey(centreScr);
           if (!pixelIsChromaKey)
           {
-            int density = getDensity(centreScr, inMM(rowWidth/2));
+//            int density = getDensity(centreScr, inMM(rowWidth/2));
+            int density = getDensity(centreScr, 10);
             centreScr.set(centreScr.x, centreScr.y, density);
             PVector centreMach = new PVector(colM, rowM, density);
             rowListScr.add(centreScr);
@@ -1866,6 +1920,10 @@ void serialEvent(Serial myPort)
     drawbotReady = true;
   else if (incoming.startsWith("SYNC"))
     readMachinePosition(incoming);
+  else if (incoming.startsWith("PGNAME"))
+    readMachineName(incoming);
+  else if (incoming.startsWith("PGSIZE"))
+    readMachineSize(incoming);
   else if (incoming.startsWith("ACK"))
     respondToAckCommand(incoming);
   else if ("RESEND".equals(incoming))
@@ -1900,6 +1958,32 @@ void readMachinePosition(String sync)
     Float b = Float.valueOf(currentBPos).floatValue();
     currentMachinePos.x = a;
     currentMachinePos.y = b;  
+  }
+}
+
+void readMachineSize(String sync)
+{
+  String[] splitted = split(sync, ",");
+  if (splitted.length == 4)
+  {
+    String mWidth = splitted[1];
+    String mHeight = splitted[2];
+    
+    Integer intWidth = Integer.parseInt(mWidth);
+    Integer intHeight = Integer.parseInt(mHeight);
+    
+    machineWidth = intWidth;
+    machineHeight = intHeight;
+  }
+}
+
+void readMachineName(String sync)
+{
+  String[] splitted = split(sync, ",");
+  if (splitted.length == 3)
+  {
+    String name = splitted[1];
+    
   }
 }
 
@@ -2026,6 +2110,10 @@ Map<Integer, Integer> buildPanelButtons()
   result.put(21, MODE_START_ROVING);
   result.put(22, MODE_STOP_ROVING);
   result.put(23, MODE_SET_ROVE_AREA);
+  result.put(24, MODE_CHANGE_MACHINE_SIZE);
+  result.put(25, MODE_CHANGE_MACHINE_NAME);
+  result.put(26, MODE_REQUEST_MACHINE_SIZE);
+  result.put(27, MODE_RESET_MACHINE);
   return result;
 }
 
@@ -2068,6 +2156,11 @@ Map<Integer, String> buildButtonLabels()
   result.put(MODE_STOP_ROVING, "stop rove");
   result.put(MODE_SET_ROVE_AREA, "set rove");
   result.put(MODE_CREATE_MACHINE_TEXT_BITMAP, "render as text");
+  
+  result.put(MODE_CHANGE_MACHINE_SIZE, "Change machine size");
+  result.put(MODE_CHANGE_MACHINE_NAME, "Change machine name");
+  result.put(MODE_REQUEST_MACHINE_SIZE, "Request machine details");
+  result.put(MODE_RESET_MACHINE, "Reset machine");
 
   return result;
 }
