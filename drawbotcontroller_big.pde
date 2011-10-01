@@ -1,8 +1,12 @@
 /**
   Polargraph controller - written by Sandy Noble
 */
-
+//import javax.swing.JFileChooser;
 import processing.serial.*;
+//import controlP5.*;
+import java.awt.event.KeyEvent;
+
+//ControlP5 controlP5;
 
 boolean drawbotReady = false;
 
@@ -54,7 +58,7 @@ PVector pictureFrameBotRight = new PVector(pictureFrameTopLeft.x + pictureFrameS
 int panelPositionX = machineWidth + 10;
 int panelPositionY = 10;
 
-int panelWidth = 50;
+int panelWidth = 100;
 int panelHeight = machineHeight - panelPositionY;
 
 int buttonHeight = 30;
@@ -199,14 +203,31 @@ static final char BITMAP_BACKGROUND_COLOUR = 0x0F;
 
 static final String filenameToLoadFromSD = "Marilyn         ";
 
+// used in the preview page
+static Integer pageColour = 100;
+
+// Page states
+public static final int PAGE_IMAGE = 1;
+public static final int PAGE_PREVIEW = 2;
+public static final int PAGE_COMMAND_QUEUE = 3;
+public static final int PAGE_LOAD_IMAGE = 4;
+public static final int PAGE_DETAILS = 5;
+public static final int DEFAULT_PAGE = PAGE_IMAGE;
+public int currentPage = DEFAULT_PAGE;
+
+public boolean showingSummaryOverlay = true;
+public boolean showingDialogBox = false;
+
+
 void setup()
 {
-  size(machineWidth*2+panelWidth+20, 1020);
-
+  frame.setResizable(true);
+  size(900, 550);
+//  controlP5 = new ControlP5(this);
   // Print a list of the serial ports, for debugging purposes:
   println(Serial.list());
 
-  String portName = Serial.list()[1];
+  String portName = Serial.list()[0];
   myPort = new Serial(this, portName, 57600);
   //read bytes into a buffer until you get a linefeed (ASCII 10):
   myPort.bufferUntil('\n');
@@ -228,9 +249,86 @@ void setup()
   currentMode = MODE_BEGIN;
   
   commandQueue.add(CMD_CHANGEPENWIDTH+currentPenWidth+",END");
+
+  frame.setSize(machineWidth*2+panelWidth+20, 1020);
 }
 
+boolean imageIsLoaded()
+{
+  if (bitmap == null)
+    return false;
+  else
+    return true;
+}
+
+
 void draw()
+{
+  switch(getCurrentPage())
+  {
+    case PAGE_IMAGE: 
+      // draw image page
+      drawImagePage();
+      break;
+    case PAGE_PREVIEW:
+      // draw preview page
+      drawImagePreviewPage();
+      break;
+    case PAGE_COMMAND_QUEUE:
+      // draw command queue
+      drawCommandQueuePage();
+      break;
+    case PAGE_LOAD_IMAGE:
+      // draw image loading page
+      drawImageLoadPage();
+      break;
+    case PAGE_DETAILS:
+      // draw details page
+      drawDetailsPage();
+      break;
+    default:
+      drawDetailsPage();
+    break;
+  }
+  if (isShowingSummaryOverlay())
+  {
+    drawSummaryOverlay();
+  }
+  if (isShowingDialogBox())
+  {
+    drawDialogBox();
+  }
+
+  if (drawbotReady)
+  {
+    dispatchCommandQueue();
+  }
+  
+}
+
+Integer getCurrentPage()
+{
+  return this.currentPage;
+}
+
+boolean isShowingSummaryOverlay()
+{
+  return this.showingSummaryOverlay;
+}
+void drawSummaryOverlay()
+{
+}
+boolean isShowingDialogBox()
+{
+  return false;
+}
+void drawDialogBox()
+{
+  
+}
+
+
+void drawImagePage()
 {
   strokeWeight(1);
   if(mouseX >= pagePositionX 
@@ -274,20 +372,124 @@ void draw()
   stroke(255, 0, 0);
   showSelectedCentres(new PVector(0,0));
   
-  showText();
   showPanel();
-  showPreviewMachine();
   
   showGroupBox();
 
   showCurrentMachinePosition();
-
-  if (drawbotReady)
-  {
-    dispatchCommandQueue();
-  }
   
+  fill(255);
+  stroke(255);
+  textSize(25);
+  text("INPUT", 30, 30);
+  
+  fill(0);
+  textSize(20);
+  text("DENSITY PREVIEW (F2)   DETAILS (F3)   COMMAND QUEUE (F4)", 115, 30);
+  
+  showText(30,45);
+  showCommandQueue(panelPositionX+panelWidth+5, 20);
+}  
+
+void drawImagePreviewPage()
+{
+  cursor(ARROW);
+  
+  strokeWeight(1);
+  background(100);
+  noFill();
+  showPictureFrame();
+  
+  stroke(150);
+  showPanel();
+  showPreviewMachine();
+  
+  showCurrentMachinePosition();
+
+  fill(0);
+  textSize(20);
+  text("INPUT (F1)", 30, 30);
+
+  fill(255);
+  stroke(255);
+  textSize(25);
+  text("DENSITY PREVIEW", 130, 30);
+  
+  fill(0);
+  textSize(20);
+  text("DETAILS (F3)   COMMAND QUEUE (F4)", 355, 30);
+
+  showText(30,45);
+  showCommandQueue(panelPositionX+panelWidth+5, 20);
+
 }
+
+void drawDetailsPage()
+{
+  cursor(ARROW);
+  // machine outline
+  fill(100);
+  stroke(150);
+  rect(0, 0, machineWidth, machineHeight); // machine
+  rect(pagePositionX, pagePositionY, pageWidth, pageHeight); // page
+  noStroke();
+
+  showPanel();
+
+  fill(0);
+  textSize(20);
+  text("INPUT (F1)   DENSITY PREVIEW (F2)", 30, 30);
+
+  fill(255);
+  stroke(255);
+  textSize(25);
+  text("DETAILS", 365, 30);
+  
+  fill(0);
+  textSize(20);
+  text("COMMAND QUEUE (F4)", 470, 30);
+
+  showText(30,45);
+  fill(100);
+  noStroke();
+  rect(panelPositionX+panelWidth+5, 0, width, height);
+  showCommandQueue(panelPositionX+panelWidth+5, 20);
+
+}
+
+
+void drawCommandQueuePage()
+{
+  cursor(ARROW);
+
+  // machine outline
+  fill(100);
+  rect(0, 0, machineWidth, machineHeight); // machine
+  showingSummaryOverlay = false;
+  showPanel();
+  
+  fill(0);
+  textSize(20);
+  text("INPUT (F1)   DENSITY PREVIEW (F2)  DETAILS (F3)", 30, 30);
+
+  fill(255);
+  stroke(255);
+  textSize(25);
+  text("COMMAND QUEUE", 494, 30);
+
+  fill(100);
+  noStroke();
+  rect(panelPositionX+panelWidth+5, 0, width, height);
+  
+  showCommandQueue(40, 60);
+}
+
+void drawImageLoadPage()
+{
+  drawImagePage();
+}
+
+
 
 void showPictureFrame()
 {
@@ -329,6 +531,7 @@ void showGroupBox()
 {
   if (boxVector1 != null && boxVector2 != null)
   {
+    noFill();
     stroke(255,0,0);
     rect(boxVector1.x, boxVector1.y, boxVector2.x-boxVector1.x, boxVector2.y-boxVector1.y);
   }
@@ -337,8 +540,9 @@ void showGroupBox()
 void showPanel()
 {
   stroke(150);
-  noFill();
+  fill(100);
   rect(panelPositionX, panelPositionY, panelWidth, panelHeight);
+  noFill();
   
   for (int i = 0; i < noOfButtons; i++)
   {
@@ -349,9 +553,13 @@ void showPanel()
         stroke(255);
       else
         stroke(150);
+      noFill();
       rect(panelPositionX+2, panelPositionY+(i*buttonHeight)+2, panelWidth-4,  buttonHeight-4);
+      stroke(255);
+      fill(255);
       text(buttonLabels.get(mode), panelPositionX+6, panelPositionY+(i*buttonHeight)+20);
     }
+    noFill();
   }
   
   noStroke();
@@ -369,13 +577,13 @@ String getButtonLabel(Integer butNo)
 void showPreviewMachine()
 {
   // machine outline
-  int machineX = width - machineWidth;
   stroke(150);
-  rect(machineX, 0, machineWidth, machineHeight); // machine
-  rect(machineX+pagePositionX, pagePositionY, pageWidth, pageHeight); // page
+  rect(0, 0, machineWidth, machineHeight); // machine
+  fill(pageColour);
+  rect(pagePositionX, pagePositionY, pageWidth, pageHeight); // page
   noStroke();
   
-  showShadedCentres(new PVector(machineX, 0));
+  showShadedCentres(new PVector(0, 0));
   
 }
 
@@ -595,11 +803,42 @@ int rounded(int lineLength)
 
 boolean mouseOverMachine()
 {
-  boolean result = true;
-  if (mouseX > machineWidth 
-    || mouseY > machineHeight)
-    result = false;
+  boolean result = false;
+  if (isMachineClickable())
+  {
+    if (mouseX > machineWidth 
+      || mouseY > machineHeight)
+      result = false;
+    else
+      result = true;
+  }
   return result;
+}
+boolean isMachineClickable()
+{
+  switch(getCurrentPage())
+  {
+    case PAGE_IMAGE:
+      return true;
+    case PAGE_PREVIEW:
+      return true;
+    case PAGE_COMMAND_QUEUE:
+      return false;
+    case PAGE_LOAD_IMAGE:
+      return true;
+    case PAGE_DETAILS:
+      return true;
+    default:
+      return true;
+  }
+}
+boolean isPanelClickable()
+{
+  return true;
+}
+boolean isQueueClickable()
+{
+  return true;
 }
 
 boolean mouseOverPanel()
@@ -637,7 +876,26 @@ Integer mouseOverButton()
 
 void keyPressed()
 {
-  if (key == 'g' || key == 'G')
+  if (key == CODED)
+  {
+    if (keyCode == java.awt.event.KeyEvent.VK_F1)
+    {
+      currentPage = PAGE_IMAGE;
+    }
+    else if (keyCode == java.awt.event.KeyEvent.VK_F2)
+    {
+      currentPage = PAGE_PREVIEW;
+    }
+    else if (keyCode == java.awt.event.KeyEvent.VK_F3)
+    {
+      currentPage = PAGE_DETAILS;
+    }
+    else if (keyCode == java.awt.event.KeyEvent.VK_F4)
+    {
+      currentPage = PAGE_COMMAND_QUEUE;
+    }
+  }
+  else if (key == 'g' || key == 'G')
     displayingRowGridlines = (displayingRowGridlines) ? false : true;
   else if (key == 'p' || key == 'P')
     displayingShadedCentres = (displayingShadedCentres) ? false : true;
@@ -669,6 +927,7 @@ void keyPressed()
   {
     realtimeCommandQueue.add(CMD_PENDOWN+"END");
   }
+  
 }
   
 void mouseClicked()
@@ -683,6 +942,7 @@ void mouseClicked()
   }
   else if (mouseOverQueue())
   {// stopping or starting 
+    println("queue clicked.");
     queueClicked();
   }
 }
@@ -857,9 +1117,9 @@ void queueClicked()
     else
       commandQueueRunning = true;
   }
-  else if (rowClicked > 1 && rowClicked < commandQueue.size()+2) // it's a command from the queue
+  else if (rowClicked > 2 && rowClicked < commandQueue.size()+3) // it's a command from the queue
   {
-    int cmdNumber = rowClicked-2;
+    int cmdNumber = rowClicked-3;
     if (commandQueueRunning)
     {
       // if its running, then clicking on a command will mark it as a pause point
@@ -1678,12 +1938,13 @@ void reset()
   commandQueue =  new ArrayList<String>();
 }
 
-void showText()
+void showText(int xPosOrigin, int yPosOrigin)
 {
+  textSize(12);
   fill(255);
   int tRow = 15;
-  int textPositionX = 15;
-  int textPositionY = 800+tRow;
+  int textPositionX = xPosOrigin;
+  int textPositionY = yPosOrigin;
   
   int tRowNo = 1;
   
@@ -1708,13 +1969,13 @@ void showText()
   text("Mode: " + currentMode, textPositionX, textPositionY+(tRow*tRowNo++));
 
   // middle side
-  textPositionX = 300;
-  textPositionY = 800+tRow;
+  textPositionX = textPositionX+200;
+  textPositionY = yPosOrigin;
   tRowNo = 1;
   
   text("Row size: " + rowWidth, textPositionX, textPositionY+(tRow*tRowNo++));
-  text("Row segments mach: " + rowSegmentsForMachine.length, textPositionX, textPositionY+(tRow*tRowNo++));
-  text("Row segments scr: " + rowSegmentsForScreen.length, textPositionX, textPositionY+(tRow*tRowNo++));
+//  text("Row segments mach: " + rowSegmentsForMachine.length, textPositionX, textPositionY+(tRow*tRowNo++));
+//  text("Row segments scr: " + rowSegmentsForScreen.length, textPositionX, textPositionY+(tRow*tRowNo++));
   
   text("Box width: " + getBoxWidth(), textPositionX, textPositionY+(tRow*tRowNo++));
   text("Box height: " + getBoxHeight(), textPositionX, textPositionY+(tRow*tRowNo++));
@@ -1731,20 +1992,20 @@ void showText()
   text("Commands sent: " + getPixelsCompleted() + ", remaining: " + getPixelsRemaining(), textPositionX, textPositionY+(tRow*tRowNo++));
 
   text("Estimated complete: " + getEstimatedCompletionTime(), textPositionX, textPositionY+(tRow*tRowNo++));
+//  text("RowsVector1: " + rowsVector1, textPositionX, textPositionY+(tRow*tRowNo++));
+//  text("RowsVector2: " + rowsVector2, textPositionX, textPositionY+(tRow*tRowNo++));
 
+//  showCommandQueue(900, 50);
+}
 
-  // right side
-  textPositionX = 600;
-  textPositionY = 800+tRow;
-  tRowNo = 1;
-  
-  text("RowsVector1: " + rowsVector1, textPositionX, textPositionY+(tRow*tRowNo++));
-  text("RowsVector2: " + rowsVector2, textPositionX, textPositionY+(tRow*tRowNo++));
-
-  // far right side
-  textPositionX = 900;
-  textPositionY = 50;
-  tRowNo = 1;
+void showCommandQueue(int xPos, int yPos)
+{
+  textSize(12);
+  fill(255);
+  int tRow = 15;
+  int textPositionX = xPos;
+  int textPositionY = yPos;
+  int tRowNo = 1;
 
   int commandQueuePos = textPositionY+(tRow*tRowNo++);
 
@@ -1767,9 +2028,6 @@ void showText()
     text((queueNumber--)+". "+ s, textPositionX, commandQueuePos);
     commandQueuePos+=queueRowHeight;
   }
-  
-  
-
 }
 
 long getCurrentPixelTime()
@@ -1858,9 +2116,9 @@ int getPixelsRemaining()
 String commandQueueStatusText()
 {
   if (commandQueueRunning)
-    return "RUNNING.";
+    return "RUNNING - click to pause";
   else
-    return "PAUSED";
+    return "PAUSED - click to start";
 }
 
 float getBoxWidth()
