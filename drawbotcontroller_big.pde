@@ -1,5 +1,9 @@
 /**
   Polargraph controller - written by Sandy Noble
+  
+  A lot of this is about the interface.
+  
+  
 */
 //import javax.swing.JFileChooser;
 import processing.serial.*;
@@ -36,24 +40,16 @@ final int A2_HEIGHT = 594;
 final int A1_WIDTH = 594;
 final int A1_HEIGHT = 841;
 
-int pageWidth = A1_WIDTH;
-int pageHeight = A1_HEIGHT;
+int pageWidth = A3_WIDTH;
+int pageHeight = A3_HEIGHT;
 
 int pagePositionX = (machineWidth/2) - (pageWidth/2);
 int pagePositionY = 120;
 
-//PVector imageOffset = new PVector(pagePositionX, pagePositionY+87); // 42cm square
-//PVector imageOffset = new PVector(pagePositionX, pagePositionY-50); // mona lisa
-//PVector imageOffset = new PVector(pagePositionX+87, pagePositionY);
-PVector imageOffset = new PVector(pagePositionX, pagePositionY); // centred
+PVector imageOffset = new PVector(pagePositionX, pagePositionY);
 
 PVector pictureFrameSize = new PVector(400.0, 400.0);
-PVector pictureFrameTopLeft = new PVector((machineWidth/2) - (pictureFrameSize.x/2), (pageHeight/2)+pagePositionY - (pictureFrameSize.y/2));
-PVector pictureFrameBotRight = new PVector(pictureFrameTopLeft.x + pictureFrameSize.x, pictureFrameTopLeft.y+pictureFrameSize.y);
-
-//PVector pictureFrameSize = new PVector(250.0, 250.0);
-//PVector pictureFrameTopLeft = new PVector((machineWidth/2) - (pictureFrameSize.x/2), 27+pagePositionY);
-//PVector pictureFrameBotRight = new PVector(pictureFrameTopLeft.x + pictureFrameSize.x, pictureFrameTopLeft.y+pictureFrameSize.y);
+PVector pictureFrameOffset = new PVector((machineWidth/2) - (pictureFrameSize.x/2), (pageHeight/2)+pagePositionY - (pictureFrameSize.y/2));
 
 int panelPositionX = machineWidth + 10;
 int panelPositionY = 10;
@@ -81,6 +77,7 @@ SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy hh:mm:ss");
 
 String commandStatus = "Waiting for a click.";
 
+int sampleArea = 10;
 int rowWidth = 75;
 float currentPenWidth = 1.2;
 final int TOTAL_ROW_WIDTH = inSteps(1200);
@@ -144,6 +141,10 @@ static final int MODE_CHANGE_MACHINE_SIZE = 35;
 static final int MODE_CHANGE_MACHINE_NAME = 36;
 static final int MODE_REQUEST_MACHINE_SIZE = 37;
 static final int MODE_RESET_MACHINE = 38;
+static final int MODE_SAVE_PROPERTIES = 39;
+static final int MODE_INC_SAMPLE_AREA = 40;
+static final int MODE_DEC_SAMPLE_AREA = 41;
+static final int MODE_MOVE_IMAGE = 42;
 
 
 static final String CMD_CHANGELENGTH = "C01,";
@@ -178,7 +179,8 @@ String testPenWidthCommand = CMD_TESTPENWIDTHSQUARE;
 String testPenWidthParameters = ",0.6,2.0,0.1,END"; // starting size, finish size, size of increments
 
 Map<Integer, String> buttonLabels = buildButtonLabels();
-Map<Integer, Integer> panelButtons = buildPanelButtons();
+
+Map<Integer, Map<Integer, Integer>> panels = buildPanels();
 
 static int currentMode = MODE_BEGIN;
 
@@ -218,31 +220,38 @@ public int currentPage = DEFAULT_PAGE;
 public boolean showingSummaryOverlay = true;
 public boolean showingDialogBox = false;
 
+public Integer windowWidth = 900;
+public Integer windowHeight = 550;
+
+public static Integer serialPort = 0;
+
+Properties props = null;
+public static String propertiesFilename = "polargraph.properties";
+
+//public static String bitmapFilename = "monalisa2_l5.png";
+//public static String bitmapFilename = "monalisa2_l3+4.png";
+//public static String bitmapFilename = "monalisa2_l2.png";
+//public static String bitmapFilename = "monalisa2_l1a.png";
+//public static String bitmapFilename = "liberty2.jpg";
+//public static String bitmapFilename = "earth2_400.jpg";
+//public static String bitmapFilename = "mars1_400.jpg";
+//public static String bitmapFilename = "moon2_400.jpg";
+//public static String bitmapFilename = "Marilyn1.jpg";
+public static String bitmapFilename = "portrait_330.jpg";
+
 
 void setup()
 {
   frame.setResizable(true);
-  size(900, 550);
+  loadFromPropertiesFile();
 //  controlP5 = new ControlP5(this);
   // Print a list of the serial ports, for debugging purposes:
   println(Serial.list());
 
-  String portName = Serial.list()[0];
+  String portName = Serial.list()[serialPort];
   myPort = new Serial(this, portName, 57600);
   //read bytes into a buffer until you get a linefeed (ASCII 10):
   myPort.bufferUntil('\n');
-
-
-//  bitmap = loadImage("monalisa2_l5.png");
-//  bitmap = loadImage("monalisa2_l3+4.png");
-//  bitmap = loadImage("monalisa2_l2.png");
-//  bitmap = loadImage("monalisa2_l1a.png");
-  bitmap = loadImage("liberty2.jpg");
-//  bitmap = loadImage("earth2_400.jpg");
-//  bitmap = loadImage("mars1_400.jpg");
-//  bitmap = loadImage("moon2_400.jpg");
-//  bitmap = loadImage("Marilyn1.jpg");
-//  bitmap = loadImage("portrait_330.jpg");
 
   rebuildRows();  
   
@@ -251,6 +260,14 @@ void setup()
   commandQueue.add(CMD_CHANGEPENWIDTH+currentPenWidth+",END");
 
   frame.setSize(machineWidth*2+panelWidth+20, 1020);
+  size(windowWidth, windowHeight);
+}
+
+Float centreImagePos()
+{
+  Float imagePosX = (new Float(machineWidth)/2.0) - (new Float(bitmap.width) / 2.0);
+  println("imagePosX:"+imagePosX);
+  return imagePosX;
 }
 
 boolean imageIsLoaded()
@@ -342,6 +359,8 @@ void drawImagePage()
 
   background(100);
   noFill();
+  
+  drawMoveImageOutline();
   image(bitmap, imageOffset.x, imageOffset.y);
   
   stroke (100, 200, 100);
@@ -489,21 +508,34 @@ void drawImageLoadPage()
   drawImagePage();
 }
 
-
+void drawMoveImageOutline()
+{
+  if (MODE_MOVE_IMAGE == currentMode)
+  {
+    Float imgX = mouseX - (new Float(bitmap.width)/2);
+    Float imgY = mouseY - (new Float(bitmap.height)/2);
+    fill(200,200,0,50);
+    rect(imgX, imgY, bitmap.width, bitmap.height);
+    
+    noFill();
+//    imageOffset.x = imgX;
+//    imageOffset.y = imgY;
+  }
+}
 
 void showPictureFrame()
 {
   stroke (255, 255, 0);
-  ellipse(pictureFrameTopLeft.x, pictureFrameTopLeft.y, 10, 10);
+  ellipse(pictureFrameOffset.x, pictureFrameOffset.y, 10, 10);
 
   stroke (255, 128, 0);
-  ellipse(pictureFrameBotRight.x, pictureFrameTopLeft.y, 10, 10);
+  ellipse(pictureFrameOffset.x + pictureFrameSize.x, pictureFrameOffset.y, 10, 10);
 
   stroke (255, 0, 255);
-  ellipse(pictureFrameBotRight.x, pictureFrameBotRight.y, 10, 10);
+  ellipse(pictureFrameOffset.x + pictureFrameSize.x, pictureFrameOffset.y+pictureFrameSize.y, 10, 10);
 
   stroke (255, 0, 128);
-  ellipse(pictureFrameTopLeft.x, pictureFrameBotRight.y, 10, 10);
+  ellipse(pictureFrameOffset.x, pictureFrameOffset.y+pictureFrameSize.y, 10, 10);
 
   stroke(255);
 }
@@ -544,6 +576,7 @@ void showPanel()
   rect(panelPositionX, panelPositionY, panelWidth, panelHeight);
   noFill();
   
+  Map<Integer, Integer> panelButtons = panels.get(getCurrentPage());
   for (int i = 0; i < noOfButtons; i++)
   {
     if (panelButtons.containsKey(i))
@@ -590,10 +623,11 @@ void showPreviewMachine()
 void showMask()
 {
   noStroke();
-  fill(100);
+
+  fill(100,100,100,150);
   rect(0, 0, width, pagePositionY); // top box
-  rect(0, pagePositionY, pagePositionX, pageHeight+pagePositionY); // left box
-  rect(pagePositionX+pageWidth, pagePositionY, width, pageHeight+pagePositionY); // right box
+  rect(0, pagePositionY, pagePositionX, pageHeight); // left box
+  rect(pagePositionX+pageWidth, pagePositionY, width, pageHeight); // right box
   rect(0, pageHeight+pagePositionY, width, height); // bottom box
   noFill();
   stroke(0);
@@ -707,7 +741,7 @@ boolean isPixelChromaKey(PVector o)
     }
     else
     {
-      println("isn't chroma key " + red(centrePixel) + ", "+green(centrePixel)+","+blue(centrePixel));
+//      println("isn't chroma key " + red(centrePixel) + ", "+green(centrePixel)+","+blue(centrePixel));
       return false;
     }
   }
@@ -868,11 +902,17 @@ Integer mouseOverButton()
   int posInPanel = mouseY - panelPositionY;
   int overButton = posInPanel / buttonHeight;
   
-  if (panelButtons.containsKey(overButton))
-    return panelButtons.get(overButton);
+  if (getCurrentPanel().containsKey(overButton))
+    return getCurrentPanel().get(overButton);
   else  
     return null;
 }
+
+Map<Integer, Integer> getCurrentPanel()
+{
+  return panels.get(getCurrentPage());
+}
+
 
 void keyPressed()
 {
@@ -989,6 +1029,10 @@ void machineClicked()
     case MODE_DRAW_TO_POSITION:
       sendMoveToPosition();
       break;
+    case MODE_MOVE_IMAGE:
+      imageOffset.x = mouseX - (new Float(bitmap.width)/2);
+      imageOffset.y = mouseY - (new Float(bitmap.height)/2);
+      break;
     default:
       break;
   }
@@ -1039,6 +1083,27 @@ void panelClicked()
       extractRowsFromBox();
       extractRows();
       currentMode = lastMode;
+      break;
+    case MODE_INC_SAMPLE_AREA:
+      sampleArea+=1;
+      rebuildRows();
+      extractRowsFromBox();
+      extractRows();
+      currentMode = lastMode;
+      println("sample size: " + sampleArea);
+      break;
+    case MODE_DEC_SAMPLE_AREA:
+      if (sampleArea < 2)
+        sampleArea = inMM(rowWidth/2);
+      else
+        sampleArea-=1;
+        
+      println("sample area: " + sampleArea);
+      rebuildRows();
+      extractRowsFromBox();
+      extractRows();
+      currentMode = lastMode;
+      println("sample size: " + sampleArea);
       break;
     case MODE_RENDER_SQUARE_PIXELS:
       if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
@@ -1099,6 +1164,12 @@ void panelClicked()
       break;
     case MODE_RESET_MACHINE:
       sendResetMachine();
+      break;
+    case MODE_SAVE_PROPERTIES:
+      savePropertiesFile();
+      // clear old properties.
+      props = null;
+      loadFromPropertiesFile();
       break;
     default:
       break;
@@ -1732,8 +1803,7 @@ void extractRowsFromBox()
           boolean pixelIsChromaKey = isPixelChromaKey(centreScr);
           if (!pixelIsChromaKey)
           {
-//            int density = getDensity(centreScr, inMM(rowWidth/2));
-            int density = getDensity(centreScr, 10);
+            int density = getDensity(centreScr, sampleArea);
             centreScr.set(centreScr.x, centreScr.y, density);
             PVector centreMach = new PVector(colM, rowM, density);
             rowListScr.add(centreScr);
@@ -2332,54 +2402,108 @@ boolean isDrawbotReady()
   return drawbotReady;
 }
 
-Map<Integer, Integer> buildPanelButtons()
+Map<Integer, Map<Integer, Integer>> buildPanels()
 {
-  Map<Integer, Integer> result = new HashMap<Integer, Integer>(30);
-  result.put(0, MODE_BEGIN);
-  result.put(1, MODE_SET_POSITION_HOME);
-  result.put(2, MODE_SET_POSITION);
-  result.put(3, MODE_DRAW_TO_POSITION);
+  Map<Integer, Map<Integer, Integer>> panelMap = new HashMap<Integer, Map<Integer, Integer>>(5);
   
-  result.put(4, MODE_INPUT_BOX_TOP_LEFT);
-  result.put(5, MODE_INPUT_BOX_BOT_RIGHT);
+  Map<Integer, Integer> inputPanel = new HashMap<Integer, Integer>(30);
+  inputPanel.put(0, MODE_BEGIN);
+  inputPanel.put(1, MODE_SET_POSITION_HOME);
+  inputPanel.put(2, MODE_SET_POSITION);
+  inputPanel.put(3, MODE_DRAW_TO_POSITION);
+  
+  inputPanel.put(4, MODE_INPUT_BOX_TOP_LEFT);
+  inputPanel.put(5, MODE_INPUT_BOX_BOT_RIGHT);
 
-  result.put(6, MODE_INPUT_ROW_START);
-  result.put(7, MODE_INPUT_ROW_END);
+//  inputPanel.put(6, MODE_INPUT_ROW_START);
+//  inputPanel.put(7, MODE_INPUT_ROW_END);
 
+  inputPanel.put(8, MODE_DRAW_OUTLINE_BOX);
+//  inputPanel.put(9, MODE_DRAW_OUTLINE_BOX_ROWS);
+//  inputPanel.put(10, MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
 
-  result.put(8, MODE_DRAW_OUTLINE_BOX);
-  result.put(9, MODE_DRAW_OUTLINE_BOX_ROWS);
-  result.put(10, MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
+//  inputPanel.put(11, MODE_DRAW_GRID);
+  inputPanel.put(11, MODE_MOVE_IMAGE);
+  inputPanel.put(12, MODE_RENDER_SQUARE_PIXELS);
+  inputPanel.put(13, MODE_RENDER_SCALED_SQUARE_PIXELS);
+  inputPanel.put(14, MODE_RENDER_SOLID_SQUARE_PIXELS);
+  inputPanel.put(15, MODE_RENDER_SCRIBBLE_PIXELS);
 
-  result.put(11, MODE_DRAW_GRID);
+  inputPanel.put(16, MODE_DRAW_TEST_PENWIDTH);
 
-  result.put(12, MODE_RENDER_SQUARE_PIXELS);
-  result.put(13, MODE_RENDER_SCALED_SQUARE_PIXELS);
-  result.put(14, MODE_RENDER_SOLID_SQUARE_PIXELS);
-  result.put(15, MODE_RENDER_SCRIBBLE_PIXELS);
+  inputPanel.put(18, INS_INC_ROWSIZE);
+  inputPanel.put(19, INS_DEC_ROWSIZE);
 
-  result.put(16, MODE_DRAW_TEST_PENWIDTH);
-  result.put(17, MODE_INPUT_SINGLE_PIXEL);
+//  inputPanel.put(20, MODE_LOAD_SD_IMAGE);
+//  inputPanel.put(21, MODE_START_ROVING);
+//  inputPanel.put(22, MODE_STOP_ROVING);
+//  inputPanel.put(23, MODE_SET_ROVE_AREA);
+//  inputPanel.put(24, MODE_CHANGE_MACHINE_SIZE);
+//  inputPanel.put(25, MODE_CHANGE_MACHINE_NAME);
+//  inputPanel.put(26, MODE_REQUEST_MACHINE_SIZE);
+//  inputPanel.put(27, MODE_RESET_MACHINE);
+//  inputPanel.put(28, MODE_SAVE_PROPERTIES);
+  panelMap.put(PAGE_IMAGE, inputPanel);
 
-  result.put(18, INS_INC_ROWSIZE);
-  result.put(19, INS_DEC_ROWSIZE);
+  Map<Integer, Integer> previewPanel = new HashMap<Integer, Integer>(30);
+  previewPanel.put(0, MODE_BEGIN);
+  previewPanel.put(1, MODE_SET_POSITION_HOME);
+  previewPanel.put(2, MODE_SET_POSITION);
+  previewPanel.put(3, MODE_DRAW_TO_POSITION);
+  previewPanel.put(4, MODE_INPUT_BOX_TOP_LEFT);
+  previewPanel.put(5, MODE_INPUT_BOX_BOT_RIGHT);
+  previewPanel.put(8, MODE_DRAW_OUTLINE_BOX);
+  previewPanel.put(9, MODE_INC_SAMPLE_AREA);
+  previewPanel.put(10, MODE_DEC_SAMPLE_AREA);
+  previewPanel.put(11, MODE_MOVE_IMAGE);
+  previewPanel.put(12, MODE_RENDER_SQUARE_PIXELS);
+  previewPanel.put(13, MODE_RENDER_SCALED_SQUARE_PIXELS);
+  previewPanel.put(14, MODE_RENDER_SOLID_SQUARE_PIXELS);
+  previewPanel.put(15, MODE_RENDER_SCRIBBLE_PIXELS);
+  previewPanel.put(16, MODE_DRAW_TEST_PENWIDTH);
+  previewPanel.put(18, INS_INC_ROWSIZE);
+  previewPanel.put(19, INS_DEC_ROWSIZE);
 
-  result.put(20, MODE_LOAD_SD_IMAGE);
-  result.put(21, MODE_START_ROVING);
-  result.put(22, MODE_STOP_ROVING);
-  result.put(23, MODE_SET_ROVE_AREA);
-  result.put(24, MODE_CHANGE_MACHINE_SIZE);
-  result.put(25, MODE_CHANGE_MACHINE_NAME);
-  result.put(26, MODE_REQUEST_MACHINE_SIZE);
-  result.put(27, MODE_RESET_MACHINE);
-  return result;
+  panelMap.put(PAGE_PREVIEW, previewPanel);
+  panelMap.put(PAGE_COMMAND_QUEUE, inputPanel);
+  panelMap.put(PAGE_LOAD_IMAGE, inputPanel);
+  
+  ////   
+  Map<Integer, Integer> detailsPanel = new HashMap<Integer, Integer>(30);
+  detailsPanel.put(0, MODE_BEGIN);
+  detailsPanel.put(1, MODE_SET_POSITION_HOME);
+  detailsPanel.put(2, MODE_SET_POSITION);
+  detailsPanel.put(3, MODE_DRAW_TO_POSITION);
+  
+  detailsPanel.put(4, MODE_INPUT_BOX_TOP_LEFT);
+  detailsPanel.put(5, MODE_INPUT_BOX_BOT_RIGHT);
+
+  detailsPanel.put(6, MODE_DRAW_TEST_PENWIDTH);
+  detailsPanel.put(7, MODE_INPUT_SINGLE_PIXEL);
+
+  detailsPanel.put(8, INS_INC_ROWSIZE);
+  detailsPanel.put(9, INS_DEC_ROWSIZE);
+
+  detailsPanel.put(10, MODE_LOAD_SD_IMAGE);
+  detailsPanel.put(11, MODE_START_ROVING);
+  detailsPanel.put(12, MODE_STOP_ROVING);
+  detailsPanel.put(13, MODE_SET_ROVE_AREA);
+  detailsPanel.put(14, MODE_CHANGE_MACHINE_SIZE);
+  detailsPanel.put(15, MODE_CHANGE_MACHINE_NAME);
+  detailsPanel.put(16, MODE_REQUEST_MACHINE_SIZE);
+  detailsPanel.put(17, MODE_RESET_MACHINE);
+  detailsPanel.put(18, MODE_SAVE_PROPERTIES);
+  
+  panelMap.put(PAGE_DETAILS, detailsPanel);
+  
+  return panelMap;
 }
 
 Map<Integer, String> buildButtonLabels()
 {
   Map<Integer, String> result = new HashMap<Integer, String>(19);
   
-  result.put(MODE_BEGIN, "Reset");
+  result.put(MODE_BEGIN, "Reset box");
   result.put(MODE_INPUT_BOX_TOP_LEFT, "Box 1");
   result.put(MODE_INPUT_BOX_BOT_RIGHT, "Box 2");
   result.put(MODE_DRAW_OUTLINE_BOX, "Outline box");
@@ -2419,7 +2543,198 @@ Map<Integer, String> buildButtonLabels()
   result.put(MODE_CHANGE_MACHINE_NAME, "Change machine name");
   result.put(MODE_REQUEST_MACHINE_SIZE, "Request machine details");
   result.put(MODE_RESET_MACHINE, "Reset machine");
+  result.put(MODE_SAVE_PROPERTIES, "Save properties");
+  
+  result.put(MODE_INC_SAMPLE_AREA, "Inc sample size");
+  result.put(MODE_DEC_SAMPLE_AREA, "Dec sample size");
+
+  result.put(MODE_MOVE_IMAGE, "Place image");
 
   return result;
+}
+
+Properties getProperties()
+{
+  if (props == null)
+  {
+    FileInputStream propertiesFileStream = null;
+    try
+    {
+      props = new Properties();
+      String fileToLoad = sketchPath(propertiesFilename);
+      
+      File propertiesFile = new File(fileToLoad);
+      if (!propertiesFile.exists())
+        savePropertiesFile();
+      
+      propertiesFileStream = new FileInputStream(propertiesFile);
+      props.load(propertiesFileStream);
+      println("Successfully loaded properties file " + fileToLoad);
+    }
+    catch (IOException e)
+    {
+      println("Couldn't read the properties file - will attempt to create one.");
+      println(e.getMessage());
+    }
+    finally
+    {
+      try { propertiesFileStream.close();}
+      catch (Exception e) {};
+    }
+  }
+  return props;
+}
+
+void loadFromPropertiesFile()
+{
+  this.machineWidth = getIntProperty("machine.width", 600);
+  // machine.height
+  this.machineHeight = getIntProperty("machine.height", 800);
+  // pen size
+  this.currentPenWidth = getFloatProperty("machine.pen.size", 1.0);
+  // serial port
+  this.serialPort = getIntProperty("controller.machine.serialport", 0);
+
+  // row size
+  this.rowWidth = getIntProperty("controller.row.size", 100);
+  this.sampleArea = getIntProperty("controller.pixel.samplearea", 2);
+  // initial screen size
+  this.windowWidth = getIntProperty("controller.window.width", 800);
+  this.windowHeight = getIntProperty("controller.window.height", 550);
+  // image filename
+  this.bitmapFilename = getStringProperty("controller.image.filename", "portrait_330.jpg");
+  
+  bitmap = loadImage(bitmapFilename);
+  
+  
+  // image position
+  Float offsetX = getFloatProperty("controller.image.position.x", 0.0);
+  Float offsetY = getFloatProperty("controller.image.position.y", 0.0);
+  this.imageOffset = new PVector(offsetX, offsetY);
+
+  // page size
+  this.pageWidth = getIntProperty("controller.page.width", A3_WIDTH);
+  this.pageHeight = getIntProperty("controller.page.height", A3_HEIGHT);
+  
+  // page position
+  this.pagePositionX = getIntProperty("controller.page.position.x", 100);
+  this.pagePositionY = getIntProperty("controller.page.position.y", 120);
+
+  // picture frame size
+  Float pfsx = getFloatProperty("controller.pictureframe.width", 200.0);
+  Float pfsy = getFloatProperty("controller.pictureframe.height", 200.0);
+  this.pictureFrameSize = new PVector(pfsx, pfsy);
+  
+  // picture frame position
+  Float pftlx = getFloatProperty("controller.pictureframe.position.x", 200.0);
+  Float pftly = getFloatProperty("controller.pictureframe.position.y", 200.0);
+  this.pictureFrameOffset = new PVector(pftlx, pftly);
+  println("Finished loading configuration from properties file.");
+}
+
+void savePropertiesFile()
+{
+  Properties props = new Properties();
+  
+  // Put keys into properties file:
+  // machine width
+  props.setProperty("machine.width", new Integer(machineWidth).toString());
+  // machine.height
+  props.setProperty("machine.height", new Integer(machineHeight).toString());
+  // pen size
+  props.setProperty("machine.pen.size", new Float(currentPenWidth).toString());
+  // serial port
+  props.setProperty("controller.machine.serialport", new Integer(serialPort).toString());
+
+  // row size
+  props.setProperty("controller.row.size", new Integer(rowWidth).toString());
+  props.setProperty("controller.pixel.samplearea", new Integer(sampleArea).toString());
+  // initial screen size
+  props.setProperty("controller.window.width", new Integer(width).toString());
+  props.setProperty("controller.window.height", new Integer(height).toString());
+  // image filename
+  props.setProperty("controller.image.filename", bitmapFilename);
+  // image position
+  props.setProperty("controller.image.position.x", new Float(imageOffset.x).toString());
+  props.setProperty("controller.image.position.y", new Float(imageOffset.y).toString());
+
+  // page size
+  props.setProperty("controller.page.width", new Integer(pageWidth).toString());
+  props.setProperty("controller.page.height", new Integer(pageHeight).toString());
+  
+  // page position
+  props.setProperty("controller.page.position.x", new Integer(pagePositionX).toString());
+  props.setProperty("controller.page.position.y", new Integer(pagePositionY).toString());
+
+  // picture frame size
+  props.setProperty("controller.pictureframe.width", new Float(pictureFrameSize.x).toString());
+  props.setProperty("controller.pictureframe.height", new Float(pictureFrameSize.y).toString());
+  // picture frame position
+  props.setProperty("controller.pictureframe.position.x", new Float(pictureFrameOffset.x).toString());
+  props.setProperty("controller.pictureframe.position.y", new Float(pictureFrameOffset.y).toString());
+ 
+  FileOutputStream propertiesOutput = null;
+
+  try
+  {
+    //save the properties to a file
+    File propertiesFile = new File(sketchPath(propertiesFilename));
+    if (propertiesFile.exists())
+    {
+      propertiesOutput = new FileOutputStream(propertiesFile);
+      Properties oldProps = new Properties();
+      FileInputStream propertiesFileStream = new FileInputStream(propertiesFile);
+      oldProps.load(propertiesFileStream);
+      oldProps.putAll(props);
+      oldProps.store(propertiesOutput,"   ***  Polargraph properties file   ***  ");
+      println("Saved settings.");
+    }
+    else
+    { // create it
+      propertiesFile.createNewFile();
+      propertiesOutput = new FileOutputStream(propertiesFile);
+      props.store(propertiesOutput,"   ***  Polargraph properties file   ***  ");
+      println("Created file.");
+    }
+  }
+  catch (Exception e)
+  {
+    println("Exception occurred while creating new properties file: " + e.getMessage());
+  }
+  finally
+  {
+    if (propertiesOutput != null)
+    {
+      try
+      {
+        propertiesOutput.close();
+      }
+      catch (Exception e2) {}
+    }
+  }
+}
+
+boolean getBooleanProperty(String id, boolean defState) 
+{
+  return boolean(getProperties().getProperty(id,""+defState));
+}
+ 
+int getIntProperty(String id, int defVal) 
+{
+  return int(getProperties().getProperty(id,""+defVal)); 
+}
+ 
+float getFloatProperty(String id, float defVal) 
+{
+  return float(getProperties().getProperty(id,""+defVal)); 
+}
+String getStringProperty(String id, String defVal)
+{
+  return getProperties().getProperty(id, defVal);
+}
+  
+void initProperties()
+{
+  getProperties();
 }
 
