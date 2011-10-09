@@ -234,8 +234,8 @@ public static String propertiesFilename = "polargraph.properties";
 //public static String bitmapFilename = "earth2_400.jpg";
 //public static String bitmapFilename = "mars1_400.jpg";
 //public static String bitmapFilename = "moon2_400.jpg";
-//public static String bitmapFilename = "Marilyn1.jpg";
-public static String bitmapFilename = "portrait_330.jpg";
+public static String bitmapFilename = "Marilyn1.jpg";
+//public static String bitmapFilename = "portrait_330.jpg";
 
 
 void setup()
