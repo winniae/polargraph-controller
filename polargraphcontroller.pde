@@ -224,7 +224,7 @@ public Integer windowHeight = 550;
 public static Integer serialPort = 0;
 
 Properties props = null;
-public static String propertiesFilename = "polargraph.properties";
+public static String propertiesFilename = "polargraph.properties.txt";
 
 //public static String bitmapFilename = "monalisa2_l5.png";
 //public static String bitmapFilename = "monalisa2_l3+4.png";
@@ -2571,7 +2571,7 @@ Properties getProperties()
     try
     {
       props = new Properties();
-      String fileToLoad = dataPath(propertiesFilename);
+      String fileToLoad = sketchPath(propertiesFilename);
       
       File propertiesFile = new File(fileToLoad);
       if (!propertiesFile.exists())
@@ -2688,7 +2688,7 @@ void savePropertiesFile()
   try
   {
     //save the properties to a file
-    File propertiesFile = new File(dataPath(propertiesFilename));
+    File propertiesFile = new File(sketchPath(propertiesFilename));
     if (propertiesFile.exists())
     {
       propertiesOutput = new FileOutputStream(propertiesFile);
