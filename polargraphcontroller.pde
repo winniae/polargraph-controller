@@ -160,8 +160,8 @@ static final String CMD_TESTPENWIDTHSCRIBBLE = "C12,";
 static final String CMD_PENDOWN = "C13,";
 static final String CMD_PENUP = "C14,";
 static final String CMD_DRAWSAWPIXEL = "C15,";
-static final String CMD_DRAWROUNDPIXEL = "C16";
-static final String CMD_GOTOCOORDS = "C17";
+static final String CMD_DRAWROUNDPIXEL = "C16,";
+static final String CMD_GOTOCOORDS = "C17,";
 static final String CMD_TXIMAGEBLOCK = "C18";
 static final String CMD_STARTROVE = "C19";
 static final String CMD_STOPROVE = "C20";
@@ -174,7 +174,7 @@ static final String CMD_RESETMACHINE = "C27";
 
 //String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
 String testPenWidthCommand = CMD_TESTPENWIDTHSQUARE;
-String testPenWidthParameters = ",0.6,2.0,0.1,END"; // starting size, finish size, size of increments
+String testPenWidthParameters = ",0.5,2.0,0.5,END"; // starting size, finish size, size of increments
 
 Map<Integer, String> buttonLabels = buildButtonLabels();
 
@@ -1765,19 +1765,19 @@ void sendOutlineOfBox()
 {
   // convert cartesian to native format
   PVector coords = getNativeCoords(boxVector1);
-  String command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  String command = CMD_CHANGELENGTH+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector2.x, boxVector1.y);
-  command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_CHANGELENGTH+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector2);
-  command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_CHANGELENGTH+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector1.x, boxVector2.y);
-  command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_CHANGELENGTH+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector1);
@@ -2682,6 +2682,7 @@ void savePropertiesFile()
   // picture frame position
   props.setProperty("controller.pictureframe.position.x", new Float(pictureFrameOffset.x).toString());
   props.setProperty("controller.pictureframe.position.y", new Float(pictureFrameOffset.y).toString());
+  props.setProperty("controller.machine.serialport", serialPort.toString());
  
   FileOutputStream propertiesOutput = null;
 
