@@ -392,7 +392,10 @@ void drawImagePage()
   noFill();
   
   drawMoveImageOutline();
-  image(bitmap, imageOffset.x, imageOffset.y);
+  if (imageIsLoaded())
+    image(bitmap, imageOffset.x, imageOffset.y);
+//  else
+//    loadImageWithFileChooser();
   
   stroke (100, 200, 100);
 
@@ -2792,6 +2795,10 @@ void loadFromPropertiesFile()
   this.bitmapFilename = getStringProperty("controller.image.filename", "portrait_330.jpg");
   
   bitmap = loadImage(bitmapFilename);
+  if (bitmap == null)
+  {
+    println("No image file loaded.");
+  }
   
   
   // image position
