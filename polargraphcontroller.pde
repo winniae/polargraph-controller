@@ -72,6 +72,7 @@ int serialCount = 0;                 // A count of how many bytes we receive
 final JFileChooser chooser = new JFileChooser();
 
 PImage bitmap;
+int bitmapWidth = 150;
 
 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy hh:mm:ss");
 
@@ -152,6 +153,7 @@ static final int MODE_SELECT_PICTUREFRAME = 45;
 static final int MODE_EXPORT_QUEUE = 46;
 static final int MODE_IMPORT_QUEUE = 47;
 static final int MODE_CLEAR_QUEUE = 48;
+static final int MODE_FIT_IMAGE_TO_BOX = 49;
 
 
 static final String CMD_CHANGELENGTH = "C01,";
@@ -171,15 +173,16 @@ static final String CMD_PENUP = "C14,";
 static final String CMD_DRAWSAWPIXEL = "C15,";
 static final String CMD_DRAWROUNDPIXEL = "C16,";
 static final String CMD_GOTOCOORDS = "C17,";
-static final String CMD_TXIMAGEBLOCK = "C18";
-static final String CMD_STARTROVE = "C19";
-static final String CMD_STOPROVE = "C20";
-static final String CMD_SETROVEAREA = "C21";
-static final String CMD_LOADMAGEFILE = "C23";
-static final String CMD_CHANGEMACHINESIZE = "C24";
-static final String CMD_CHANGEMACHINENAME = "C25";
-static final String CMD_REQUESTMACHINESIZE = "C26";
-static final String CMD_RESETMACHINE = "C27";
+static final String CMD_TXIMAGEBLOCK = "C18,";
+static final String CMD_STARTROVE = "C19,";
+static final String CMD_STOPROVE = "C20,";
+static final String CMD_SETROVEAREA = "C21,";
+static final String CMD_LOADMAGEFILE = "C23,";
+static final String CMD_CHANGEMACHINESIZE = "C24,";
+static final String CMD_CHANGEMACHINENAME = "C25,";
+static final String CMD_REQUESTMACHINESIZE = "C26,";
+static final String CMD_RESETMACHINE = "C27,";
+static final String CMD_DRAWDIRECTIONTEST = "C28,";
 
 //String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
 String testPenWidthCommand = CMD_TESTPENWIDTHSQUARE;
@@ -239,17 +242,7 @@ public static Integer serialPort = 0;
 Properties props = null;
 public static String propertiesFilename = "polargraph.properties.txt";
 
-//public static String bitmapFilename = "monalisa2_l5.png";
-//public static String bitmapFilename = "monalisa2_l3+4.png";
-//public static String bitmapFilename = "monalisa2_l2.png";
-//public static String bitmapFilename = "monalisa2_l1a.png";
-//public static String bitmapFilename = "liberty2.jpg";
-//public static String bitmapFilename = "earth2_400.jpg";
-//public static String bitmapFilename = "mars1_400.jpg";
-//public static String bitmapFilename = "moon2_400.jpg";
 public static String bitmapFilename = "Marilyn1.jpg";
-//public static String bitmapFilename = "portrait_330.jpg";
-
 
 void setup()
 {
@@ -719,7 +712,8 @@ int getDensity(PVector o, int dim)
   
   PVector v = PVector.sub(o,imageOffset);
   
-  if (v.x < bitmap.width && v.y < bitmap.height)
+  if (v.x <= bitmap.width && v.x>=0 
+  && v.y>=0 && v.y <= bitmap.height)
   {
     // get pixels from the vector coords
     int centrePixel = bitmap.get((int)v.x, (int)v.y);
@@ -1277,6 +1271,14 @@ void panelClicked()
       loadImageWithFileChooser();
       println("Loaded image: " + bitmapFilename);
       break;
+    case MODE_FIT_IMAGE_TO_BOX:
+      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+      {
+        sizeImageToFitBox();
+        extractRows();
+      }
+      println("fitted image to box.");
+      break;
     case MODE_CONVERT_BOX_TO_PICTUREFRAME:
       setPictureFrameDimensionsToBox();
       break;
@@ -1292,6 +1294,15 @@ void panelClicked()
     default:
       break;
   }
+}
+
+void sizeImageToFitBox()
+{
+  float boxWidth = boxVector2.x - boxVector1.x;
+  this.bitmapWidth = (int) boxWidth;
+  loadAndProcessImage(bitmapFilename, bitmapWidth);
+  imageOffset.x = boxVector1.x;
+  imageOffset.y = boxVector1.y;
 }
 
 void exportQueueToFile()
@@ -1365,51 +1376,51 @@ void queueClicked()
 
 void sendResetMachine()
 {
-  String command = CMD_RESETMACHINE + ",END";
+  String command = CMD_RESETMACHINE + "END";
   commandQueue.add(command);
 }
 void sendRequestMachineSize()
 {
-  String command = CMD_REQUESTMACHINESIZE + ",END";
+  String command = CMD_REQUESTMACHINESIZE + "END";
   commandQueue.add(command);
 }
 void sendNewMachineSize()
 {
   // ask for input to get the new machine size
-  String command = CMD_CHANGEMACHINESIZE+","+machineWidth+","+machineHeight+",END";
+  String command = CMD_CHANGEMACHINESIZE+machineWidth+","+machineHeight+",END";
   commandQueue.add(command);
 }
 void sendNewMachineName()
 {
   // ask for input to get the new machine size
-  String command = CMD_CHANGEMACHINENAME+","+newMachineName+",END";
+  String command = CMD_CHANGEMACHINENAME+newMachineName+",END";
   commandQueue.add(command);
 }
 
 
 void sendStartRove()
 {
-  String command = CMD_STARTROVE+",END";
+  String command = CMD_STARTROVE+"END";
   commandQueue.add(command);
 }
 
 void sendStopRove()
 {
-  String command = CMD_STOPROVE+",END";
+  String command = CMD_STOPROVE+"END";
   commandQueue.add(command);
 }
 void sendRoveArea()
 {
   if (isRowsSpecified())
   {
-    String command = CMD_SETROVEAREA+","+rowsVector1.x+","+rowsVector1.y+","+rowsVector2.x+","+rowsVector2.y+",END";
+    String command = CMD_SETROVEAREA+rowsVector1.x+","+rowsVector1.y+","+rowsVector2.x+","+rowsVector2.y+",END";
     commandQueue.add(command);
   }
 }
 
 void loadImageFromSD()
 {
-  String command = CMD_LOADMAGEFILE+","+filenameToLoadFromSD+",END";
+  String command = CMD_LOADMAGEFILE+filenameToLoadFromSD+",END";
   commandQueue.add(command);
 }
 
@@ -1500,7 +1511,7 @@ void sendMoveToPosition()
 
 void sendTestPattern()
 {
-  String command = CMD_TESTPATTERN+int(rowWidth)+",6,END";
+  String command = CMD_DRAWDIRECTIONTEST+int(rowWidth)+",6,END";
   commandQueue.add(command);
 }
 
@@ -1872,11 +1883,11 @@ void sendGridOfBox()
       
     
     // goto beginning of long line (probably the shortline)
-    String command = CMD_CHANGELENGTH+","+int(startPoint.x)+","+int(startPoint.y)+",END";
+    String command = CMD_CHANGELENGTH+int(startPoint.x)+","+int(startPoint.y)+",END";
     commandQueue.add(command);
     
     // draw long line
-    command=CMD_CHANGELENGTH+","+int(endPoint.x)+","+int(endPoint.y)+",END";
+    command=CMD_CHANGELENGTH+int(endPoint.x)+","+int(endPoint.y)+",END";
     commandQueue.add(command);
     
     if (rowDirection.equals("LTR"))
@@ -1908,11 +1919,11 @@ void sendGridOfBox()
       
     
     // goto beginning of line (probably the shortline)
-    String command = CMD_CHANGELENGTH+","+int(startPoint.x)+","+int(startPoint.y)+",END";
+    String command = CMD_CHANGELENGTH+int(startPoint.x)+","+int(startPoint.y)+",END";
     commandQueue.add(command);
     
     // draw long line
-    command=CMD_CHANGELENGTH+","+int(endPoint.x)+","+int(endPoint.y)+",END";
+    command=CMD_CHANGELENGTH+int(endPoint.x)+","+int(endPoint.y)+",END";
     commandQueue.add(command);
     
     if (rowDirection.equals("LTR"))
@@ -1993,8 +2004,34 @@ void extractRowsFromBox()
     
     pixelCentresForMachine = resultMach;
     pixelCentresForScreen = resultScr;
+    
+    simplifyPixels(pixelCentresForScreen);
+    
   }
 }
+
+/*
+This is not working yet.  Maybe it will one day.
+*/
+void simplifyPixels(List<List<PVector>> rowsList)
+{
+//  for (int rowNo=0; rowNo < rowsList.length; rowNo++)
+//  {
+//    List<PVector> rowList = rowsList.get(rowNo);
+//    
+//  }
+//  
+//  for (List<PVector> row : rowsList)
+//  {
+//    // process each row
+//    for (PVector pixel : row)
+//    {
+//      // pull out each pixel
+//      
+//    }
+//  }
+}
+
 
 List<List<PVector>> extractRowsFromBoxOpposite()
 {
@@ -2598,22 +2635,29 @@ Map<Integer, Map<Integer, Integer>> buildPanels()
   inputPanel.put(6, MODE_CONVERT_BOX_TO_PICTUREFRAME);
   inputPanel.put(7, MODE_SELECT_PICTUREFRAME);
 
-  inputPanel.put(8, MODE_DRAW_OUTLINE_BOX);
-//  inputPanel.put(9, MODE_DRAW_OUTLINE_BOX_ROWS);
-//  inputPanel.put(10, MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
+  inputPanel.put(9, LOAD_IMAGE);
+  inputPanel.put(10, MODE_MOVE_IMAGE);
+  inputPanel.put(11, MODE_FIT_IMAGE_TO_BOX);
+  
+  inputPanel.put(13, MODE_RENDER_SQUARE_PIXELS);
+  inputPanel.put(14, MODE_RENDER_SCALED_SQUARE_PIXELS);
+  inputPanel.put(15, MODE_RENDER_SOLID_SQUARE_PIXELS);
+  inputPanel.put(16, MODE_RENDER_SCRIBBLE_PIXELS);
 
-  inputPanel.put(10, LOAD_IMAGE);
-  inputPanel.put(11, MODE_MOVE_IMAGE);
-  inputPanel.put(12, MODE_RENDER_SQUARE_PIXELS);
-  inputPanel.put(13, MODE_RENDER_SCALED_SQUARE_PIXELS);
-  inputPanel.put(14, MODE_RENDER_SOLID_SQUARE_PIXELS);
-  inputPanel.put(15, MODE_RENDER_SCRIBBLE_PIXELS);
+  inputPanel.put(17, MODE_DRAW_TEST_PENWIDTH);
+//  inputPanel.put(17, MODE_DRAW_TESTPATTERN);
 
-  inputPanel.put(16, MODE_DRAW_TEST_PENWIDTH);
+  inputPanel.put(19, INS_INC_ROWSIZE);
+  inputPanel.put(20, INS_DEC_ROWSIZE);
 
-  inputPanel.put(18, INS_INC_ROWSIZE);
-  inputPanel.put(19, INS_DEC_ROWSIZE);
 
+  inputPanel.put(22, MODE_DRAW_GRID);
+  inputPanel.put(23, MODE_DRAW_OUTLINE_BOX);
+  inputPanel.put(24, MODE_DRAW_OUTLINE_BOX_ROWS);
+  inputPanel.put(25, MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
+
+//  inputPanel.put(23, MODE_INPUT_ROW_START);
+//  inputPanel.put(24, MODE_INPUT_ROW_END);
 //  inputPanel.put(20, MODE_LOAD_SD_IMAGE);
 //  inputPanel.put(21, MODE_START_ROVING);
 //  inputPanel.put(22, MODE_STOP_ROVING);
@@ -2689,26 +2733,26 @@ Map<Integer, String> buildButtonLabels()
   Map<Integer, String> result = new HashMap<Integer, String>(19);
   
   result.put(MODE_BEGIN, "Reset queue");
-  result.put(MODE_INPUT_BOX_TOP_LEFT, "Box 1");
-  result.put(MODE_INPUT_BOX_BOT_RIGHT, "Box 2");
-  result.put(MODE_DRAW_OUTLINE_BOX, "Outline box");
-  result.put(MODE_DRAW_OUTLINE_BOX_ROWS, "Outline rows");
-  result.put(MODE_DRAW_SHADE_BOX_ROWS_PIXELS, "Outline pixels");
+  result.put(MODE_INPUT_BOX_TOP_LEFT, "Select TopLeft");
+  result.put(MODE_INPUT_BOX_BOT_RIGHT, "Select BotRight");
+  result.put(MODE_DRAW_OUTLINE_BOX, "Draw Outline box");
+  result.put(MODE_DRAW_OUTLINE_BOX_ROWS, "Draw Outline rows");
+  result.put(MODE_DRAW_SHADE_BOX_ROWS_PIXELS, "Draw Outline pixels");
 
-  result.put(MODE_DRAW_TO_POSITION, "Move to");
-  result.put(MODE_RENDER_SQUARE_PIXELS, "Shade Sq");
-  result.put(MODE_RENDER_SCALED_SQUARE_PIXELS, "Shade Scaled sq");
-  result.put(MODE_RENDER_SAW_PIXELS, "Shade saw");
-  result.put(MODE_RENDER_CIRCLE_PIXELS, "Shade circ");
-  result.put(MODE_INPUT_ROW_START, "Row start");
-  result.put(MODE_INPUT_ROW_END, "Row end");
-  result.put(MODE_SET_POSITION, "Set pos");
+  result.put(MODE_DRAW_TO_POSITION, "Move pen to point");
+  result.put(MODE_RENDER_SQUARE_PIXELS, "Shade Squarewave");
+  result.put(MODE_RENDER_SCALED_SQUARE_PIXELS, "Shade Scaled Squarewave");
+  result.put(MODE_RENDER_SAW_PIXELS, "Shade sawtooth");
+  result.put(MODE_RENDER_CIRCLE_PIXELS, "Shade circular");
+  result.put(MODE_INPUT_ROW_START, "Select Row start");
+  result.put(MODE_INPUT_ROW_END, "Select Row end");
+  result.put(MODE_SET_POSITION, "Set pen position");
   
-  result.put(MODE_DRAW_GRID, "box grid");
+  result.put(MODE_DRAW_GRID, "Draw grid of box");
   result.put(MODE_DRAW_TESTPATTERN, "test pattern");
   
   result.put(PLACE_IMAGE, "place image");
-  result.put(LOAD_IMAGE, "load image");
+  result.put(LOAD_IMAGE, "Load image file");
   
   result.put(INS_INC_ROWSIZE, "Rowsize up");
   result.put(INS_DEC_ROWSIZE, "Rowsize down");
@@ -2716,7 +2760,7 @@ Map<Integer, String> buildButtonLabels()
   result.put(MODE_INPUT_SINGLE_PIXEL, "Choose pixel");
   result.put(MODE_DRAW_TEST_PENWIDTH, "Test pen widths");
   result.put(MODE_RENDER_SOLID_SQUARE_PIXELS, "Shade solid");
-  result.put(MODE_RENDER_SCRIBBLE_PIXELS, "Shade Scribble");
+  result.put(MODE_RENDER_SCRIBBLE_PIXELS, "Shade scribble");
 
   result.put(MODE_LOAD_SD_IMAGE, "upload image (SD)");
   result.put(MODE_START_ROVING, "start rove");
@@ -2733,12 +2777,13 @@ Map<Integer, String> buildButtonLabels()
   result.put(MODE_INC_SAMPLE_AREA, "Inc sample size");
   result.put(MODE_DEC_SAMPLE_AREA, "Dec sample size");
 
-  result.put(MODE_MOVE_IMAGE, "Place image");
-  result.put(MODE_CONVERT_BOX_TO_PICTUREFRAME, "Save selection");
+  result.put(MODE_MOVE_IMAGE, "Move image");
+  result.put(MODE_CONVERT_BOX_TO_PICTUREFRAME, "Set frame");
   result.put(MODE_SELECT_PICTUREFRAME, "Select frame");
   
   result.put(MODE_EXPORT_QUEUE, "Export queue");
   result.put(MODE_IMPORT_QUEUE, "Import queue");
+  result.put(MODE_FIT_IMAGE_TO_BOX, "Resize image");
 
   return result;
 }
@@ -2791,28 +2836,24 @@ void loadFromPropertiesFile()
   // initial screen size
   this.windowWidth = getIntProperty("controller.window.width", 800);
   this.windowHeight = getIntProperty("controller.window.height", 550);
-  // image filename
-  this.bitmapFilename = getStringProperty("controller.image.filename", "portrait_330.jpg");
-  
-  bitmap = loadImage(bitmapFilename);
-  if (bitmap == null)
-  {
-    println("No image file loaded.");
-  }
-  
-  
-  // image position
-  Float offsetX = getFloatProperty("controller.image.position.x", 0.0);
-  Float offsetY = getFloatProperty("controller.image.position.y", 0.0);
-  this.imageOffset = new PVector(offsetX, offsetY);
 
   // page size
   this.pageWidth = getIntProperty("controller.page.width", A3_WIDTH);
   this.pageHeight = getIntProperty("controller.page.height", A3_HEIGHT);
-  
   // page position
   this.pagePositionX = getIntProperty("controller.page.position.x", 100);
   this.pagePositionY = getIntProperty("controller.page.position.y", 120);
+
+  // image filename
+  this.bitmapFilename = getStringProperty("controller.image.filename", "portrait_330.jpg");
+  // image position
+  Float offsetX = getFloatProperty("controller.image.position.x", 0.0);
+  Float offsetY = getFloatProperty("controller.image.position.y", 0.0);
+  this.imageOffset = new PVector(offsetX, offsetY);
+  this.bitmapWidth = getIntProperty("controller.image.width", 300);
+
+  // load image
+  loadAndProcessImage(bitmapFilename, bitmapWidth);
 
   // picture frame size
   Float pfsx = getFloatProperty("controller.pictureframe.width", 200.0);
@@ -2862,6 +2903,8 @@ void savePropertiesFile()
   // image position
   props.setProperty("controller.image.position.x", new Float(imageOffset.x).toString());
   props.setProperty("controller.image.position.y", new Float(imageOffset.y).toString());
+  // image size
+  props.setProperty("controller.image.width", new Integer(bitmapWidth).toString());
 
   // page size
   props.setProperty("controller.page.width", new Integer(pageWidth).toString());
@@ -2951,5 +2994,18 @@ String getStringProperty(String id, String defVal)
 void initProperties()
 {
   getProperties();
+}
+
+void loadAndProcessImage(String filename, int width)
+{
+  this.bitmap = loadImage(filename);
+  if (bitmap == null)
+  {
+    println("No image file loaded.");
+  }
+  else
+  {
+    this.bitmap.resize(width, 0);
+  }
 }
 
