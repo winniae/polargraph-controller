@@ -13,12 +13,13 @@ import java.awt.event.KeyEvent;
 //ControlP5 controlP5;
 
 boolean drawbotReady = false;
+boolean drawbotConnected = false;
 
 String newMachineName = "PGXXABCD";
 
 final int MACHINE_SRAM = 2048;
 float stepsPerRev = 800.00;
-float mmPerRev = 95; // 84 for kitters
+float mmPerRev = 84; // 95 for me
 
 float mmPerStep = mmPerRev / stepsPerRev;
 float stepsPerMM = stepsPerRev / mmPerRev;
@@ -214,6 +215,8 @@ boolean displayingShadedCentres = true;
 boolean displayingRowGridlines = false;
 boolean displayingInfoTextOnInputPage = true;
 
+boolean useSerialPortConnection = false;
+
 static final char BITMAP_BACKGROUND_COLOUR = 0x0F;
 
 static final String filenameToLoadFromSD = "Marilyn         ";
@@ -236,13 +239,13 @@ public boolean showingDialogBox = false;
 public Integer windowWidth = 900;
 public Integer windowHeight = 550;
 
-public static Integer serialPort = 0;
+public static Integer serialPortNumber = -1;
 
 
 Properties props = null;
 public static String propertiesFilename = "polargraph.properties.txt";
 
-public static String bitmapFilename = "Marilyn1.jpg";
+public static String bitmapFilename = null;
 
 void setup()
 {
@@ -256,26 +259,46 @@ void setup()
   { 
     e.printStackTrace();   
   }   
-  println("About to load properties.");
   loadFromPropertiesFile();
-  println("Loaded properties.  Looking up serial port.");
-//  controlP5 = new ControlP5(this);
-  // Print a list of the serial ports, for debugging purposes:
-  println(Serial.list());
-  
-  String portName = null;
-  try 
+ 
+  String[] serialPorts = Serial.list();
+  println("Serial ports available on your machine:");
+  println(serialPorts);
+
+  if (getSerialPortNumber() >= 0)
   {
-    portName = Serial.list()[serialPort];
+    println("About to connect to serial port in slot " + getSerialPortNumber());
+    // Print a list of the serial ports, for debugging purposes:
+    if (serialPorts.length > 0)
+    {
+      String portName = null;
+      try 
+      {
+        portName = serialPorts[getSerialPortNumber()];
+        myPort = new Serial(this, portName, 57600);
+        //read bytes into a buffer until you get a linefeed (ASCII 10):
+        myPort.bufferUntil('\n');
+        useSerialPortConnection = true;
+        println("Successfully connected to port " + portName);
+      }
+      catch (Exception e)
+      {
+        println("Attempting to connect to serial port " 
+        + portName + " in slot " + getSerialPortNumber() 
+        + " caused an exception: " + e.getMessage());
+      }
+    }
+    else
+    {
+      println("No serial ports found.");
+      useSerialPortConnection = false;
+    }
   }
-  catch (ArrayIndexOutOfBoundsException oobe)
+  else
   {
-    portName = Serial.list()[0];
+    useSerialPortConnection = false;
   }
 
-  myPort = new Serial(this, portName, 57600);
-  //read bytes into a buffer until you get a linefeed (ASCII 10):
-  myPort.bufferUntil('\n');
 
   rebuildRows();  
   
@@ -1070,11 +1093,7 @@ void keyPressed()
   
 void mouseClicked()
 {
-  if (mouseOverMachine())
-  { // picking coords
-    machineClicked();
-  }
-  else if (mouseOverPanel())
+  if (mouseOverPanel())
   { // changing mode
     panelClicked();
   }
@@ -1082,6 +1101,10 @@ void mouseClicked()
   {// stopping or starting 
     println("queue clicked.");
     queueClicked();
+  }
+  else if (mouseOverMachine())
+  { // picking coords
+    machineClicked();
   }
 }
 
@@ -2200,7 +2223,7 @@ void rebuildRows()
     int r = rowWidth * i;
     rowSegmentsForMachine[i] = r;
     rowSegmentsForScreen[i] = int(r / stepsPerMM);
-    println("Machine Row:"+i+":"+r);
+//    println("Machine Row:"+i+":"+r);
   }
 }
 
@@ -2242,12 +2265,8 @@ void showText(int xPosOrigin, int yPosOrigin)
   text("Pixel Length B: " + inMM(getBLength()) + " (" + calcBLength + ")", textPositionX, textPositionY+(tRow*tRowNo++));
   text("Steps Length A: " + getALength(), textPositionX, textPositionY+(tRow*tRowNo++));
   text("Steps Length B: " + getBLength(), textPositionX, textPositionY+(tRow*tRowNo++));
-  
-  String dbReady = "Drawbot is BUSY!";
-  if (drawbotReady)
-    dbReady = "READY!";
 
-  text(dbReady, textPositionX, textPositionY+(tRow*tRowNo++));
+  drawStatusText(textPositionX, textPositionY+(tRow*tRowNo++));  
     
   text(commandStatus, textPositionX, textPositionY+(tRow*tRowNo++));
   text("Last sent pen width: " + currentPenWidth, textPositionX, textPositionY+(tRow*tRowNo++));
@@ -2285,10 +2304,49 @@ void showText(int xPosOrigin, int yPosOrigin)
 
 }
 
-void showCommandQueue(int xPos, int yPos)
+void drawStatusText(int x, int y)
+{
+  String drawbotStatus = null;
+  
+  if (useSerialPortConnection)
+  {
+    if (isDrawbotConnected())
+    {
+      if (drawbotReady)
+      {
+        fill(0, 200, 0);
+        drawbotStatus = "READY!";
+      }
+      else
+      {
+        fill(200, 200, 0);
+        drawbotStatus = "BUSY!";
+      }  
+    }
+    else
+    {
+      fill(255, 0, 0);
+      drawbotStatus = "Drawbot is not connected.";
+    }  
+  }
+  else
+  {
+    fill(255, 0, 0);
+    drawbotStatus = "No serial connection.";
+  }
+  
+  text(drawbotStatus, x, y);
+  fill(255);
+}
+
+void setCommandQueueFont()
 {
   textSize(12);
   fill(255);
+}  
+void showCommandQueue(int xPos, int yPos)
+{
+  setCommandQueueFont();
   int tRow = 15;
   int textPositionX = xPos;
   int textPositionY = yPos;
@@ -2300,8 +2358,8 @@ void showCommandQueue(int xPos, int yPos)
   leftEdgeOfQueue = textPositionX;
   rightEdgeOfQueue = textPositionX+300;
   bottomEdgeOfQueue = height;
-
-  text("CommandQueue: " + commandQueueStatusText(), textPositionX, commandQueuePos);
+  
+  drawCommandQueueStatus(textPositionX, commandQueuePos);
   commandQueuePos+=queueRowHeight;
   text("Last command: " + ((commandHistory.isEmpty()) ? "-" : commandHistory.get(commandHistory.size()-1)), textPositionX, commandQueuePos);
   commandQueuePos+=queueRowHeight;
@@ -2315,6 +2373,25 @@ void showCommandQueue(int xPos, int yPos)
     text((queueNumber--)+". "+ s, textPositionX, commandQueuePos);
     commandQueuePos+=queueRowHeight;
   }
+}
+
+void drawCommandQueueStatus(int x, int y)
+{
+  String queueStatus = null;
+  textSize(14);
+  if (commandQueueRunning)
+  {
+    queueStatus = "RUNNING - click to pause";
+    fill(0, 200, 0);
+  }
+  else
+  {
+    queueStatus = "PAUSED - click to start";
+    fill(255, 0, 0);
+  }
+
+  text("CommandQueue: " + queueStatus, x, y);
+  setCommandQueueFont();
 }
 
 long getCurrentPixelTime()
@@ -2400,14 +2477,6 @@ int getPixelsRemaining()
 }
 
 
-String commandQueueStatusText()
-{
-  if (commandQueueRunning)
-    return "RUNNING - click to pause";
-  else
-    return "PAUSED - click to start";
-}
-
 float getBoxWidth()
 {
   if (boxVector1 != null && boxVector2 != null)
@@ -2477,6 +2546,9 @@ void serialEvent(Serial myPort)
     drawbotReady = false;
   else if (incoming.startsWith("MEMORY"))
     extractMemoryUsage(incoming);
+
+  if (drawbotReady)
+    drawbotConnected = true;
 
 }
 
@@ -2617,6 +2689,10 @@ void stopPixelTimer()
 boolean isDrawbotReady()
 {
   return drawbotReady;
+}
+boolean isDrawbotConnected()
+{
+  return drawbotConnected;
 }
 
 Map<Integer, Map<Integer, Integer>> buildPanels()
@@ -2800,7 +2876,11 @@ Properties getProperties()
       
       File propertiesFile = new File(fileToLoad);
       if (!propertiesFile.exists())
+      {
+        println("saving.");
         savePropertiesFile();
+        println("saved.");
+      }
       
       propertiesFileStream = new FileInputStream(propertiesFile);
       props.load(propertiesFileStream);
@@ -2814,7 +2894,7 @@ Properties getProperties()
     finally
     {
       try { propertiesFileStream.close();}
-      catch (Exception e) {};
+      catch (Exception e) {println(e.getMessage());};
     }
   }
   return props;
@@ -2828,7 +2908,7 @@ void loadFromPropertiesFile()
   // pen size
   this.currentPenWidth = getFloatProperty("machine.pen.size", 1.0);
   // serial port
-  this.serialPort = getIntProperty("controller.machine.serialport", 0);
+  this.serialPortNumber = getIntProperty("controller.machine.serialport", 0);
 
   // row size
   this.rowWidth = getIntProperty("controller.row.size", 100);
@@ -2890,7 +2970,7 @@ void savePropertiesFile()
   // pen size
   props.setProperty("machine.pen.size", new Float(currentPenWidth).toString());
   // serial port
-  props.setProperty("controller.machine.serialport", new Integer(serialPort).toString());
+  props.setProperty("controller.machine.serialport", getSerialPortNumber().toString());
 
   // row size
   props.setProperty("controller.row.size", new Integer(rowWidth).toString());
@@ -2899,7 +2979,7 @@ void savePropertiesFile()
   props.setProperty("controller.window.width", new Integer(width).toString());
   props.setProperty("controller.window.height", new Integer(height).toString());
   // image filename
-  props.setProperty("controller.image.filename", bitmapFilename);
+  props.setProperty("controller.image.filename", (bitmapFilename==null) ? "" : bitmapFilename);
   // image position
   props.setProperty("controller.image.position.x", new Float(imageOffset.x).toString());
   props.setProperty("controller.image.position.y", new Float(imageOffset.y).toString());
@@ -2920,7 +3000,6 @@ void savePropertiesFile()
   // picture frame position
   props.setProperty("controller.pictureframe.position.x", new Float(pictureFrameOffset.x).toString());
   props.setProperty("controller.pictureframe.position.y", new Float(pictureFrameOffset.y).toString());
-  props.setProperty("controller.machine.serialport", serialPort.toString());
   
   props.setProperty("machine.motors.stepsPerRev", new Float(stepsPerRev).toString());
   props.setProperty("machine.motors.mmPerRev", new Float(mmPerRev).toString());
@@ -2967,7 +3046,7 @@ void savePropertiesFile()
       {
         propertiesOutput.close();
       }
-      catch (Exception e2) {}
+      catch (Exception e2) {println("what now!"+e2.getMessage());}
     }
   }
 }
@@ -2989,6 +3068,11 @@ float getFloatProperty(String id, float defVal)
 String getStringProperty(String id, String defVal)
 {
   return getProperties().getProperty(id, defVal);
+}
+
+Integer getSerialPortNumber()
+{
+  return this.serialPortNumber;
 }
   
 void initProperties()
