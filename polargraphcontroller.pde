@@ -140,8 +140,7 @@ static final int MODE_START_ROVING = 30;
 static final int MODE_STOP_ROVING = 31;
 static final int MODE_SET_ROVE_AREA = 32;
 static final int MODE_CREATE_MACHINE_TEXT_BITMAP = 34;
-static final int MODE_CHANGE_MACHINE_SIZE = 35;
-static final int MODE_CHANGE_MACHINE_NAME = 36;
+static final int MODE_CHANGE_MACHINE_SPEC = 35;
 static final int MODE_REQUEST_MACHINE_SIZE = 37;
 static final int MODE_RESET_MACHINE = 38;
 static final int MODE_SAVE_PROPERTIES = 39;
@@ -184,6 +183,10 @@ static final String CMD_CHANGEMACHINENAME = "C25,";
 static final String CMD_REQUESTMACHINESIZE = "C26,";
 static final String CMD_RESETMACHINE = "C27,";
 static final String CMD_DRAWDIRECTIONTEST = "C28,";
+static final String CMD_CHANGEMACHINEMMPERREV = "C29,";
+static final String CMD_CHANGEMACHINESTEPSPERREV = "C30,";
+static final String CMD_SETMOTORSPEED = "C31,";
+static final String CMD_SETMOTORACCEL = "C32,";
 
 //String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
 String testPenWidthCommand = CMD_TESTPENWIDTHSQUARE;
@@ -927,7 +930,8 @@ void loadImageWithFileChooser()
 boolean isAcceptableImageFormat(File file)
 {
   String filename = file.getName();
-  if (filename.endsWith ("jpg") || filename.endsWith ("jpeg") || filename.endsWith ("png"))
+  if (filename.endsWith ("jpg") || filename.endsWith ("jpeg") || filename.endsWith ("png")
+  || filename.endsWith ("JPG") || filename.endsWith ("JPEG") || filename.endsWith ("PNG"))
     return true;
   else
     return false;
@@ -1272,11 +1276,8 @@ void panelClicked()
     case MODE_LOAD_SD_IMAGE:
       loadImageFromSD();
       break;
-    case MODE_CHANGE_MACHINE_SIZE:
-      sendNewMachineSize();
-      break;
-    case MODE_CHANGE_MACHINE_NAME:
-      sendNewMachineName();
+    case MODE_CHANGE_MACHINE_SPEC:
+      sendMachineSpec();
       break;
     case MODE_REQUEST_MACHINE_SIZE:
       sendRequestMachineSize();
@@ -1407,16 +1408,16 @@ void sendRequestMachineSize()
   String command = CMD_REQUESTMACHINESIZE + "END";
   commandQueue.add(command);
 }
-void sendNewMachineSize()
-{
-  // ask for input to get the new machine size
-  String command = CMD_CHANGEMACHINESIZE+machineWidth+","+machineHeight+",END";
-  commandQueue.add(command);
-}
-void sendNewMachineName()
+void sendMachineSpec()
 {
   // ask for input to get the new machine size
   String command = CMD_CHANGEMACHINENAME+newMachineName+",END";
+  commandQueue.add(command);
+  command = CMD_CHANGEMACHINESIZE+machineWidth+","+machineHeight+",END";
+  commandQueue.add(command);
+  command = CMD_CHANGEMACHINEMMPERREV+mmPerRev+",END";
+  commandQueue.add(command);
+  command = CMD_CHANGEMACHINESTEPSPERREV+stepsPerRev+",END";
   commandQueue.add(command);
 }
 
@@ -2786,8 +2787,7 @@ Map<Integer, Map<Integer, Integer>> buildPanels()
 //  detailsPanel.put(11, MODE_START_ROVING);
 //  detailsPanel.put(12, MODE_STOP_ROVING);
 //  detailsPanel.put(13, MODE_SET_ROVE_AREA);
-  detailsPanel.put(14, MODE_CHANGE_MACHINE_SIZE);
-//  detailsPanel.put(15, MODE_CHANGE_MACHINE_NAME);
+  detailsPanel.put(14, MODE_CHANGE_MACHINE_SPEC);
   detailsPanel.put(16, MODE_REQUEST_MACHINE_SIZE);
   detailsPanel.put(17, MODE_RESET_MACHINE);
   detailsPanel.put(18, MODE_SAVE_PROPERTIES);
@@ -2844,9 +2844,8 @@ Map<Integer, String> buildButtonLabels()
   result.put(MODE_SET_ROVE_AREA, "set rove area");
   result.put(MODE_CREATE_MACHINE_TEXT_BITMAP, "render as text");
   
-  result.put(MODE_CHANGE_MACHINE_SIZE, "Upload size");
-  result.put(MODE_CHANGE_MACHINE_NAME, "Upload name");
-  result.put(MODE_REQUEST_MACHINE_SIZE, "Download size");
+  result.put(MODE_CHANGE_MACHINE_SPEC, "Upload machine spec");
+  result.put(MODE_REQUEST_MACHINE_SIZE, "Download size spec");
   result.put(MODE_RESET_MACHINE, "Reset machine");
   result.put(MODE_SAVE_PROPERTIES, "Save properties");
   
