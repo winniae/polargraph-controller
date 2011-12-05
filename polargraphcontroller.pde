@@ -98,8 +98,21 @@ List<String> commandHistory = new ArrayList<String>();
 
 String lastCommand = "";
 Boolean commandQueueRunning = false;
+static final int DRAW_DIR_NE = 1;
+static final int DRAW_DIR_SE = 2;
+static final int DRAW_DIR_SW = 3;
+static final int DRAW_DIR_NW = 4;
+static final int DRAW_DIR_N = 5;
+static final int DRAW_DIR_E = 6;
+static final int DRAW_DIR_S = 7;
+static final int DRAW_DIR_W = 8;
+static int drawDirection = DRAW_DIR_SE;
 
-String drawDirection = "LTR";
+static final int DRAW_DIR_MODE_AUTO = 1;
+static final int DRAW_DIR_MODE_PRESET = 2;
+static final int DRAW_DIR_MODE_RANDOM = 3;
+static int pixelDirectionMode = DRAW_DIR_MODE_PRESET;
+
 
 PVector currentMachinePos = new PVector();
 int machineAvailMem = 0;
@@ -1573,7 +1586,7 @@ void sendSawtoothPixels()
 {
   for (List<PVector> row : pixelCentresForMachine)
   {
-    if (drawDirection == "LTR")
+    if (drawDirection == DRAW_DIR_SE)
     {
       for (PVector v : row) // left to right
       {
@@ -1599,7 +1612,7 @@ void sendSawtoothPixels()
       }
     }
     flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
     commandQueue.add(command);
   }
 }
@@ -1608,7 +1621,7 @@ void sendCircularPixels()
 {
   for (List<PVector> row : pixelCentresForMachine)
   {
-    if (drawDirection == "LTR")
+    if (drawDirection == DRAW_DIR_SE)
     {
       for (PVector v : row) // left to right
       {
@@ -1634,7 +1647,7 @@ void sendCircularPixels()
       }
     }
     flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
     commandQueue.add(command);
   }
 }
@@ -1657,9 +1670,11 @@ int scaleDensity(int inDens, int inMax, int outMax)
 void sendScaledSquarePixels()
 {
   commandQueue.add(CMD_PENDOWN+"END");
+  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
+  commandQueue.add(changeDir);
   for (List<PVector> row : pixelCentresForMachine)
   {
-    if (drawDirection == "LTR")
+    if (drawDirection == DRAW_DIR_SE)
     {
       for (PVector v : row) // left to right
       {
@@ -1688,7 +1703,7 @@ void sendScaledSquarePixels()
       }
     }
     flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
     commandQueue.add(command);
   }
   commandQueue.add(CMD_PENUP+"END");
@@ -1699,9 +1714,11 @@ void sendScaledSquarePixels()
 void sendSolidSquarePixels()
 {
   commandQueue.add(CMD_PENDOWN+"END");
+  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
+  commandQueue.add(changeDir);
   for (List<PVector> row : pixelCentresForMachine)
   {
-    if (drawDirection == "LTR")
+    if (drawDirection == DRAW_DIR_SE)
     {
       for (PVector v : row) // left to right
       {
@@ -1726,7 +1743,7 @@ void sendSolidSquarePixels()
       }
     }
     flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
     commandQueue.add(command);
   }
   commandQueue.add(CMD_PENUP+"END");
@@ -1737,12 +1754,12 @@ void sendSolidSquarePixels()
 void sendSquarePixels()
 {
   commandQueue.add(CMD_PENDOWN+"END");
-  String changeDir = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
+  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
   commandQueue.add(changeDir);
 
   for (List<PVector> row : pixelCentresForMachine)
   {
-    if (drawDirection == "LTR")
+    if (drawDirection == DRAW_DIR_SE)
     {
       for (PVector v : row) // left to right
       {
@@ -1769,7 +1786,7 @@ void sendSquarePixels()
       }
     }
     flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
     commandQueue.add(command);
   }
   
@@ -1778,13 +1795,19 @@ void sendSquarePixels()
   startPixelTimer();
 }
 
+int getPixelDirectionMode()
+{
+  return pixelDirectionMode;
+}
 void sendScribblePixels()
 {
   commandQueue.add(CMD_PENDOWN+"END");
+  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
+  commandQueue.add(changeDir);
 
   for (List<PVector> row : pixelCentresForMachine)
   {
-    if (drawDirection == "LTR")
+    if (drawDirection == DRAW_DIR_SE)
     {
       for (PVector v : row) // left to right
       {
@@ -1811,7 +1834,7 @@ void sendScribblePixels()
       }
     }
     flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+"A," + drawDirection +",END";
+    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
     commandQueue.add(command);
   }
   
@@ -2230,10 +2253,21 @@ void rebuildRows()
 
 void flipDirection()
 {
-  if (drawDirection.equals("LTR"))
-    drawDirection = "RTL";
-  else
-    drawDirection = "LTR";
+  switch (drawDirection)
+  {
+    case DRAW_DIR_SE:  
+      drawDirection = DRAW_DIR_NW; 
+      break;
+    case DRAW_DIR_SW:  
+      drawDirection = DRAW_DIR_NE; 
+      break;
+    case DRAW_DIR_NW:  
+      drawDirection = DRAW_DIR_SE; 
+      break;
+    case DRAW_DIR_NE:
+      drawDirection = DRAW_DIR_SW; 
+      break;
+  }
 }
 
 void resetQueue()
@@ -2526,7 +2560,6 @@ void serialEvent(Serial myPort)
   // read the serial buffer:
   String incoming = myPort.readStringUntil('\n');
   myPort.clear();
-
   // if you got any bytes other than the linefeed:
   incoming = trim(incoming);
   println("incoming: " + incoming);
@@ -2550,7 +2583,6 @@ void serialEvent(Serial myPort)
 
   if (drawbotReady)
     drawbotConnected = true;
-
 }
 
 void extractMemoryUsage(String mem)
