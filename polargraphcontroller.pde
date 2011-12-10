@@ -36,6 +36,9 @@ final int A3_HEIGHT = 420;
 final int A2_WIDTH = 418;
 final int A2_HEIGHT = 594;
 
+final int A2_IMP_WIDTH = 450;
+final int A2_IMP_HEIGHT = 640;
+
 final int A1_WIDTH = 594;
 final int A1_HEIGHT = 841;
 
@@ -1088,14 +1091,18 @@ void keyPressed()
   {
     currentPenWidth = currentPenWidth+penIncrement;
     currentPenWidth =  Math.round(currentPenWidth*100.0)/100.0;
-    DecimalFormat df = new DecimalFormat("###.##");
+    NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+    DecimalFormat df = (DecimalFormat)nf;  
+    df.applyPattern("###.##");
     realtimeCommandQueue.add(CMD_CHANGEPENWIDTH+df.format(currentPenWidth)+",END");
   }
   else if (key == '[')
   {
     currentPenWidth = currentPenWidth-penIncrement;
     currentPenWidth =  Math.round(currentPenWidth*100.0)/100.0;
-    DecimalFormat df = new DecimalFormat("###.##");
+    NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+    DecimalFormat df = (DecimalFormat)nf;  
+    df.applyPattern("###.##");
     realtimeCommandQueue.add(CMD_CHANGEPENWIDTH+df.format(currentPenWidth)+",END");
   }
   else if (key == '#')
@@ -1554,7 +1561,9 @@ void sendTestPattern()
 
 void sendTestPenWidth()
 {
-  DecimalFormat df = new DecimalFormat("##0.##");
+  NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+  DecimalFormat df = (DecimalFormat)nf;  
+  df.applyPattern("##0.##");
   StringBuilder sb = new StringBuilder();
   sb.append(testPenWidthCommand)
     .append(int(rowWidth))
