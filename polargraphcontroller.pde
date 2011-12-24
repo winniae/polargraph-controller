@@ -178,6 +178,7 @@ static final int MODE_IMPORT_QUEUE = 47;
 static final int MODE_CLEAR_QUEUE = 48;
 static final int MODE_FIT_IMAGE_TO_BOX = 49;
 static final int MODE_DRAW_DIRECT = 50;
+static final int MODE_RENDER_COMMAND_QUEUE = 51;
 
 
 static final String CMD_CHANGELENGTH = "C01,";
@@ -592,6 +593,9 @@ void drawCommandQueuePage()
   rect(panelPositionX+panelWidth+5, 0, width, height);
   
   showCommandQueue(40, 60);
+  
+  previewQueue();
+  
 }
 
 void drawImageLoadPage()
@@ -1427,8 +1431,39 @@ void panelClicked()
     case MODE_IMPORT_QUEUE:
       importQueueFromFile();
       break;
+    case MODE_RENDER_COMMAND_QUEUE:
+      previewQueue();
+      break;
     default:
       break;
+  }
+}
+
+/**
+  This will comb the command queue and attempt to draw a picture of what it contains.
+  Coordinates here are in pixels.
+*/
+void previewQueue()
+{
+  PVector startPoint = new PVector(machineWidth/2, pagePositionY);
+  
+  for (String command : commandQueue)
+  {
+    if (command.startsWith(CMD_CHANGELENGTHDIRECT))
+    {
+      String[] splitted = split(command, ",");
+      if (splitted.length == 5)
+      {
+        String aLenStr = splitted[1];
+        String bLenStr = splitted[2];
+        int aLen = inMM(Integer.parseInt(aLenStr));
+        int bLen = inMM(Integer.parseInt(bLenStr));
+        PVector endPoint = getCartesian(aLen, bLen);
+        stroke(255);
+        line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+        startPoint = endPoint;
+      }
+    }
   }
 }
 
@@ -2982,6 +3017,7 @@ Map<Integer, Map<Integer, Integer>> buildPanels()
 
   Map<Integer, Integer> queuePanel = new HashMap<Integer, Integer>(30);
   queuePanel.put(0, MODE_BEGIN);
+  queuePanel.put(5, MODE_RENDER_COMMAND_QUEUE);
   queuePanel.put(6, MODE_EXPORT_QUEUE);
   queuePanel.put(7, MODE_IMPORT_QUEUE);
   
@@ -3046,6 +3082,8 @@ Map<Integer, String> buildButtonLabels()
   result.put(MODE_EXPORT_QUEUE, "Export queue");
   result.put(MODE_IMPORT_QUEUE, "Import queue");
   result.put(MODE_FIT_IMAGE_TO_BOX, "Resize image");
+  
+  result.put(MODE_RENDER_COMMAND_QUEUE, "Preview queue");
 
   return result;
 }
