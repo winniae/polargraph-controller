@@ -19,7 +19,7 @@ String newMachineName = "PGXXABCD";
 
 final int MACHINE_SRAM = 2048;
 float stepsPerRev = 800.00;
-float mmPerRev = 84; // 95 for me
+float mmPerRev = 95;
 
 float mmPerStep = mmPerRev / stepsPerRev;
 float stepsPerMM = stepsPerRev / mmPerRev;
@@ -86,6 +86,12 @@ int sampleArea = 10;
 int rowWidth = 75;
 float currentPenWidth = 1.2;
 float penIncrement = 0.05;
+
+float currentMachineMaxSpeed = 600.0;
+float currentMachineAccel = 400.0;
+float MACHINE_ACCEL_INCREMENT = 25.0;
+float MACHINE_MAXSPEED_INCREMENT = 25.0;
+
 final int TOTAL_ROW_WIDTH = inSteps(1200);
 int rows = TOTAL_ROW_WIDTH / rowWidth;
 
@@ -118,6 +124,7 @@ static int pixelDirectionMode = DRAW_DIR_MODE_PRESET;
 
 
 PVector currentMachinePos = new PVector();
+PVector currentCartesianMachinePos = new PVector();
 int machineAvailMem = 0;
 int machineUsedMem = 0;
 int machineMinAvailMem = 2048;
@@ -170,6 +177,7 @@ static final int MODE_EXPORT_QUEUE = 46;
 static final int MODE_IMPORT_QUEUE = 47;
 static final int MODE_CLEAR_QUEUE = 48;
 static final int MODE_FIT_IMAGE_TO_BOX = 49;
+static final int MODE_DRAW_DIRECT = 50;
 
 
 static final String CMD_CHANGELENGTH = "C01,";
@@ -188,7 +196,7 @@ static final String CMD_PENDOWN = "C13,";
 static final String CMD_PENUP = "C14,";
 static final String CMD_DRAWSAWPIXEL = "C15,";
 static final String CMD_DRAWROUNDPIXEL = "C16,";
-static final String CMD_GOTOCOORDS = "C17,";
+static final String CMD_CHANGELENGTHDIRECT = "C17,";
 static final String CMD_TXIMAGEBLOCK = "C18,";
 static final String CMD_STARTROVE = "C19,";
 static final String CMD_STOPROVE = "C20,";
@@ -209,6 +217,9 @@ String testPenWidthCommand = CMD_TESTPENWIDTHSQUARE;
 float testPenWidthStartSize = 0.5;
 float testPenWidthEndSize = 2.0;
 float testPenWidthIncrementSize = 0.5;
+
+int maxSegmentLength = 20;
+
 
 Map<Integer, String> buttonLabels = buildButtonLabels();
 
@@ -323,10 +334,18 @@ void setup()
   
   currentMode = MODE_BEGIN;
   
-  //commandQueue.add(CMD_CHANGEPENWIDTH+currentPenWidth+",END");
+  preLoadCommandQueue();
 
   frame.setSize(machineWidth*2+panelWidth+20, 1020);
   size(windowWidth, windowHeight);
+}
+
+void preLoadCommandQueue()
+{
+  commandQueue.add(CMD_CHANGEPENWIDTH+currentPenWidth+",END");
+  commandQueue.add(CMD_SETMOTORSPEED+currentMachineMaxSpeed+",END");
+  commandQueue.add(CMD_SETMOTORACCEL+currentMachineAccel+",END");
+  
 }
 
 Float centreImagePos()
@@ -608,9 +627,39 @@ void showPictureFrame()
 
   stroke (255, 0, 128);
   ellipse(pictureFrameOffset.x, pictureFrameOffset.y+pictureFrameSize.y, 10, 10);
+  
+  
+//  interpolateBetween(pictureFrameOffset.x, pictureFrameSize);
+  
 
   stroke(255);
 }
+
+//void interpolateBetween(float p1x, float p1y, float p2x, float p2y)
+//{
+//  PVector p2 = new PVector(p1.x, p1.y);
+//  p2.add(size);
+//  
+//  // ok, we're going to draw some dots between p1 and p2.  Using maths. I know!
+//  
+//  // first one
+////  ellipse(p1.x, p1.y, 2, 2);
+//  float n = 1.0;
+//  for (float i=0.0; i<=n; i+=0.1)
+//  {
+//    float v = i / n;
+//    println(i + ". v: " + v);
+//
+//    // x value
+//    float newPosX = (p1.x * v) + (p2.x * (1 - v));
+//    // y value
+//    float newPosY = (p1.y * v) + (p2.y * (1 - v));
+//    ellipse(newPosX, newPosY, 2, 2);
+//  }
+//  
+//  // last one
+////  ellipse(p2.x, p2.y, 2, 2);
+//}
 
 void showCurrentMachinePosition()
 {
@@ -618,6 +667,10 @@ void showCurrentMachinePosition()
   fill(255,0,255,150);
   PVector cartesian = getCartesian(inMM(currentMachinePos.x), inMM(currentMachinePos.y));
   ellipse(cartesian.x, cartesian.y, 20, 20);
+
+  fill(255,255,0,150);
+  ellipse(currentCartesianMachinePos.x, currentCartesianMachinePos.y, 20, 20);
+
   noFill();
 }
 
@@ -1080,13 +1133,41 @@ void keyPressed()
   else if (key == 'i' || key == 'I')
     displayingInfoTextOnInputPage = (displayingInfoTextOnInputPage) ? false : true;
   else if (key == '+')
-    realtimeCommandQueue.add(CMD_CHANGEMOTORSPEED+"25,END");  
+  {
+    currentMachineMaxSpeed = currentMachineMaxSpeed+MACHINE_MAXSPEED_INCREMENT;
+    currentMachineMaxSpeed =  Math.round(currentMachineMaxSpeed*100.0)/100.0;
+    NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+    DecimalFormat df = (DecimalFormat)nf;  
+    df.applyPattern("###.##");
+    realtimeCommandQueue.add(CMD_SETMOTORSPEED+df.format(currentMachineMaxSpeed)+",END");
+  }
   else if (key == '-')
-    realtimeCommandQueue.add(CMD_CHANGEMOTORSPEED+"-25,END");  
+  {
+    currentMachineMaxSpeed = currentMachineMaxSpeed+(0.0 - MACHINE_MAXSPEED_INCREMENT);
+    currentMachineMaxSpeed =  Math.round(currentMachineMaxSpeed*100.0)/100.0;
+    NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+    DecimalFormat df = (DecimalFormat)nf;  
+    df.applyPattern("###.##");
+    realtimeCommandQueue.add(CMD_SETMOTORSPEED+df.format(currentMachineMaxSpeed)+",END");
+  }
   else if (key == '*')
-    realtimeCommandQueue.add(CMD_CHANGEMOTORACCEL+"25,END");  
+  {
+    currentMachineAccel = currentMachineAccel+MACHINE_ACCEL_INCREMENT;
+    currentMachineAccel =  Math.round(currentMachineAccel*100.0)/100.0;
+    NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+    DecimalFormat df = (DecimalFormat)nf;  
+    df.applyPattern("###.##");
+    realtimeCommandQueue.add(CMD_SETMOTORACCEL+df.format(currentMachineAccel)+",END");
+  }
   else if (key == '/')
-    realtimeCommandQueue.add(CMD_CHANGEMOTORACCEL+"-25,END");  
+  {
+    currentMachineAccel = currentMachineAccel+(0.0 - MACHINE_ACCEL_INCREMENT);
+    currentMachineAccel =  Math.round(currentMachineAccel*100.0)/100.0;
+    NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+    DecimalFormat df = (DecimalFormat)nf;  
+    df.applyPattern("###.##");
+    realtimeCommandQueue.add(CMD_SETMOTORACCEL+df.format(currentMachineAccel)+",END");
+  }
   else if (key == ']')
   {
     currentPenWidth = currentPenWidth+penIncrement;
@@ -1105,13 +1186,22 @@ void keyPressed()
     df.applyPattern("###.##");
     realtimeCommandQueue.add(CMD_CHANGEPENWIDTH+df.format(currentPenWidth)+",END");
   }
-  else if (key == '#')
+  else if (key == '#' )
   {
     realtimeCommandQueue.add(CMD_PENUP+"END");
   }
   else if (key == '~')
   {
     realtimeCommandQueue.add(CMD_PENDOWN+"END");
+  }
+  else if (key == '<' || key == ',')
+  {
+    if (this.maxSegmentLength > 4)
+      this.maxSegmentLength--;
+  }
+  else if (key == '>' || key == '.')
+  {
+    this.maxSegmentLength++;
   }
 }
   
@@ -1171,8 +1261,11 @@ void machineClicked()
       setRowsVector2();
       extractRows();
       break;
+    case MODE_DRAW_DIRECT:
+      sendMoveToPosition(true);
+      break;
     case MODE_DRAW_TO_POSITION:
-      sendMoveToPosition();
+      sendMoveToPosition(false);
       break;
     case MODE_MOVE_IMAGE:
       imageOffset.x = mouseX - (new Float(bitmap.width)/2);
@@ -1274,7 +1367,6 @@ void panelClicked()
       break;
     case MODE_SET_POSITION:
       break;
-      
     case MODE_DRAW_TESTPATTERN:
       sendTestPattern();
       break;
@@ -1395,6 +1487,7 @@ void queueClicked()
 {
   int relativeCoord = (mouseY-topEdgeOfQueue);
   int rowClicked = relativeCoord / queueRowHeight;
+  int totalCommands = commandQueue.size()+realtimeCommandQueue.size();
   
   if (rowClicked < 1) // its the header - start or stop queue
   {
@@ -1403,9 +1496,9 @@ void queueClicked()
     else
       commandQueueRunning = true;
   }
-  else if (rowClicked > 2 && rowClicked < commandQueue.size()+3) // it's a command from the queue
+  else if (rowClicked > 2 && rowClicked < totalCommands+3) // it's a command from the queue
   {
-    int cmdNumber = rowClicked-3;
+    int cmdNumber = rowClicked-2;
     if (commandQueueRunning)
     {
       // if its running, then clicking on a command will mark it as a pause point
@@ -1413,7 +1506,20 @@ void queueClicked()
     else
     {
       // if it's not running, then clicking on a command row will remove it
-      commandQueue.remove(cmdNumber);
+      if (!realtimeCommandQueue.isEmpty())
+      {
+        if (cmdNumber <= realtimeCommandQueue.size())
+          realtimeCommandQueue.remove(cmdNumber-1);
+        else  
+        {
+          cmdNumber-=(realtimeCommandQueue.size()+1);
+          commandQueue.remove(cmdNumber);
+        }        
+      }
+      else
+      {
+        commandQueue.remove(cmdNumber-1);
+      }
     }
   }
 }
@@ -1547,10 +1653,20 @@ void renderToFile()
 }
 
 
-void sendMoveToPosition()
+void sendMoveToPosition(boolean direct)
 {
-  String command = CMD_CHANGELENGTH+getALength()+","+getBLength()+",END";
+  String command = null;
+  if (direct)
+    command = CMD_CHANGELENGTHDIRECT+getALength()+","+getBLength()+","+getMaxSegmentLength()+",END";
+  else
+    command = CMD_CHANGELENGTH+getALength()+","+getBLength()+",END";
+  
   commandQueue.add(command);
+}
+
+int getMaxSegmentLength()
+{
+  return this.maxSegmentLength;
 }
 
 void sendTestPattern()
@@ -1995,23 +2111,23 @@ void sendOutlineOfBox()
 {
   // convert cartesian to native format
   PVector coords = getNativeCoords(boxVector1);
-  String command = CMD_CHANGELENGTH+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  String command = CMD_CHANGELENGTHDIRECT+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector2.x, boxVector1.y);
-  command = CMD_CHANGELENGTH+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_CHANGELENGTHDIRECT+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector2);
-  command = CMD_CHANGELENGTH+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_CHANGELENGTHDIRECT+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector1.x, boxVector2.y);
-  command = CMD_CHANGELENGTH+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_CHANGELENGTHDIRECT+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 
   coords = getNativeCoords(boxVector1);
-  command = CMD_GOTOCOORDS+inSteps(coords.x)+","+inSteps(coords.y)+",END";
+  command = CMD_CHANGELENGTHDIRECT+inSteps(coords.x)+","+inSteps(coords.y)+",END";
   commandQueue.add(command);
 }
 
@@ -2290,7 +2406,7 @@ void showText(int xPosOrigin, int yPosOrigin)
 {
   noStroke();
   fill(0, 0, 0, 80);
-  rect(xPosOrigin-4, yPosOrigin-4, xPosOrigin+250, yPosOrigin+350);
+  rect(xPosOrigin-4, yPosOrigin-4, xPosOrigin+250, yPosOrigin+370);
   
   
   textSize(12);
@@ -2313,7 +2429,6 @@ void showText(int xPosOrigin, int yPosOrigin)
   drawStatusText(textPositionX, textPositionY+(tRow*tRowNo++));  
     
   text(commandStatus, textPositionX, textPositionY+(tRow*tRowNo++));
-  text("Last sent pen width: " + currentPenWidth, textPositionX, textPositionY+(tRow*tRowNo++));
   
   text("Mode: " + currentMode, textPositionX, textPositionY+(tRow*tRowNo++));
 
@@ -2345,6 +2460,13 @@ void showText(int xPosOrigin, int yPosOrigin)
 //  text("RowsVector2: " + rowsVector2, textPositionX, textPositionY+(tRow*tRowNo++));
 
   text("Pixel sample area: " + sampleArea, textPositionX, textPositionY+(tRow*tRowNo++));
+  text("Max line segment length: " + getMaxSegmentLength(), textPositionX, textPositionY+(tRow*tRowNo++));
+
+  tRowNo++;
+  text("Machine settings:", textPositionX, textPositionY+(tRow*tRowNo++));
+  text("Last sent pen width: " + currentPenWidth, textPositionX, textPositionY+(tRow*tRowNo++));
+  text("Last sent speed: " + currentMachineMaxSpeed, textPositionX, textPositionY+(tRow*tRowNo++));
+  text("Last sent accel: " + currentMachineAccel, textPositionX, textPositionY+(tRow*tRowNo++));
 
 }
 
@@ -2410,8 +2532,15 @@ void showCommandQueue(int xPos, int yPos)
   text("Current command: " + lastCommand, textPositionX, commandQueuePos);
   commandQueuePos+=queueRowHeight;
   
+  fill(128,255,255);
+  int queueNumber = commandQueue.size()+realtimeCommandQueue.size();
+  for (String s : realtimeCommandQueue)
+  {
+    text((queueNumber--)+". "+ s, textPositionX, commandQueuePos);
+    commandQueuePos+=queueRowHeight;
+  }
   
-  int queueNumber = commandQueue.size();
+  fill(255);
   for (String s : commandQueue)
   {
     text((queueNumber--)+". "+ s, textPositionX, commandQueuePos);
@@ -2577,6 +2706,8 @@ void serialEvent(Serial myPort)
     drawbotReady = true;
   else if (incoming.startsWith("SYNC"))
     readMachinePosition(incoming);
+  else if (incoming.startsWith("CARTESIAN"))
+    readCartesianMachinePosition(incoming);
   else if (incoming.startsWith("PGNAME"))
     readMachineName(incoming);
   else if (incoming.startsWith("PGSIZE"))
@@ -2617,6 +2748,19 @@ void readMachinePosition(String sync)
     Float b = Float.valueOf(currentBPos).floatValue();
     currentMachinePos.x = a;
     currentMachinePos.y = b;  
+  }
+}
+void readCartesianMachinePosition(String sync)
+{
+  String[] splitted = split(sync, ",");
+  if (splitted.length == 4)
+  {
+    String currentAPos = splitted[1];
+    String currentBPos = splitted[2];
+    Float a = Float.valueOf(currentAPos).floatValue();
+    Float b = Float.valueOf(currentBPos).floatValue();
+    currentCartesianMachinePos.x = a;
+    currentCartesianMachinePos.y = b;  
   }
 }
 
@@ -2665,7 +2809,7 @@ void respondToAckCommand(String ack)
     // try again!!!!
     if (lastCommand == null || lastCommand.equals(""))
     {
-      println("Last command has been badly acknowledges, but there isn't one!!");
+      println("Apparently the last command has been badly acknowledged, but there isn't one!!");
     }
     else
     {
@@ -2746,12 +2890,13 @@ Map<Integer, Map<Integer, Integer>> buildPanels()
   inputPanel.put(1, MODE_SET_POSITION_HOME);
   inputPanel.put(2, MODE_SET_POSITION);
   inputPanel.put(3, MODE_DRAW_TO_POSITION);
+  inputPanel.put(4, MODE_DRAW_DIRECT);
   
-  inputPanel.put(4, MODE_INPUT_BOX_TOP_LEFT);
-  inputPanel.put(5, MODE_INPUT_BOX_BOT_RIGHT);
+  inputPanel.put(5, MODE_INPUT_BOX_TOP_LEFT);
+  inputPanel.put(6, MODE_INPUT_BOX_BOT_RIGHT);
 
-  inputPanel.put(6, MODE_CONVERT_BOX_TO_PICTUREFRAME);
-  inputPanel.put(7, MODE_SELECT_PICTUREFRAME);
+  inputPanel.put(7, MODE_CONVERT_BOX_TO_PICTUREFRAME);
+  inputPanel.put(8, MODE_SELECT_PICTUREFRAME);
 
   inputPanel.put(9, LOAD_IMAGE);
   inputPanel.put(10, MODE_MOVE_IMAGE);
@@ -2857,6 +3002,7 @@ Map<Integer, String> buildButtonLabels()
   result.put(MODE_DRAW_SHADE_BOX_ROWS_PIXELS, "Draw Outline pixels");
 
   result.put(MODE_DRAW_TO_POSITION, "Move pen to point");
+  result.put(MODE_DRAW_DIRECT, "Move direct");
   result.put(MODE_RENDER_SQUARE_PIXELS, "Shade Squarewave");
   result.put(MODE_RENDER_SCALED_SQUARE_PIXELS, "Shade Scaled Squarewave");
   result.put(MODE_RENDER_SAW_PIXELS, "Shade sawtooth");
@@ -2947,6 +3093,10 @@ void loadFromPropertiesFile()
   this.machineHeight = getIntProperty("machine.height", 800);
   // pen size
   this.currentPenWidth = getFloatProperty("machine.pen.size", 1.0);
+
+  this.currentMachineMaxSpeed = getFloatProperty("machine.motors.maxSpeed", 600.0);
+  this.currentMachineAccel = getFloatProperty("machine.motors.accel", 400.0);
+  
   // serial port
   this.serialPortNumber = getIntProperty("controller.machine.serialport", 0);
 
@@ -2993,6 +3143,8 @@ void loadFromPropertiesFile()
   this.testPenWidthStartSize = getFloatProperty("controller.testPenWidth.startSize", 0.5);
   this.testPenWidthEndSize = getFloatProperty("controller.testPenWidth.endSize", 2.0);
   this.testPenWidthIncrementSize = getFloatProperty("controller.testPenWidth.incrementSize", 0.5);
+  
+  this.maxSegmentLength = getIntProperty("controller.maxSegmentLength", 20);
   
   
   println("Finished loading configuration from properties file.");
@@ -3048,6 +3200,10 @@ void savePropertiesFile()
   props.setProperty("controller.testPenWidth.endSize", new Float(testPenWidthEndSize).toString());
   props.setProperty("controller.testPenWidth.incrementSize", new Float(testPenWidthIncrementSize).toString());
   
+  props.setProperty("controller.maxSegmentLength", new Integer(getMaxSegmentLength()).toString());
+  
+  props.setProperty("machine.motors.maxSpeed", new Float(currentMachineMaxSpeed).toString());
+  props.setProperty("machine.motors.accel", new Float(currentMachineAccel).toString());
   
  
   FileOutputStream propertiesOutput = null;
