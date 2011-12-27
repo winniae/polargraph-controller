@@ -632,38 +632,8 @@ void showPictureFrame()
   stroke (255, 0, 128);
   ellipse(pictureFrameOffset.x, pictureFrameOffset.y+pictureFrameSize.y, 10, 10);
   
-  
-//  interpolateBetween(pictureFrameOffset.x, pictureFrameSize);
-  
-
   stroke(255);
 }
-
-//void interpolateBetween(float p1x, float p1y, float p2x, float p2y)
-//{
-//  PVector p2 = new PVector(p1.x, p1.y);
-//  p2.add(size);
-//  
-//  // ok, we're going to draw some dots between p1 and p2.  Using maths. I know!
-//  
-//  // first one
-////  ellipse(p1.x, p1.y, 2, 2);
-//  float n = 1.0;
-//  for (float i=0.0; i<=n; i+=0.1)
-//  {
-//    float v = i / n;
-//    println(i + ". v: " + v);
-//
-//    // x value
-//    float newPosX = (p1.x * v) + (p2.x * (1 - v));
-//    // y value
-//    float newPosY = (p1.y * v) + (p2.y * (1 - v));
-//    ellipse(newPosX, newPosY, 2, 2);
-//  }
-//  
-//  // last one
-////  ellipse(p2.x, p2.y, 2, 2);
-//}
 
 void showCurrentMachinePosition()
 {
@@ -672,6 +642,7 @@ void showCurrentMachinePosition()
   PVector cartesian = getCartesian(inMM(currentMachinePos.x), inMM(currentMachinePos.y));
   ellipse(cartesian.x, cartesian.y, 20, 20);
 
+  // also show cartesian position if reported
   fill(255,255,0,150);
   ellipse(currentCartesianMachinePos.x, currentCartesianMachinePos.y, 20, 20);
 
@@ -1012,10 +983,13 @@ boolean isAcceptableImageFormat(File file)
 
 void setPictureFrameDimensionsToBox()
 {
-  this.pictureFrameOffset = this.boxVector1;
-  this.pictureFrameSize = PVector.sub(this.boxVector2, this.boxVector1);
-  this.rowsVector1 = null;
-  this.rowsVector2 = null;
+  if (boxVector1 != null && boxVector2 != null)
+  {
+    this.pictureFrameOffset = this.boxVector1;
+    this.pictureFrameSize = PVector.sub(this.boxVector2, this.boxVector1);
+    this.rowsVector1 = null;
+    this.rowsVector2 = null;
+  }
 }
 void setBoxToPictureframeDimensions()
 {
@@ -1415,8 +1389,8 @@ void panelClicked()
       if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
       {
         sizeImageToFitBox();
-        extractRows();
       }
+      extractRowsFromBox();
       println("fitted image to box.");
       break;
     case MODE_CONVERT_BOX_TO_PICTUREFRAME:
