@@ -106,6 +106,7 @@ List<String> realtimeCommandQueue = new ArrayList<String>();
 List<String> commandHistory = new ArrayList<String>();
 
 String lastCommand = "";
+String lastDrawingCommand = "";
 Boolean commandQueueRunning = false;
 static final int DRAW_DIR_NE = 1;
 static final int DRAW_DIR_SE = 2;
@@ -1413,32 +1414,84 @@ void panelClicked()
   }
 }
 
+boolean isPreviewable(String command)
+{
+  if ((command.startsWith(CMD_CHANGELENGTHDIRECT) || command.startsWith(CMD_CHANGELENGTH)))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 /**
   This will comb the command queue and attempt to draw a picture of what it contains.
   Coordinates here are in pixels.
 */
 void previewQueue()
 {
-  PVector startPoint = new PVector(machineWidth/2, pagePositionY);
   
-  for (String command : commandQueue)
+  PVector startPoint = null;
+  
+  List<String> fullList = new ArrayList<String>();
+  if (!commandHistory.isEmpty())
   {
-    if (command.startsWith(CMD_CHANGELENGTHDIRECT))
+    Integer commandPosition = commandHistory.size()-1;
+    String lastCommand = "";
+    while (commandPosition>=0)
     {
-      String[] splitted = split(command, ",");
-      if (splitted.length == 5)
+      lastCommand = commandHistory.get(commandPosition);
+      if (isPreviewable(lastCommand))
       {
-        String aLenStr = splitted[1];
-        String bLenStr = splitted[2];
-        int aLen = inMM(Integer.parseInt(aLenStr));
-        int bLen = inMM(Integer.parseInt(bLenStr));
-        PVector endPoint = getCartesian(aLen, bLen);
-        stroke(255);
-        line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-        startPoint = endPoint;
+        fullList.add(lastCommand);
+        break;
       }
+      commandPosition--;
     }
   }
+
+  for (String command : commandQueue)
+  {
+    if ((command.startsWith(CMD_CHANGELENGTHDIRECT) || command.startsWith(CMD_CHANGELENGTH)))
+    {
+      fullList.add(command);
+    }
+  }
+  
+  for (String command : fullList)
+  {
+    String[] splitted = split(command, ",");
+    String aLenStr = splitted[1];
+    String bLenStr = splitted[2];
+    int aLen = inMM(Integer.parseInt(aLenStr));
+    int bLen = inMM(Integer.parseInt(bLenStr));
+    PVector endPoint = getCartesian(aLen, bLen);
+    
+    if (startPoint == null)
+    {
+      noStroke();
+      fill(255,0,255,150);
+      startPoint = getCartesian(inMM(currentMachinePos.x), inMM(currentMachinePos.y));
+      ellipse(startPoint.x, startPoint.y, 20, 20);
+      noFill();
+    }
+    
+    stroke(255);
+    line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+    startPoint = endPoint;
+  }
+  
+
+  if (startPoint != null)
+  {
+    noStroke();
+    fill(200,0,0,128);
+    ellipse(startPoint.x, startPoint.y, 15,15);
+    noFill();
+  }
+  
 }
 
 void sizeImageToFitBox()
