@@ -15,16 +15,17 @@ import java.awt.event.KeyEvent;
 boolean drawbotReady = false;
 boolean drawbotConnected = false;
 
-String newMachineName = "PGXXABCD";
+final int MACHINE_SRAM = 2048;
 
 Machine machine = new Machine(712, 980, 800.0, 95.0);
-PVector machinePosition = new PVector(10.0, 10.0);
-final int MACHINE_SRAM = 2048;
+String newMachineName = "PGXXABCD";
+PVector machinePosition = new PVector(130.0, 50.0);
+float machineScaling = 1.0;
+DisplayMachine dMachine = new DisplayMachine(machine, machinePosition, machineScaling);
 
 int homeALengthMM = 400;
 int homeBLengthMM = 400;
 
-float machineScaling = 1;
 final int A3_WIDTH = 297;
 final int A3_HEIGHT = 420;
 
@@ -166,39 +167,6 @@ static final int MODE_FIT_IMAGE_TO_BOX = 49;
 static final int MODE_DRAW_DIRECT = 50;
 static final int MODE_RENDER_COMMAND_QUEUE = 51;
 
-
-static final String CMD_CHANGELENGTH = "C01,";
-static final String CMD_CHANGEPENWIDTH = "C02,";
-static final String CMD_CHANGEMOTORSPEED = "C03,";
-static final String CMD_CHANGEMOTORACCEL = "C04,";
-static final String CMD_DRAWPIXEL = "C05,";
-static final String CMD_DRAWSCRIBBLEPIXEL = "C06,";
-static final String CMD_DRAWRECT = "C07,";
-static final String CMD_CHANGEDRAWINGDIRECTION = "C08,";
-static final String CMD_SETPOSITION = "C09,";
-static final String CMD_TESTPATTERN = "C10,";
-static final String CMD_TESTPENWIDTHSQUARE = "C11,";
-static final String CMD_TESTPENWIDTHSCRIBBLE = "C12,";
-static final String CMD_PENDOWN = "C13,";
-static final String CMD_PENUP = "C14,";
-static final String CMD_DRAWSAWPIXEL = "C15,";
-static final String CMD_DRAWROUNDPIXEL = "C16,";
-static final String CMD_CHANGELENGTHDIRECT = "C17,";
-static final String CMD_TXIMAGEBLOCK = "C18,";
-static final String CMD_STARTROVE = "C19,";
-static final String CMD_STOPROVE = "C20,";
-static final String CMD_SETROVEAREA = "C21,";
-static final String CMD_LOADMAGEFILE = "C23,";
-static final String CMD_CHANGEMACHINESIZE = "C24,";
-static final String CMD_CHANGEMACHINENAME = "C25,";
-static final String CMD_REQUESTMACHINESIZE = "C26,";
-static final String CMD_RESETMACHINE = "C27,";
-static final String CMD_DRAWDIRECTIONTEST = "C28,";
-static final String CMD_CHANGEMACHINEMMPERREV = "C29,";
-static final String CMD_CHANGEMACHINESTEPSPERREV = "C30,";
-static final String CMD_SETMOTORSPEED = "C31,";
-static final String CMD_SETMOTORACCEL = "C32,";
-
 //String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
 String testPenWidthCommand = CMD_TESTPENWIDTHSQUARE;
 float testPenWidthStartSize = 0.5;
@@ -236,7 +204,6 @@ boolean useSerialPortConnection = false;
 
 static final char BITMAP_BACKGROUND_COLOUR = 0x0F;
 
-static final String filenameToLoadFromSD = "Marilyn         ";
 
 // used in the preview page
 static Integer pageColour = 100;
@@ -450,8 +417,6 @@ void drawImagePage()
 
   stroke(0, 0, 255, 50);
   strokeWeight(getMachine().inMM(rowWidth));
-  showARow();
-  showBRow();
   strokeWeight(1);
   showMask();
   showPictureFrame();
@@ -459,15 +424,13 @@ void drawImagePage()
   stroke(255, 150, 255, 100);
   strokeWeight(3);
   
-  line(machinePosition.x,machinePosition.y, mouseX, mouseY);
-  line(getMachine().getWidth(),machinePosition.y, mouseX, mouseY);
-  strokeWeight(1);
   
   stroke(150);
   noFill();
   
   // draw machine outline
-  drawMachineOutline();
+  getMachine().setScale(machineScaling);
+  getMachine().draw(machinePosition);
 
   
   stroke(255, 0, 0);
@@ -479,19 +442,10 @@ void drawImagePage()
 
   showCurrentMachinePosition();
   
-  fill(255);
-  stroke(255);
-  textSize(25);
-  text("INPUT", 30, 30);
-  
-  fill(0);
-  textSize(20);
-  text("DENSITY PREVIEW (F2)   DETAILS (F3)   COMMAND QUEUE (F4)", 115, 30);
-  
   if (displayingInfoTextOnInputPage)
     showText(30,45);
   showCommandQueue(panelPositionX+panelWidth+5, 20);
-}  
+}
 
 void drawMachineOutline()
 {
@@ -512,20 +466,6 @@ void drawImagePreviewPage()
   showPreviewMachine();
   
 //  showCurrentMachinePosition();
-
-  fill(0);
-  textSize(20);
-  text("INPUT (F1)", 30, 30);
-
-  fill(255);
-  stroke(255);
-  textSize(25);
-  text("DENSITY PREVIEW", 130, 30);
-  
-  fill(0);
-  textSize(20);
-  text("DETAILS (F3)   COMMAND QUEUE (F4)", 355, 30);
-
   if (displayingInfoTextOnInputPage)
     showText(30,45);
   showCommandQueue(panelPositionX+panelWidth+5, 20);
@@ -544,20 +484,6 @@ void drawDetailsPage()
 
   showPanel();
 
-  fill(0);
-  textSize(20);
-  text("INPUT (F1)   DENSITY PREVIEW (F2)", 30, 30);
-
-  fill(255);
-  stroke(255);
-  textSize(25);
-  text("DETAILS", 365, 30);
-  
-  fill(0);
-  textSize(20);
-  text("COMMAND QUEUE (F4)", 470, 30);
-
-  showText(30,45);
   fill(100);
   noStroke();
   rect(panelPositionX+panelWidth+5, 0, width, height);
@@ -576,15 +502,6 @@ void drawCommandQueuePage()
   showingSummaryOverlay = false;
   showPanel();
   
-  fill(0);
-  textSize(20);
-  text("INPUT (F1)   DENSITY PREVIEW (F2)  DETAILS (F3)", 30, 30);
-
-  fill(255);
-  stroke(255);
-  textSize(25);
-  text("COMMAND QUEUE", 494, 30);
-
   fill(100);
   noStroke();
   
@@ -665,60 +582,6 @@ void showGroupBox()
     stroke(255,0,0);
     rect(boxVector1.x, boxVector1.y, boxVector2.x-boxVector1.x, boxVector2.y-boxVector1.y);
   }
-}
-
-void showPanel()
-{
-  stroke(150);
-  fill(100);
-  rect(panelPositionX, panelPositionY, panelWidth, panelHeight);
-  noFill();
-  
-  Map<Integer, Integer> panelButtons = panels.get(getCurrentPage());
-  for (int i = 0; i < noOfButtons; i++)
-  {
-    if (panelButtons.containsKey(i))
-    {
-      Integer mode = panelButtons.get(i);
-      if (currentMode == mode)
-        stroke(255);
-      else
-        stroke(150);
-      noFill();
-      rect(panelPositionX+2, panelPositionY+(i*buttonHeight)+2, panelWidth-4,  buttonHeight-4);
-      stroke(255);
-      fill(255);
-      text(buttonLabels.get(mode), panelPositionX+6, panelPositionY+(i*buttonHeight)+20);
-    }
-    noFill();
-  }
-  
-  noStroke();
-}
-
-String getButtonLabel(Integer butNo)
-{
-  if (buttonLabels.containsKey(butNo))
-    return buttonLabels.get(butNo);
-  else
-    return "";
-}
-
-
-void showPreviewMachine()
-{
-  // machine outline
-  stroke(150);
-  rect(0, 0, getMachine().getWidth(), getMachine().getHeight()); // machine
-  fill(pageColour);
-  rect(getMachine().getPage().getLeft(), 
-        getMachine().getPage().getTop(), 
-        getMachine().getPage().getWidth(), 
-        getMachine().getPage().getHeight()); // page
-  noStroke();
-  
-  showShadedCentres(new PVector(0, 0));
-  
 }
 
 void showMask()
@@ -831,19 +694,6 @@ void showAllBRows()
   }
 }
 
-void showARow()
-{
-  int roundedLength = getMachine().inMM(rounded(getALength()));
-  int dia = roundedLength*2;
-  int rowMM = getMachine().inMM(rowWidth);
-  ellipse(machinePosition.x, machinePosition.y, dia, dia);
-}
-void showBRow()
-{
-  int roundedLength = getMachine().inMM(rounded(getBLength()));
-  int dia = roundedLength*2;
-  ellipse(machinePosition.x+getMachine().getWidth(), machinePosition.y, dia, dia);
-}
 
 int rounded(int lineLength)
 {
@@ -1378,66 +1228,66 @@ boolean isPreviewable(String command)
 */
 void previewQueue()
 {
-  
-  PVector startPoint = null;
-  
-  List<String> fullList = new ArrayList<String>();
-  if (!commandHistory.isEmpty())
-  {
-    Integer commandPosition = commandHistory.size()-1;
-    String lastCommand = "";
-    while (commandPosition>=0)
-    {
-      lastCommand = commandHistory.get(commandPosition);
-      if (isPreviewable(lastCommand))
-      {
-        fullList.add(lastCommand);
-        break;
-      }
-      commandPosition--;
-    }
-  }
-
-  for (String command : commandQueue)
-  {
-    if ((command.startsWith(CMD_CHANGELENGTHDIRECT) || command.startsWith(CMD_CHANGELENGTH)))
-    {
-      fullList.add(command);
-    }
-  }
-  
-  for (String command : fullList)
-  {
-    String[] splitted = split(command, ",");
-    String aLenStr = splitted[1];
-    String bLenStr = splitted[2];
-    int aLen = getMachine().inMM(Integer.parseInt(aLenStr));
-    int bLen = getMachine().inMM(Integer.parseInt(bLenStr));
-    PVector endPoint = getCartesian(aLen, bLen);
-    
-    if (startPoint == null)
-    {
-      noStroke();
-      fill(255,0,255,150);
-      startPoint = getMachine().asCartesian(currentMachinePos);
-      ellipse(startPoint.x, startPoint.y, 20, 20);
-      noFill();
-    }
-    
-    stroke(255);
-    line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-    startPoint = endPoint;
-  }
-  
-
-  if (startPoint != null)
-  {
-    noStroke();
-    fill(200,0,0,128);
-    ellipse(startPoint.x, startPoint.y, 15,15);
-    noFill();
-  }
-  
+//  
+//  PVector startPoint = null;
+//  
+//  List<String> fullList = new ArrayList<String>();
+//  if (!commandHistory.isEmpty())
+//  {
+//    Integer commandPosition = commandHistory.size()-1;
+//    String lastCommand = "";
+//    while (commandPosition>=0)
+//    {
+//      lastCommand = commandHistory.get(commandPosition);
+//      if (isPreviewable(lastCommand))
+//      {
+//        fullList.add(lastCommand);
+//        break;
+//      }
+//      commandPosition--;
+//    }
+//  }
+//
+//  for (String command : commandQueue)
+//  {
+//    if ((command.startsWith(CMD_CHANGELENGTHDIRECT) || command.startsWith(CMD_CHANGELENGTH)))
+//    {
+//      fullList.add(command);
+//    }
+//  }
+//  
+//  for (String command : fullList)
+//  {
+//    String[] splitted = split(command, ",");
+//    String aLenStr = splitted[1];
+//    String bLenStr = splitted[2];
+//    int aLen = getMachine().inMM(Integer.parseInt(aLenStr));
+//    int bLen = getMachine().inMM(Integer.parseInt(bLenStr));
+//    PVector endPoint = getCartesian(aLen, bLen);
+//    
+//    if (startPoint == null)
+//    {
+//      noStroke();
+//      fill(255,0,255,150);
+//      startPoint = getMachine().asCartesian(currentMachinePos);
+//      ellipse(startPoint.x, startPoint.y, 20, 20);
+//      noFill();
+//    }
+//    
+//    stroke(255);
+//    line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+//    startPoint = endPoint;
+//  }
+//  
+//
+//  if (startPoint != null)
+//  {
+//    noStroke();
+//    fill(200,0,0,128);
+//    ellipse(startPoint.x, startPoint.y, 15,15);
+//    noFill();
+//  }
+//  
 }
 
 void sizeImageToFitBox()
@@ -1536,508 +1386,6 @@ void queueClicked()
   }
 }
 
-void sendResetMachine()
-{
-  String command = CMD_RESETMACHINE + "END";
-  commandQueue.add(command);
-}
-void sendRequestMachineSize()
-{
-  String command = CMD_REQUESTMACHINESIZE + "END";
-  commandQueue.add(command);
-}
-void sendMachineSpec()
-{
-  // ask for input to get the new machine size
-  String command = CMD_CHANGEMACHINENAME+newMachineName+",END";
-  commandQueue.add(command);
-  command = CMD_CHANGEMACHINESIZE+getMachine().getWidth()+","+getMachine().getHeight()+",END";
-  commandQueue.add(command);
-  command = CMD_CHANGEMACHINEMMPERREV+getMachine().getMMPerRev()+",END";
-  commandQueue.add(command);
-  command = CMD_CHANGEMACHINESTEPSPERREV+getMachine().getStepsPerRev()+",END";
-  commandQueue.add(command);
-}
-
-
-void sendMoveToPosition(boolean direct)
-{
-  String command = null;
-  if (direct)
-    command = CMD_CHANGELENGTHDIRECT+getALength()+","+getBLength()+","+getMaxSegmentLength()+",END";
-  else
-    command = CMD_CHANGELENGTH+getALength()+","+getBLength()+",END";
-  
-  commandQueue.add(command);
-}
-
-int getMaxSegmentLength()
-{
-  return this.maxSegmentLength;
-}
-
-void sendTestPattern()
-{
-  String command = CMD_DRAWDIRECTIONTEST+int(rowWidth)+",6,END";
-  commandQueue.add(command);
-}
-
-void sendTestPenWidth()
-{
-  NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
-  DecimalFormat df = (DecimalFormat)nf;  
-  df.applyPattern("##0.##");
-  StringBuilder sb = new StringBuilder();
-  sb.append(testPenWidthCommand)
-    .append(int(rowWidth))
-    .append(",")
-    .append(df.format(testPenWidthStartSize))
-    .append(",")
-    .append(df.format(testPenWidthEndSize))
-    .append(",")
-    .append(df.format(testPenWidthIncrementSize))
-    .append(",END");
-  commandQueue.add(sb.toString());
-}
-
-void sendSetPosition()
-{
-  String command = CMD_SETPOSITION+getALength()+","+getBLength()+",END";
-  commandQueue.add(command);
-}
-
-void sendSetHomePosition()
-{
-  PVector homePoint = new PVector(getMachine().getWidth()/2, getMachine().getPage().getTop());
-  PVector pgCoords = getMachine().asNativeCoords(homePoint);
-  
-  String command = CMD_SETPOSITION+pgCoords.x+","+pgCoords.y+",END";
-  commandQueue.add(command);
-}
-
-void sendSawtoothPixels()
-{
-  for (List<PVector> row : pixelCentresForMachine)
-  {
-    if (drawDirection == DRAW_DIR_SE)
-    {
-      for (PVector v : row) // left to right
-      {
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        String command = CMD_DRAWSAWPIXEL+inX+","+inY+","+rowWidth+","+density+",END";
-        commandQueue.add(command);
-      }
-    }
-    else
-    {
-      for (int i = row.size()-1; i >= 0; i--) // right to left
-      {
-        PVector v = row.get(i);
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        String command = CMD_DRAWSAWPIXEL+inX+","+inY+","+rowWidth+","+density+",END";
-        commandQueue.add(command);
-      }
-    }
-    flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-    commandQueue.add(command);
-  }
-}
-
-void sendCircularPixels()
-{
-  for (List<PVector> row : pixelCentresForMachine)
-  {
-    if (drawDirection == DRAW_DIR_SE)
-    {
-      for (PVector v : row) // left to right
-      {
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        String command = CMD_DRAWROUNDPIXEL+inX+","+inY+","+int(rowWidth)+","+density+",END";
-        commandQueue.add(command);
-      }
-    }
-    else
-    {
-      for (int i = row.size()-1; i >= 0; i--) // right to left
-      {
-        PVector v = row.get(i);
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        String command = CMD_DRAWROUNDPIXEL+inX+","+inY+","+int(rowWidth)+","+density+",END";
-        commandQueue.add(command);
-      }
-    }
-    flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-    commandQueue.add(command);
-  }
-}
-
-int scaleDensity(int inDens, int inMax, int outMax)
-{
-  float reducedDens = (float(inDens) / float(inMax)) * float(outMax);
-  reducedDens = outMax-reducedDens;
-  println("inDens:"+inDens+", inMax:"+inMax+", outMax:"+outMax+", reduced:"+reducedDens);
-  
-  // round up if bigger than .5
-  int result = int(reducedDens);
-  if (reducedDens - (result) > 0.5)
-    result ++;
-  
-  //result = outMax - result;
-  return result;
-}
-
-void sendScaledSquarePixels()
-{
-  commandQueue.add(CMD_PENDOWN+"END");
-  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-  commandQueue.add(changeDir);
-  for (List<PVector> row : pixelCentresForMachine)
-  {
-    if (drawDirection == DRAW_DIR_SE)
-    {
-      for (PVector v : row) // left to right
-      {
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        int pixelSize = scaleDensity(density, 255, rowWidth);
-        String command = CMD_DRAWPIXEL+inX+","+inY+","+(pixelSize)+",0,END";
-
-        commandQueue.add(command);
-      }
-    }
-    else
-    {
-      for (int i = row.size()-1; i >= 0; i--) // right to left
-      {
-        PVector v = row.get(i);
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        int pixelSize = scaleDensity(density, 255, rowWidth);
-        String command = CMD_DRAWPIXEL+inX+","+inY+","+(pixelSize)+",0,END";
-        commandQueue.add(command);
-      }
-    }
-    flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-    commandQueue.add(command);
-  }
-  commandQueue.add(CMD_PENUP+"END");
-  numberOfPixelsTotal = commandQueue.size();
-  startPixelTimer();
-}
-
-void sendSolidSquarePixels()
-{
-  commandQueue.add(CMD_PENDOWN+"END");
-  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-  commandQueue.add(changeDir);
-  for (List<PVector> row : pixelCentresForMachine)
-  {
-    if (drawDirection == DRAW_DIR_SE)
-    {
-      for (PVector v : row) // left to right
-      {
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+",0,END";
-
-        commandQueue.add(command);
-      }
-    }
-    else
-    {
-      for (int i = row.size()-1; i >= 0; i--) // right to left
-      {
-        PVector v = row.get(i);
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+",0,END";
-        commandQueue.add(command);
-      }
-    }
-    flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-    commandQueue.add(command);
-  }
-  commandQueue.add(CMD_PENUP+"END");
-  numberOfPixelsTotal = commandQueue.size();
-  startPixelTimer();
-}
-
-void sendSquarePixels()
-{
-  commandQueue.add(CMD_PENDOWN+"END");
-  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-  commandQueue.add(changeDir);
-
-  for (List<PVector> row : pixelCentresForMachine)
-  {
-    if (drawDirection == DRAW_DIR_SE)
-    {
-      for (PVector v : row) // left to right
-      {
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
-
-        commandQueue.add(command);
-      }
-    }
-    else
-    {
-      for (int i = row.size()-1; i >= 0; i--) // right to left
-      {
-        PVector v = row.get(i);
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
-        commandQueue.add(command);
-      }
-    }
-    flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-    commandQueue.add(command);
-  }
-  
-  commandQueue.add(CMD_PENUP+"END");
-  numberOfPixelsTotal = commandQueue.size();
-  startPixelTimer();
-}
-
-int getPixelDirectionMode()
-{
-  return pixelDirectionMode;
-}
-void sendScribblePixels()
-{
-  commandQueue.add(CMD_PENDOWN+"END");
-  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-  commandQueue.add(changeDir);
-
-  for (List<PVector> row : pixelCentresForMachine)
-  {
-    if (drawDirection == DRAW_DIR_SE)
-    {
-      for (PVector v : row) // left to right
-      {
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        String command = CMD_DRAWSCRIBBLEPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
-
-        commandQueue.add(command);
-      }
-    }
-    else
-    {
-      for (int i = row.size()-1; i >= 0; i--) // right to left
-      {
-        PVector v = row.get(i);
-        // now convert to ints 
-        int inX = int(v.x);
-        int inY = int(v.y);
-        Integer density = int(v.z);
-        String command = CMD_DRAWSCRIBBLEPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
-        commandQueue.add(command);
-      }
-    }
-    flipDirection();
-    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-    commandQueue.add(command);
-  }
-  
-  commandQueue.add(CMD_PENUP+"END");
-  numberOfPixelsTotal = commandQueue.size();
-  startPixelTimer();
-}
-
-
-void sendOutlineOfPixels()
-{
-  PVector offset = new PVector(rowWidth/2.0, rowWidth/2.0);
-
-  for (List<PVector> row : pixelCentresForMachine)
-  {
-    for (PVector v : row)
-    {
-      // now convert to native format
-      // now offset by row size
-      PVector startPoint = PVector.sub(v, offset);
-      PVector endPoint = PVector.add(v, offset);
-      // now convert to steps
-      String command = CMD_DRAWRECT+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
-      commandQueue.add(command);
-    }
-  }
-}
-
-void sendOutlineOfRows()
-{
-  for (List<PVector> row : pixelCentresForMachine)
-  {
-    PVector first = row.get(0);
-    PVector last = row.get(row.size()-1);
-    
-    // now offset by row size
-    PVector offset = new PVector(rowWidth/2.0, rowWidth/2.0);
-    
-    PVector startPoint = PVector.sub(first, offset);
-    PVector endPoint = PVector.add(last, offset);
-    
-    // now convert to steps
-    String command = CMD_DRAWRECT+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
-    commandQueue.add(command);
-  }
-  
-  // now do it in the opposite axis
-  
-  List<List<PVector>> otherWay = extractRowsFromBoxOpposite();
-  for (List<PVector> row : otherWay)
-  {
-    PVector first = row.get(0);
-    PVector last = row.get(row.size()-1);
-    
-    // now offset by row size
-    PVector offset = new PVector(rowWidth/2.0, rowWidth/2.0);
-    
-    PVector startPoint = PVector.sub(first, offset);
-    PVector endPoint = PVector.add(last, offset);
-    
-    // now convert to steps
-    String command = CMD_DRAWRECT+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
-    commandQueue.add(command);
-  }
-
-}
-
-void sendGridOfBox()
-{
-  String rowDirection = "LTR";
-  float halfRow = rowWidth/2.0;
-  PVector startPoint = null;
-  PVector endPoint = null;
-
-  for (List<PVector> row : pixelCentresForMachine)
-  {
-    PVector first = row.get(0);
-    PVector last = row.get(row.size()-1);
-
-
-    if (rowDirection.equals("LTR"))
-    {
-      // now offset by row size
-      startPoint = new PVector(first.x-halfRow, first.y-halfRow);
-      endPoint = new PVector(last.x+halfRow, last.y-halfRow);
-    }
-    else
-    {
-      // now offset by row size
-      startPoint = new PVector(last.x+halfRow, last.y-halfRow);
-      endPoint = new PVector(first.x-halfRow, first.y-halfRow);
-    }      
-      
-    
-    // goto beginning of long line (probably the shortline)
-    String command = CMD_CHANGELENGTH+int(startPoint.x)+","+int(startPoint.y)+",END";
-    commandQueue.add(command);
-    
-    // draw long line
-    command=CMD_CHANGELENGTH+int(endPoint.x)+","+int(endPoint.y)+",END";
-    commandQueue.add(command);
-    
-    if (rowDirection.equals("LTR"))
-      rowDirection = "RTL";
-    else
-      rowDirection = "LTR";
-  }
-  
-  // now do it in the opposite axis
-  
-  List<List<PVector>> otherWay = extractRowsFromBoxOpposite();
-  for (List<PVector> row : otherWay)
-  {
-    PVector first = row.get(0);
-    PVector last = row.get(row.size()-1);
-    
-    if (rowDirection.equals("LTR"))
-    {
-      // now offset by row size
-      startPoint = new PVector(first.x-halfRow, first.y+halfRow);
-      endPoint = new PVector(last.x-halfRow, last.y-halfRow);
-    }
-    else
-    {
-      // now offset by row size
-      startPoint = new PVector(last.x-halfRow, last.y-halfRow);
-      endPoint = new PVector(first.x-halfRow, first.y+halfRow);
-    }
-      
-    
-    // goto beginning of line (probably the shortline)
-    String command = CMD_CHANGELENGTH+int(startPoint.x)+","+int(startPoint.y)+",END";
-    commandQueue.add(command);
-    
-    // draw long line
-    command=CMD_CHANGELENGTH+int(endPoint.x)+","+int(endPoint.y)+",END";
-    commandQueue.add(command);
-    
-    if (rowDirection.equals("LTR"))
-      rowDirection = "RTL";
-    else
-      rowDirection = "LTR";
-  }
-
-}
-
-
-void sendOutlineOfBox()
-{
-  // convert cartesian to native format
-  PVector coords = getMachine().asNativeCoords(boxVector1);
-  String command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
-  commandQueue.add(command);
-
-  coords = getMachine().asNativeCoords(boxVector2.x, boxVector1.y);
-  command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
-  commandQueue.add(command);
-
-  coords = getMachine().asNativeCoords(boxVector2);
-  command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
-  commandQueue.add(command);
-
-  coords = getMachine().asNativeCoords(boxVector1.x, boxVector2.y);
-  command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
-  commandQueue.add(command);
-
-  coords = getMachine().asNativeCoords(boxVector1);
-  command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
-  commandQueue.add(command);
-}
 
 void extractRowsFromBox()
 {
@@ -2750,178 +2098,6 @@ boolean isDrawbotConnected()
   return drawbotConnected;
 }
 
-Map<Integer, Map<Integer, Integer>> buildPanels()
-{
-  Map<Integer, Map<Integer, Integer>> panelMap = new HashMap<Integer, Map<Integer, Integer>>(5);
-  
-  Map<Integer, Integer> inputPanel = new HashMap<Integer, Integer>(30);
-  inputPanel.put(0, MODE_BEGIN);
-  inputPanel.put(1, MODE_SET_POSITION_HOME);
-  inputPanel.put(2, MODE_SET_POSITION);
-  inputPanel.put(3, MODE_DRAW_TO_POSITION);
-  inputPanel.put(4, MODE_DRAW_DIRECT);
-  
-  inputPanel.put(5, MODE_INPUT_BOX_TOP_LEFT);
-  inputPanel.put(6, MODE_INPUT_BOX_BOT_RIGHT);
-
-  inputPanel.put(7, MODE_CONVERT_BOX_TO_PICTUREFRAME);
-  inputPanel.put(8, MODE_SELECT_PICTUREFRAME);
-
-  inputPanel.put(9, LOAD_IMAGE);
-  inputPanel.put(10, MODE_MOVE_IMAGE);
-  inputPanel.put(11, MODE_FIT_IMAGE_TO_BOX);
-  
-  inputPanel.put(13, MODE_RENDER_SQUARE_PIXELS);
-  inputPanel.put(14, MODE_RENDER_SCALED_SQUARE_PIXELS);
-  inputPanel.put(15, MODE_RENDER_SOLID_SQUARE_PIXELS);
-  inputPanel.put(16, MODE_RENDER_SCRIBBLE_PIXELS);
-
-  inputPanel.put(17, MODE_DRAW_TEST_PENWIDTH);
-//  inputPanel.put(17, MODE_DRAW_TESTPATTERN);
-
-  inputPanel.put(19, INS_INC_ROWSIZE);
-  inputPanel.put(20, INS_DEC_ROWSIZE);
-
-
-  inputPanel.put(22, MODE_DRAW_GRID);
-  inputPanel.put(23, MODE_DRAW_OUTLINE_BOX);
-  inputPanel.put(24, MODE_DRAW_OUTLINE_BOX_ROWS);
-  inputPanel.put(25, MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
-
-//  inputPanel.put(23, MODE_INPUT_ROW_START);
-//  inputPanel.put(24, MODE_INPUT_ROW_END);
-//  inputPanel.put(20, MODE_LOAD_SD_IMAGE);
-//  inputPanel.put(21, MODE_START_ROVING);
-//  inputPanel.put(22, MODE_STOP_ROVING);
-//  inputPanel.put(23, MODE_SET_ROVE_AREA);
-//  inputPanel.put(24, MODE_CHANGE_MACHINE_SIZE);
-//  inputPanel.put(25, MODE_CHANGE_MACHINE_NAME);
-//  inputPanel.put(26, MODE_REQUEST_MACHINE_SIZE);
-//  inputPanel.put(27, MODE_RESET_MACHINE);
-//  inputPanel.put(28, MODE_SAVE_PROPERTIES);
-  panelMap.put(PAGE_IMAGE, inputPanel);
-
-  Map<Integer, Integer> previewPanel = new HashMap<Integer, Integer>(30);
-  previewPanel.put(0, MODE_BEGIN);
-  previewPanel.put(1, MODE_SET_POSITION_HOME);
-  previewPanel.put(2, MODE_SET_POSITION);
-  previewPanel.put(3, MODE_DRAW_TO_POSITION);
-  previewPanel.put(4, MODE_INPUT_BOX_TOP_LEFT);
-  previewPanel.put(5, MODE_INPUT_BOX_BOT_RIGHT);
-  previewPanel.put(8, MODE_DRAW_OUTLINE_BOX);
-  previewPanel.put(9, MODE_INC_SAMPLE_AREA);
-  previewPanel.put(10, MODE_DEC_SAMPLE_AREA);
-  previewPanel.put(11, MODE_MOVE_IMAGE);
-  previewPanel.put(12, MODE_RENDER_SQUARE_PIXELS);
-  previewPanel.put(13, MODE_RENDER_SCALED_SQUARE_PIXELS);
-  previewPanel.put(14, MODE_RENDER_SOLID_SQUARE_PIXELS);
-  previewPanel.put(15, MODE_RENDER_SCRIBBLE_PIXELS);
-  previewPanel.put(16, MODE_DRAW_TEST_PENWIDTH);
-  previewPanel.put(18, INS_INC_ROWSIZE);
-  previewPanel.put(19, INS_DEC_ROWSIZE);
-
-  panelMap.put(PAGE_PREVIEW, previewPanel);
-  
-  ////   
-  Map<Integer, Integer> detailsPanel = new HashMap<Integer, Integer>(30);
-//  detailsPanel.put(0, MODE_BEGIN);
-//  detailsPanel.put(1, MODE_SET_POSITION_HOME);
-//  detailsPanel.put(2, MODE_SET_POSITION);
-//  detailsPanel.put(3, MODE_DRAW_TO_POSITION);
-//  
-//  detailsPanel.put(4, MODE_INPUT_BOX_TOP_LEFT);
-//  detailsPanel.put(5, MODE_INPUT_BOX_BOT_RIGHT);
-//
-//  detailsPanel.put(6, MODE_DRAW_TEST_PENWIDTH);
-//  detailsPanel.put(7, MODE_INPUT_SINGLE_PIXEL);
-//
-//  detailsPanel.put(8, INS_INC_ROWSIZE);
-//  detailsPanel.put(9, INS_DEC_ROWSIZE);
-
-//  detailsPanel.put(10, MODE_LOAD_SD_IMAGE);
-//  detailsPanel.put(11, MODE_START_ROVING);
-//  detailsPanel.put(12, MODE_STOP_ROVING);
-//  detailsPanel.put(13, MODE_SET_ROVE_AREA);
-  detailsPanel.put(14, MODE_CHANGE_MACHINE_SPEC);
-  detailsPanel.put(16, MODE_REQUEST_MACHINE_SIZE);
-  detailsPanel.put(17, MODE_RESET_MACHINE);
-  detailsPanel.put(18, MODE_SAVE_PROPERTIES);
-  
-  panelMap.put(PAGE_DETAILS, detailsPanel);
-
-  Map<Integer, Integer> queuePanel = new HashMap<Integer, Integer>(30);
-  queuePanel.put(0, MODE_BEGIN);
-  queuePanel.put(5, MODE_RENDER_COMMAND_QUEUE);
-  queuePanel.put(6, MODE_EXPORT_QUEUE);
-  queuePanel.put(7, MODE_IMPORT_QUEUE);
-  
-  panelMap.put(PAGE_COMMAND_QUEUE, queuePanel);
-  
-  return panelMap;
-}
-
-Map<Integer, String> buildButtonLabels()
-{
-  Map<Integer, String> result = new HashMap<Integer, String>(19);
-  
-  result.put(MODE_BEGIN, "Reset queue");
-  result.put(MODE_INPUT_BOX_TOP_LEFT, "Select TopLeft");
-  result.put(MODE_INPUT_BOX_BOT_RIGHT, "Select BotRight");
-  result.put(MODE_DRAW_OUTLINE_BOX, "Draw Outline box");
-  result.put(MODE_DRAW_OUTLINE_BOX_ROWS, "Draw Outline rows");
-  result.put(MODE_DRAW_SHADE_BOX_ROWS_PIXELS, "Draw Outline pixels");
-
-  result.put(MODE_DRAW_TO_POSITION, "Move pen to point");
-  result.put(MODE_DRAW_DIRECT, "Move direct");
-  result.put(MODE_RENDER_SQUARE_PIXELS, "Shade Squarewave");
-  result.put(MODE_RENDER_SCALED_SQUARE_PIXELS, "Shade Scaled Squarewave");
-  result.put(MODE_RENDER_SAW_PIXELS, "Shade sawtooth");
-  result.put(MODE_RENDER_CIRCLE_PIXELS, "Shade circular");
-  result.put(MODE_INPUT_ROW_START, "Select Row start");
-  result.put(MODE_INPUT_ROW_END, "Select Row end");
-  result.put(MODE_SET_POSITION, "Set pen position");
-  
-  result.put(MODE_DRAW_GRID, "Draw grid of box");
-  result.put(MODE_DRAW_TESTPATTERN, "test pattern");
-  
-  result.put(PLACE_IMAGE, "place image");
-  result.put(LOAD_IMAGE, "Load image file");
-  
-  result.put(INS_INC_ROWSIZE, "Rowsize up");
-  result.put(INS_DEC_ROWSIZE, "Rowsize down");
-  result.put(MODE_SET_POSITION_HOME, "Set home");
-  result.put(MODE_INPUT_SINGLE_PIXEL, "Choose pixel");
-  result.put(MODE_DRAW_TEST_PENWIDTH, "Test pen widths");
-  result.put(MODE_RENDER_SOLID_SQUARE_PIXELS, "Shade solid");
-  result.put(MODE_RENDER_SCRIBBLE_PIXELS, "Shade scribble");
-
-  result.put(MODE_LOAD_SD_IMAGE, "upload image (SD)");
-  result.put(MODE_START_ROVING, "start rove");
-  result.put(MODE_STOP_ROVING, "stop rove");
-  result.put(MODE_SET_ROVE_AREA, "set rove area");
-  result.put(MODE_CREATE_MACHINE_TEXT_BITMAP, "render as text");
-  
-  result.put(MODE_CHANGE_MACHINE_SPEC, "Upload machine spec");
-  result.put(MODE_REQUEST_MACHINE_SIZE, "Download size spec");
-  result.put(MODE_RESET_MACHINE, "Reset machine");
-  result.put(MODE_SAVE_PROPERTIES, "Save properties");
-  
-  result.put(MODE_INC_SAMPLE_AREA, "Inc sample size");
-  result.put(MODE_DEC_SAMPLE_AREA, "Dec sample size");
-
-  result.put(MODE_MOVE_IMAGE, "Move image");
-  result.put(MODE_CONVERT_BOX_TO_PICTUREFRAME, "Set frame");
-  result.put(MODE_SELECT_PICTUREFRAME, "Select frame");
-  
-  result.put(MODE_EXPORT_QUEUE, "Export queue");
-  result.put(MODE_IMPORT_QUEUE, "Import queue");
-  result.put(MODE_FIT_IMAGE_TO_BOX, "Resize image");
-  
-  result.put(MODE_RENDER_COMMAND_QUEUE, "Preview queue");
-
-  return result;
-}
-
 Properties getProperties()
 {
   if (props == null)
@@ -2960,8 +2136,7 @@ Properties getProperties()
 
 void loadFromPropertiesFile()
 {
-
-  getMachine().setSize(getIntProperty("machine.width", 600), getIntProperty("machine.height", 800));
+  getMachine().loadDefinitionFromProperties(getProperties());
   
   // pen size
   this.currentPenWidth = getFloatProperty("machine.pen.size", 1.0);
@@ -2979,35 +2154,11 @@ void loadFromPropertiesFile()
   this.windowWidth = getIntProperty("controller.window.width", 800);
   this.windowHeight = getIntProperty("controller.window.height", 550);
 
-  // page size
-  PVector pageSize = new PVector(getIntProperty("controller.page.width", A3_WIDTH), getIntProperty("controller.page.height", A3_HEIGHT));
-  PVector pagePos = new PVector(getIntProperty("controller.page.position.x", (int)getMachine().getPageCentrePosition(pageSize.x)), getIntProperty("controller.page.position.y", 120));
-  Rectangle page = new Rectangle(pagePos, pageSize);
-  getMachine().setPage(page);
-
   // image filename
   this.bitmapFilename = getStringProperty("controller.image.filename", "portrait_330.jpg");
-  // image position
-  Float offsetX = getFloatProperty("controller.image.position.x", 0.0);
-  Float offsetY = getFloatProperty("controller.image.position.y", 0.0);
-  PVector imagePos = new PVector(offsetX, offsetY);
-  
-  Float imageWidth = getFloatProperty("controller.image.width", 300);
-  PVector imageSize = new PVector(imageWidth, 0.0);
-  Rectangle imageFrame = new Rectangle(imagePos, imageSize);
-  getMachine().setImageFrame(imageFrame);
-
   // load image
   loadAndProcessImage(bitmapFilename, bitmapWidth);
 
-  // picture frame size
-  PVector frameSize = new PVector(getIntProperty("controller.pictureframe.width", 200), getIntProperty("controller.pictureframe.height", 200));
-  PVector framePos = new PVector(getIntProperty("controller.pictureframe.position.x", 200), getIntProperty("controller.pictureframe.position.y", 200));
-  Rectangle frame = new Rectangle(framePos, frameSize);
-  getMachine().setPictureFrame(frame);
-  
-  getMachine().setStepsPerRev(getFloatProperty("machine.motors.stepsPerRev", 800.0));
-  getMachine().setMMPerRev(getFloatProperty("machine.motors.mmPerRev", 84));
   
   this.testPenWidthStartSize = getFloatProperty("controller.testPenWidth.startSize", 0.5);
   this.testPenWidthEndSize = getFloatProperty("controller.testPenWidth.endSize", 2.0);
@@ -3023,11 +2174,8 @@ void savePropertiesFile()
 {
   Properties props = new Properties();
   
-  // Put keys into properties file:
-  // machine width
-  props.setProperty("machine.width", Integer.toString((int) getMachine().getWidth()));
-  // machine.height
-  props.setProperty("machine.height", Integer.toString((int) getMachine().getHeight()));
+  props = getMachine().loadDefinitionIntoProperties(props);
+  
   // pen size
   props.setProperty("machine.pen.size", new Float(currentPenWidth).toString());
   // serial port
@@ -3041,30 +2189,7 @@ void savePropertiesFile()
   props.setProperty("controller.window.height", new Integer(height).toString());
   // image filename
   props.setProperty("controller.image.filename", (bitmapFilename==null) ? "" : bitmapFilename);
-  // image position
-  props.setProperty("controller.image.position.x", Integer.toString((int)getMachine().getImageFrame().getLeft()));
-  props.setProperty("controller.image.position.y", Integer.toString((int) getMachine().getImageFrame().getTop()));
-  // image size
-  props.setProperty("controller.image.width", new Integer(bitmapWidth).toString());
 
-  // page size
-  props.setProperty("controller.page.width", Integer.toString((int)getMachine().getPage().getWidth()));
-  props.setProperty("controller.page.height", Integer.toString((int)getMachine().getPage().getHeight()));
-  
-  // page position
-  props.setProperty("controller.page.position.x", Integer.toString((int)getMachine().getPage().getLeft()));
-  props.setProperty("controller.page.position.y", Integer.toString((int)getMachine().getPage().getTop()));
-
-  // picture frame size
-  props.setProperty("controller.pictureframe.width", Integer.toString((int)getMachine().getPictureFrame().getWidth()));
-  props.setProperty("controller.pictureframe.height", Integer.toString((int)getMachine().getPictureFrame().getHeight()));
-  // picture frame position
-  props.setProperty("controller.pictureframe.position.x", Integer.toString((int)getMachine().getPictureFrame().getLeft()));
-  props.setProperty("controller.pictureframe.position.y", Integer.toString((int)getMachine().getPictureFrame().getTop()));
-  
-  props.setProperty("machine.motors.stepsPerRev", getMachine().getStepsPerRev().toString());
-  props.setProperty("machine.motors.mmPerRev", getMachine().getMMPerRev().toString());
-  
   props.setProperty("controller.testPenWidth.startSize", new Float(testPenWidthStartSize).toString());
   props.setProperty("controller.testPenWidth.endSize", new Float(testPenWidthEndSize).toString());
   props.setProperty("controller.testPenWidth.incrementSize", new Float(testPenWidthIncrementSize).toString());
