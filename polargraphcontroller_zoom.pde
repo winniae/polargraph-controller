@@ -551,7 +551,7 @@ void showCurrentMachinePosition()
 {
   noStroke();
   fill(255,0,255,150);
-  PVector pgCoord = getMachine().asCartesian(currentMachinePos);
+  PVector pgCoord = getMachine().asCartesianCoords(currentMachinePos);
   ellipse(pgCoord.x, pgCoord.y, 20, 20);
 
   // also show cartesian position if reported
@@ -1651,16 +1651,16 @@ void showText(int xPosOrigin, int yPosOrigin)
 
   if (getDisplayMachine().getOutline().surrounds(screenCoordsCart))
   {
-    PVector mmCoordsCartesian = getDisplayMachine().asCartesianCoords(screenCoordsCart);
-    text("Machine x/y mm: " + mmCoordsCartesian.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
     
-//    ellipse(mmCoordsCartesian.x, mmCoordsCartesian.y, 5,5);
+    PVector posOnMachineCartesianInMM = getDisplayMachine().scaleToDisplayMachine(screenCoordsCart);
+    text("Machine x/y mm: " + posOnMachineCartesianInMM.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
     
-    PVector mmCoordsNative = getDisplayMachine().asNativeCoordsMM(screenCoordsCart);
-    text("Machine a/b mm: " + mmCoordsNative.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
+    PVector posOnMachineNativeInMM = getDisplayMachine().convertToNative(posOnMachineCartesianInMM);
+    text("Machine a/b mm: " + posOnMachineNativeInMM.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
+    ellipse(posOnMachineNativeInMM.x, posOnMachineNativeInMM.y, 15,15);
   
-    PVector stepCoords = getDisplayMachine().asNativeCoords(screenCoordsCart);
-    text("Machine a/b steps: " + stepCoords.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
+    PVector posOnMachineNativeInSteps = getDisplayMachine().inSteps(posOnMachineNativeInMM);
+    text("Machine a/b steps: " + posOnMachineNativeInSteps.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
   }
   else
   {

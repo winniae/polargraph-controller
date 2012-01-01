@@ -116,86 +116,84 @@ class DisplayMachine extends Machine
     showRows();
 
   }
-  
-  public PVector scaleToScreen(float x, float y)
-  {
-    PVector coords = new PVector(scaleToScreen(x), scaleToScreen(y));
-    return coords;
-  }
-  public PVector scaleToScreen(PVector p)
-  {
-    PVector coords = new PVector(scaleToScreen(p.x), scaleToScreen(p.y));
-    return coords;  
-  }
-  public float scaleToScreen(float c)
-  {
-    float scalingFactor = 1.0/getScaling();
-    float scaled = scalingFactor * c;
-    return scaled;
-    
-  }    
-  
-  // converts a cartesian screen coordinate into a machine coordinate in steps
-  public PVector asNativeCoords(float x, float y)
-  {
-    // first scale the coordinates to the current scaling setting of the machine
-    PVector scaled = scaleToScreen(x, y);
-    // then get the native equivalents
-    PVector pos = super.asNativeCoords(scaled.x, scaled.y);
-    return pos;
-  }
-  
-  // converts a cartesian screen coordinate into a machine coordinates in steps
-  public PVector asNativeCoords(PVector mm)
-  {
-    PVector p = asNativeCoordsMM(mm);
-    p.x = inSteps(p.x);
-    p.y = inSteps(p.y);
-    return p;
-  }
-  
-  // converts a cartesian screen coordinate into a machine coordinate in mm
-  public PVector asNativeCoordsMM(PVector mm)
-  {
-    // offset machine position
-    PVector p = PVector.sub(mm, getOffset());
-    // scale with machine scaling
-    p = asScaledCoords(p.x, p.y);
-    
-    ellipse(getOffset().x+p.x, getOffset().y+p.y, 5, 5);
-    
-    // now convert to 
-    PVector pos = super.asNativeCoords(p.x, p.y);
-    return pos;
-  }
-  
-  // converts cartesian screen coordinate into a cartesian machine coordinate in mm
-  public PVector asCartesianCoords(PVector c)
-  {
-    PVector p = PVector.sub(c, getOffset());
-    p = asScaledCoords(p.x, p.y);
-    return p;
-  }
+
 
   
+  // this scales a value from the screen to be a position on the machine
+  /**  Given a point on-screen, this works out where on the 
+       actual machine it refers to.
+  */
+  public PVector scaleToDisplayMachine(PVector screen)
+  {
+    // offset
+    float x = screen.x - getOffset().x;
+    float y = screen.y - getOffset().y;
+
+    // transform
+    float scalingFactor = 1.0/getScaling();
+    x = scalingFactor * x;
+    y = scalingFactor * y;
+    
+    // and out
+    PVector mach = new PVector(x,y);
+    return mach;
+  }
+  
+  /** This works out the position, on-screen of a specific point on the machine.
+       Both values are cartesian coordinates.
+  */
+  public PVector scaleToScreen(PVector mach)
+  {
+    // transform
+    float x = mach.x * scaling;
+    float y = mach.y * scaling;
+
+    // offset
+    x = x + getOffset().x;
+    y = y + getOffset().y;
+
+    // and out!
+    PVector screen = new PVector(x, y);
+    return screen;
+  }
+  
+  // converts a cartesian coord into a native one
+  public PVector convertToNative(PVector cart)
+  {
+    // width of machine in mm
+    float width = inMM(super.getWidth());
+    
+    // work out distances
+    float a = dist(0,0,cart.x,cart.y);
+    float b = dist(width,0,cart.x,cart.y);
+    
+    // and out
+    PVector nativeMM = new PVector(a, b);
+    return nativeMM;
+  }
+
+  /**  This draws on screen, showing an arc highlighting the row that the mouse
+  is on.
+  */
   void showRows()
   {
     PVector mVect = getMouseVector();
-    mVect = this.asNativeCoordsMM(mVect);
-    println("mVect: " + mVect);
     
-    mVect.x = mVect.x * scaling;
-    mVect.y = mVect.y * scaling;
+    // scale it to  find out the coordinates on the machine that the mouse is pointing at.
+    mVect = scaleToDisplayMachine(mVect);
+    // convert it to the native coordinates system
+    mVect = convertToNative(mVect);
+    // scale it back to find out how to represent this on-screen
+    mVect = scaleToScreen(mVect);
     
-    println("mvect sc: " + mVect);
+    // and finally, because scaleToScreen also allows for the machine position (offset), subtract it.
+    mVect.sub(getOffset());
     
-    int roundedLength = rounded(mVect.x);
-    int dia = roundedLength*2;
-    ellipse(getLeft(), getTop(), dia, dia);
+    float dia = mVect.x*2;
+    arc(getLeft(), getTop(), dia, dia, 0, 1.57079633);
     
-    roundedLength = rounded(mVect.y);
-    dia = roundedLength*2;
-    ellipse(getRight(), getTop(), dia, dia);
+    dia = mVect.y*2;
+    arc(getRight(), getTop(), dia, dia, 1.57079633, 3.14159266);
   }
   
     

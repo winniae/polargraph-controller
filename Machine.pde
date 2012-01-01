@@ -140,9 +140,8 @@ class Machine
   
   public PVector inSteps(PVector mm)
   {
-    mm.x = inSteps(mm.x);
-    mm.y = inSteps(mm.y);
-    return mm;
+    PVector steps = new PVector(inSteps(mm.x), inSteps(mm.y));
+    return steps;
   }
   
   public int inMM(float steps) 
@@ -150,6 +149,12 @@ class Machine
     double mm = steps / getStepsPerMM();
     int mmInt = (int) mm;
     return mmInt;
+  }
+  
+  public PVector inMM (PVector steps)
+  {
+    PVector mm = new PVector(inMM(steps.x), inMM(steps.y));
+    return mm;
   }
   
   
@@ -226,10 +231,6 @@ class Machine
     else return false;
   }
   
-//  public PVector asNativeCoords(int x, int y)
-//  {
-//    return this.asNativeCoords((float)x, (float)y);
-//  }
   public PVector asNativeCoords(PVector cartCoords)
   {
     return asNativeCoords(cartCoords.x, cartCoords.y);
@@ -241,7 +242,9 @@ class Machine
     PVector pgCoords = new PVector(distA, distB);
     return pgCoords;
   }
-  public PVector asCartesian(PVector pgCoords)
+  
+  
+  public PVector asCartesianCoords(PVector pgCoords)
   {
     float calcX = int((pow(getWidth(), 2) - pow(pgCoords.y, 2) + pow(pgCoords.x, 2)) / (getWidth()*2));
     float calcY = int(sqrt(pow(pgCoords.x,2)-pow(calcX,2)));
