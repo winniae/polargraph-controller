@@ -5,6 +5,8 @@ class DisplayMachine extends Machine
   private Scaler scaler = null;
   private PVector offset = null;
   
+  PImage scaledImage = null;
+  
   public DisplayMachine(Machine m, PVector offset, float scaling)
   {
     // construct
@@ -15,6 +17,9 @@ class DisplayMachine extends Machine
     super.page = m.page;
     super.imageFrame = m.imageFrame;
     super.pictureFrame = m.pictureFrame;
+    
+    super.imageBitmap = m.imageBitmap;
+    super.imageFilename = m.imageFilename;
     
     super.stepsPerRev = m.stepsPerRev;
     super.mmPerRev = m.mmPerRev;
@@ -66,58 +71,40 @@ class DisplayMachine extends Machine
   {
     return this.offset;
   }
-  public Integer getLeft()
-  {
-    return int(getOutline().getLeft());
-  }
-  public Integer getTop()
-  {
-    return int(getOffset().y);
-  }
-  public Integer getRight()
-  {
-    return int(getOffset().x+sc(super.getWidth()));
-  }
-  public Integer getBottom()
-  {
-    return int(getOffset().y+sc(super.getHeight()));
-  }
-  public Integer getWidth()
-  {
-    return int(sc(super.getWidth()));
-  }
-  public Integer getHeight()
-  {
-    return int(sc(super.getHeight()));
-  }
   public void draw()
   {
     // work out the scaling factor.
     
     // draw machine outline
-    rect(getLeft(), getTop(), getWidth(), getHeight());
+    rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
     
     // draw page
-    rect(getLeft()+sc(getPage().getLeft()), 
-      getTop()+sc(getPage().getTop()), 
+    rect(getOutline().getLeft()+sc(getPage().getLeft()), 
+      getOutline().getTop()+sc(getPage().getTop()), 
       sc(getPage().getWidth()), 
       sc(getPage().getHeight()));
 
-    // draw image
-    rect(getLeft()+sc(getImageFrame().getLeft()), 
-      getTop()+sc(getImageFrame().getTop()), 
-      sc(getImageFrame().getWidth()), 
-      sc(getImageFrame().getHeight()));
+    // draw actual image
+    if (imageIsLoaded())
+    {
+      float ox = getOutline().getLeft()+sc(getImageFrame().getLeft());
+      float oy = getOutline().getTop()+sc(getImageFrame().getTop());
+      float w = sc(getImageFrame().getWidth());
+      float h = sc(getImageFrame().getHeight());
 
-    // hanging strings
-    line(getLeft(), getTop(), mouseX, mouseY);
-    line(getRight(), getTop(), mouseX, mouseY);
-
-    showRows();
+      image(getImage(), ox, oy, w, h);
+    }
+    else
+    {
+      println("no image loaded.");
+    }
+    
+    drawPictureFrame();
+      
+    drawHangingStrings();
+    drawRows();
 
   }
-
-
   
   // this scales a value from the screen to be a position on the machine
   /**  Given a point on-screen, this works out where on the 
@@ -172,10 +159,43 @@ class DisplayMachine extends Machine
     return nativeMM;
   }
 
+  void drawPictureFrame()
+  {
+    strokeWeight(1);
+    PVector topLeft = new PVector(getOutline().getLeft()+sc(getPictureFrame().getLeft()),
+    getOutline().getTop()+sc(getPage().getTop()));
+    
+    PVector botRight = new PVector(sc(getPage().getWidth()) + topLeft.x, sc(getPage().getHeight()) + topLeft.y);
+    
+    stroke (255, 255, 0);
+    ellipse(topLeft.x, topLeft.y, 10, 10);
+  
+    stroke (255, 128, 0);
+    ellipse(botRight.x, topLeft.y, 10, 10);
+  
+    stroke (255, 0, 255);
+    ellipse(botRight.x, botRight.y, 10, 10);
+  
+    stroke (255, 0, 128);
+    ellipse(topLeft.x, botRight.y, 10, 10);
+    
+    stroke(255);
+  }
+
+
+  public void drawHangingStrings()
+  {
+    // hanging strings
+    strokeWeight(4);
+    stroke(255,255,255,64);
+    line(getOutline().getLeft(), getOutline().getTop(), mouseX, mouseY);
+    line(getOutline().getRight(), getOutline().getTop(), mouseX, mouseY);
+  }
+
   /**  This draws on screen, showing an arc highlighting the row that the mouse
   is on.
   */
-  void showRows()
+  public void drawRows()
   {
     PVector mVect = getMouseVector();
     
@@ -188,14 +208,17 @@ class DisplayMachine extends Machine
     
     // and finally, because scaleToScreen also allows for the machine position (offset), subtract it.
     mVect.sub(getOffset());
+
+
+    strokeWeight(16);
+    stroke(255,255,200, 64);
+    strokeCap(SQUARE);
     
     float dia = mVect.x*2;
-    arc(getLeft(), getTop(), dia, dia, 0, 1.57079633);
+    arc(getOutline().getLeft(), getOutline().getTop(), dia, dia, 0, 1.57079633);
     
     dia = mVect.y*2;
-    arc(getRight(), getTop(), dia, dia, 1.57079633, 3.14159266);
+    arc(getOutline().getRight(), getOutline().getTop(), dia, dia, 1.57079633, 3.14159266);
   }
-  
-    
-  
+
 }

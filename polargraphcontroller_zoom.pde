@@ -7,10 +7,10 @@
 */
 import javax.swing.*;
 import processing.serial.*;
-//import controlP5.*;
+import controlP5.*;
 import java.awt.event.KeyEvent;
 
-//ControlP5 controlP5;
+ControlP5 controlP5;
 
 boolean drawbotReady = false;
 boolean drawbotConnected = false;
@@ -38,7 +38,6 @@ final int A2_IMP_HEIGHT = 640;
 final int A1_WIDTH = 594;
 final int A1_HEIGHT = 841;
 
-
 int panelPositionX = 10;
 int panelPositionY = 10;
 
@@ -60,9 +59,6 @@ int[] serialInArray = new int[1];    // Where we'll put what we receive
 int serialCount = 0;                 // A count of how many bytes we receive
 
 final JFileChooser chooser = new JFileChooser();
-
-PImage bitmap;
-int bitmapWidth = 150;
 
 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy hh:mm:ss");
 
@@ -178,7 +174,7 @@ int maxSegmentLength = 20;
 
 Map<Integer, String> buttonLabels = buildButtonLabels();
 
-Map<Integer, Map<Integer, Integer>> panels = buildPanels();
+public Map<String, Panel> panels = null;
 
 static int currentMode = MODE_BEGIN;
 
@@ -228,8 +224,6 @@ public static Integer serialPortNumber = -1;
 
 Properties props = null;
 public static String propertiesFilename = "polargraph.properties.txt";
-
-public static String bitmapFilename = null;
 
 void setup()
 {
@@ -294,10 +288,27 @@ void setup()
   preLoadCommandQueue();
 
   frame.setSize(getMachine().getWidth()*2+panelWidth+20, 1020);
+  this.panels = buildPanels();
   size(windowWidth, windowHeight);
   
 //  this.controlP5 = new ControlP5(this);
 }
+
+Map<String, Panel> buildPanels()
+{
+  Map<String, Panel> panels = new HashMap<String, Panel>(4);
+  for (String tabName : tabs)
+  {
+    Rectangle panelOutline = new Rectangle(10,10, 10+200, 10+500);
+    List<Button> buttons = new ArrayList<Button>();
+    List<PVector> buttonPositions = new ArrayList<PVector>();
+    Panel p = new Panel(tabName, panelOutline, buttons, buttonPositions);
+    
+  }
+  
+  return panels;
+}
+
 
 void preLoadCommandQueue()
 {
@@ -306,22 +317,6 @@ void preLoadCommandQueue()
   commandQueue.add(CMD_SETMOTORACCEL+currentMachineAccel+",END");
   
 }
-
-Float centreImagePos()
-{
-  Float imagePosX = (new Float(getMachine().getWidth())/2.0) - (new Float(bitmap.width) / 2.0);
-  println("imagePosX:"+imagePosX);
-  return imagePosX;
-}
-
-boolean imageIsLoaded()
-{
-  if (bitmap == null)
-    return false;
-  else
-    return true;
-}
-
 
 void draw()
 {
@@ -389,13 +384,13 @@ void drawDialogBox()
 }
 
 
+
+
 void drawImagePage()
 {
   strokeWeight(1);
-  if(mouseX >= getMachine().getPage().getLeft() 
-  && mouseX < getMachine().getPage().getRight() 
-  && mouseY >= getMachine().getPage().getTop()
-  && mouseY < getMachine().getPage().getBottom()) {
+  if (getDisplayMachine().getPage().surrounds(getMouseVector())) 
+  {
     cursor(CROSS);
   } else {
     cursor(ARROW);
@@ -405,21 +400,6 @@ void drawImagePage()
   noFill();
   
   drawMoveImageOutline();
-  if (imageIsLoaded())
-    image(bitmap, getMachine().getImageFrame().getLeft(), getMachine().getImageFrame().getTop());
-//  else
-//    loadImageWithFileChooser();
-  
-  stroke (100, 200, 100);
-
-  showAllARows();
-  showAllBRows();
-
-  stroke(0, 0, 255, 50);
-  strokeWeight(getMachine().inMM(rowWidth));
-  strokeWeight(1);
-  showMask();
-  showPictureFrame();
   
   stroke(255, 150, 255, 100);
   strokeWeight(3);
@@ -443,7 +423,7 @@ void drawImagePage()
   
   if (displayingInfoTextOnInputPage)
     showText(600,45);
-  showCommandQueue(panelPositionX+panelWidth+5, 20);
+  showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
 }
 
 void drawMachineOutline()
@@ -467,7 +447,7 @@ void drawImagePreviewPage()
 //  showCurrentMachinePosition();
   if (displayingInfoTextOnInputPage)
     showText(600,45);
-  showCommandQueue(panelPositionX+panelWidth+5, 20);
+  showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
 
 }
 
@@ -486,7 +466,7 @@ void drawDetailsPage()
   fill(100);
   noStroke();
   rect(panelPositionX+panelWidth+5, 0, width, height);
-  showCommandQueue(panelPositionX+panelWidth+5, 20);
+  showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
 
 }
 
@@ -517,17 +497,17 @@ void drawImageLoadPage()
 
 void drawMoveImageOutline()
 {
-  if (MODE_MOVE_IMAGE == currentMode)
-  {
-    Float imgX = mouseX - (new Float(bitmap.width)/2);
-    Float imgY = mouseY - (new Float(bitmap.height)/2);
-    fill(200,200,0,50);
-    rect(imgX, imgY, bitmap.width, bitmap.height);
-    
-    noFill();
-//    imageOffset.x = imgX;
-//    imageOffset.y = imgY;
-  }
+//  if (MODE_MOVE_IMAGE == currentMode)
+//  {
+//    Float imgX = mouseX - (new Float(bitmap.width)/2);
+//    Float imgY = mouseY - (new Float(bitmap.height)/2);
+//    fill(200,200,0,50);
+//    rect(imgX, imgY, bitmap.width, bitmap.height);
+//    
+//    noFill();
+////    imageOffset.x = imgX;
+////    imageOffset.y = imgY;
+//  }
 }
 
 void showPictureFrame()
@@ -571,23 +551,23 @@ void showGroupBox()
   }
 }
 
-void showMask()
-{
-  noStroke();
-
-  fill(100,100,100,150);
-  rect(0, 0, width, getMachine().getPage().getTop()); // top box
-  rect(0, getMachine().getPage().getTop(), getMachine().getPage().getLeft(), getMachine().getPage().getBottom()); // left box
-  rect(getMachine().getPage().getRight(), getMachine().getPage().getTop(), width-getMachine().getPage().getRight(), getMachine().getPage().getHeight()); // right box
-  rect(0, getMachine().getPage().getBottom(), width, height-getMachine().getPage().getBottom()); // bottom box
-  noFill();
-  stroke(0);
-  strokeWeight(2);
-  rect(getMachine().getPage().getLeft(), getMachine().getPage().getTop(), getMachine().getPage().getWidth(), getMachine().getPage().getHeight()); // page
-  stroke(255);
-  rect(getMachine().getPage().getLeft()-2, getMachine().getPage().getTop()-2, getMachine().getPage().getWidth()+4, getMachine().getPage().getHeight()+4); // page
-  strokeWeight(1);
-}
+//void showMask()
+//{
+//  noStroke();
+//
+//  fill(100,100,100,150);
+//  rect(0, 0, width, getMachine().getPage().getTop()); // top box
+//  rect(0, getMachine().getPage().getTop(), getMachine().getPage().getLeft(), getMachine().getPage().getBottom()); // left box
+//  rect(getMachine().getPage().getRight(), getMachine().getPage().getTop(), width-getMachine().getPage().getRight(), getMachine().getPage().getHeight()); // right box
+//  rect(0, getMachine().getPage().getBottom(), width, height-getMachine().getPage().getBottom()); // bottom box
+//  noFill();
+//  stroke(0);
+//  strokeWeight(2);
+//  rect(getMachine().getPage().getLeft(), getMachine().getPage().getTop(), getMachine().getPage().getWidth(), getMachine().getPage().getHeight()); // page
+//  stroke(255);
+//  rect(getMachine().getPage().getLeft()-2, getMachine().getPage().getTop()-2, getMachine().getPage().getWidth()+4, getMachine().getPage().getHeight()+4); // page
+//  strokeWeight(1);
+//}
 
 void showSelectedCentres(PVector offset)
 {
@@ -728,8 +708,8 @@ void loadImageWithFileChooser()
           PImage img = loadImage(file.getPath());
           if (img != null) 
           {
-            bitmapFilename = file.getPath();
-            bitmap = loadImage(bitmapFilename);
+            getMachine().setImageFilename(file.getPath());
+//            getMachine().setImage(loadImage(bitmapFilename));
             img = null;
           }
         }
@@ -858,6 +838,7 @@ void zoomOutFromMachine(float inc)
     machineScaling = machineScaling - inc;
     machineScaling =  Math.round(machineScaling*100.0)/100.0;
   }
+//  getDisplayMachine().setScaledImage(null);
 }
 
 public final float MAX_ZOOM = 2.0;
@@ -868,6 +849,7 @@ void zoomInToMachine(float inc)
     machineScaling = machineScaling + inc;
     machineScaling =  Math.round(machineScaling*100.0)/100.0;
   }
+//  getDisplayMachine().setScaledImage(null);
 }
 float getZoomIncrement()
 {
@@ -894,13 +876,29 @@ void keyPressed()
     {
       currentPage = PAGE_COMMAND_QUEUE;
     }
-    else if (keyCode == java.awt.event.KeyEvent.VK_F7)
+    else if (keyCode == java.awt.event.KeyEvent.VK_PAGE_UP)
     {
       zoomInToMachine(getZoomIncrement());
     }
-    else if (keyCode == java.awt.event.KeyEvent.VK_F8)
+    else if (keyCode == java.awt.event.KeyEvent.VK_PAGE_DOWN)
     {
       zoomOutFromMachine(getZoomIncrement());
+    }
+    else if (keyCode == DOWN)
+    {
+      getDisplayMachine().getOffset().y = getDisplayMachine().getOffset().y + 10;
+    }
+    else if (keyCode == UP)
+    {
+      getDisplayMachine().getOffset().y = getDisplayMachine().getOffset().y - 10;
+    }
+    else if (keyCode == RIGHT)
+    {
+      getDisplayMachine().getOffset().x = getDisplayMachine().getOffset().x + 10;
+    }
+    else if (keyCode == LEFT)
+    {
+      getDisplayMachine().getOffset().x = getDisplayMachine().getOffset().x - 10;
     }
   }
   else if (key == 'g' || key == 'G')
@@ -1047,8 +1045,8 @@ void machineClicked()
       sendMoveToPosition(false);
       break;
     case MODE_MOVE_IMAGE:
-      float ix = mouseX - (new Float(bitmap.width)/2);
-      float iy = mouseY - (new Float(bitmap.height)/2);
+      float ix = mouseX - (new Float(getMachine().getImageFrame().getWidth())/2);
+      float iy = mouseY - (new Float(getMachine().getImageFrame().getHeight())/2);
       getMachine().getImageFrame().setPosition(ix, iy);
       extractRowsFromBox();
       break;
@@ -1173,7 +1171,7 @@ void panelClicked()
       break;
     case LOAD_IMAGE:
       loadImageWithFileChooser();
-      println("Loaded image: " + bitmapFilename);
+      println("Loaded image: " + getMachine().getImageFilename());
       break;
     case MODE_FIT_IMAGE_TO_BOX:
       if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
@@ -1291,9 +1289,6 @@ void sizeImageToFitBox()
   
   Rectangle r = new Rectangle(boxVector1, boxSize);
   getMachine().setImageFrame(r);
-
-  this.bitmapWidth = (int) boxWidth;
-  loadAndProcessImage(bitmapFilename, bitmapWidth);
 }
 
 void exportQueueToFile()
@@ -1646,21 +1641,19 @@ void showText(int xPosOrigin, int yPosOrigin)
 //  text("Pixel Length B: " + dist(getDisplayMachine().getRight(), getDisplayMachine().getTop(), screenCoordsCart.x, screenCoordsCart.y), textPositionX, textPositionY+(tRow*tRowNo++));
 //
   
-  text("MM Per Step: " + getMachine().getMMPerStep(),textPositionX, textPositionY+(tRow*tRowNo++));
+  text("MM Per Step: " + getMachine().getMMPerStep(), textPositionX, textPositionY+(tRow*tRowNo++));
   text("Steps Per MM: " + getMachine().getStepsPerMM() ,textPositionX, textPositionY+(tRow*tRowNo++));
 
   if (getDisplayMachine().getOutline().surrounds(screenCoordsCart))
   {
-    
     PVector posOnMachineCartesianInMM = getDisplayMachine().scaleToDisplayMachine(screenCoordsCart);
-    text("Machine x/y mm: " + posOnMachineCartesianInMM.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
+    text("Machine x/y mm: " + posOnMachineCartesianInMM.x+","+posOnMachineCartesianInMM.y, textPositionX, textPositionY+(tRow*tRowNo++));
     
     PVector posOnMachineNativeInMM = getDisplayMachine().convertToNative(posOnMachineCartesianInMM);
-    text("Machine a/b mm: " + posOnMachineNativeInMM.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
-    ellipse(posOnMachineNativeInMM.x, posOnMachineNativeInMM.y, 15,15);
+    text("Machine a/b mm: " + posOnMachineNativeInMM.x+","+posOnMachineNativeInMM.y, textPositionX, textPositionY+(tRow*tRowNo++));
   
     PVector posOnMachineNativeInSteps = getDisplayMachine().inSteps(posOnMachineNativeInMM);
-    text("Machine a/b steps: " + posOnMachineNativeInSteps.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
+    text("Machine a/b steps: " + posOnMachineNativeInSteps.x+","+posOnMachineNativeInSteps.y, textPositionX, textPositionY+(tRow*tRowNo++));
   }
   else
   {
@@ -2179,12 +2172,6 @@ void loadFromPropertiesFile()
   this.windowWidth = getIntProperty("controller.window.width", 800);
   this.windowHeight = getIntProperty("controller.window.height", 550);
 
-  // image filename
-  this.bitmapFilename = getStringProperty("controller.image.filename", "portrait_330.jpg");
-  // load image
-  loadAndProcessImage(bitmapFilename, bitmapWidth);
-
-  
   this.testPenWidthStartSize = getFloatProperty("controller.testPenWidth.startSize", 0.5);
   this.testPenWidthEndSize = getFloatProperty("controller.testPenWidth.endSize", 2.0);
   this.testPenWidthIncrementSize = getFloatProperty("controller.testPenWidth.incrementSize", 0.5);
@@ -2212,8 +2199,6 @@ void savePropertiesFile()
   // initial screen size
   props.setProperty("controller.window.width", new Integer(width).toString());
   props.setProperty("controller.window.height", new Integer(height).toString());
-  // image filename
-  props.setProperty("controller.image.filename", (bitmapFilename==null) ? "" : bitmapFilename);
 
   props.setProperty("controller.testPenWidth.startSize", new Float(testPenWidthStartSize).toString());
   props.setProperty("controller.testPenWidth.endSize", new Float(testPenWidthEndSize).toString());
@@ -2295,16 +2280,4 @@ void initProperties()
   getProperties();
 }
 
-void loadAndProcessImage(String filename, int width)
-{
-  this.bitmap = loadImage(filename);
-  if (bitmap == null)
-  {
-    println("No image file loaded.");
-  }
-  else
-  {
-    this.bitmap.resize(width, 0);
-  }
-}
 

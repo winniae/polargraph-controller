@@ -20,6 +20,9 @@ class Machine
   protected Float maxLength = null;
   protected Float gridSize = null;
   
+  protected PImage imageBitmap = null;
+  protected String imageFilename = null;
+  
   
   public Machine(Integer width, Integer height, Float stepsPerRev, Float mmPerRev)
   {
@@ -62,7 +65,13 @@ class Machine
 
   public void setImageFrame(Rectangle r)
   {
+    setImageFrame(r, true);
+  }
+  public void setImageFrame(Rectangle r, boolean resizeImage)
+  {
     this.imageFrame = r;
+    if (resizeImage)
+      resizeImage(this.imageFrame);
   }
   public Rectangle getImageFrame()
   {
@@ -164,24 +173,24 @@ class Machine
     
     PVector v = PVector.sub(o, getImageFrame().getTopLeft());
     
-    if (v.x <= bitmap.width && v.x>=0 
-    && v.y>=0 && v.y <= bitmap.height)
+    if (v.x <= getImage().width && v.x>=0 
+    && v.y>=0 && v.y <= getImage().height)
     {
       // get pixels from the vector coords
-      int centrePixel = bitmap.get((int)v.x, (int)v.y);
+      int centrePixel = getImage().get((int)v.x, (int)v.y);
       int x = ((int)v.x) - (dim/2);
       int y = ((int)v.y) - (dim/2);
       
       int dimWidth = dim;
       int dimHeight = dim;
       
-      if (x+dim > bitmap.width)
-        dimWidth = bitmap.width-x;
+      if (x+dim > getImage().width)
+        dimWidth = getImage().width-x;
         
-      if (y+dim > bitmap.height)
-        dimHeight = bitmap.height-y;
+      if (y+dim > getImage().height)
+        dimHeight = getImage().height-y;
         
-      PImage block = bitmap.get(x, y, dimWidth, dimHeight);
+      PImage block = getImage().get(x, y, dimWidth, dimHeight);
       
       block.loadPixels();
       int numberOfPixels = block.pixels.length;
@@ -207,10 +216,10 @@ class Machine
     
     PVector v = PVector.sub(o, getImageFrame().getTopLeft());
     
-    if (v.x < bitmap.width && v.y < bitmap.height)
+    if (v.x < getImage().width && v.y < getImage().height)
     {
       // get pixels from the vector coords
-      color centrePixel = bitmap.get((int)v.x, (int)v.y);
+      color centrePixel = getImage().get((int)v.x, (int)v.y);
       float r = red(centrePixel);
       float g = green(centrePixel);
       float b = blue(centrePixel);
@@ -255,19 +264,23 @@ class Machine
   public void loadDefinitionFromProperties(Properties props)
   {
     // get these first because they are important to convert the rest of them
-    getMachine().setStepsPerRev(getFloatProperty("machine.motors.stepsPerRev", 800.0));
-    getMachine().setMMPerRev(getFloatProperty("machine.motors.mmPerRev", 95.0));
+    setStepsPerRev(getFloatProperty("machine.motors.stepsPerRev", 800.0));
+    setMMPerRev(getFloatProperty("machine.motors.mmPerRev", 95.0));
     
     // now stepsPerMM and mmPerStep should have been calculated. It's safe to get the rest.
    
     // machine size
-    getMachine().setSize(inSteps(getIntProperty("machine.width", 600)), inSteps(getIntProperty("machine.height", 800)));
+    setSize(inSteps(getIntProperty("machine.width", 600)), inSteps(getIntProperty("machine.height", 800)));
     
     // page size
     PVector pageSize = new PVector(getIntProperty("controller.page.width", A3_WIDTH), getIntProperty("controller.page.height", A3_HEIGHT));
     PVector pagePos = new PVector(getIntProperty("controller.page.position.x", (int) getMachine().getPageCentrePosition(pageSize.x)), getIntProperty("controller.page.position.y", 120));
     Rectangle page = new Rectangle(inSteps(pagePos), inSteps(pageSize));
-    getMachine().setPage(page);
+    setPage(page);
+
+    // bitmap
+    setImageFilename(getStringProperty("controller.image.filename", "portrait_330.jpg"));
+    loadImageFromFilename(imageFilename);
   
     // image position
     Float offsetX = getFloatProperty("controller.image.position.x", 0.0);
@@ -276,13 +289,13 @@ class Machine
     Float imageWidth = getFloatProperty("controller.image.width", 300);
     PVector imageSize = new PVector(imageWidth, imageWidth);
     Rectangle imageFrame = new Rectangle(inSteps(imagePos), inSteps(imageSize));
-    getMachine().setImageFrame(imageFrame);
-  
+    setImageFrame(imageFrame); // this automatically resizes the image if nec
+
     // picture frame size
     PVector frameSize = new PVector(getIntProperty("controller.pictureframe.width", 200), getIntProperty("controller.pictureframe.height", 200));
     PVector framePos = new PVector(getIntProperty("controller.pictureframe.position.x", 200), getIntProperty("controller.pictureframe.position.y", 200));
     Rectangle frame = new Rectangle(inSteps(framePos), inSteps(frameSize));
-    getMachine().setPictureFrame(frame);
+    setPictureFrame(frame);
   }
   public Properties loadDefinitionIntoProperties(Properties props)
   {
@@ -294,6 +307,9 @@ class Machine
     props.setProperty("machine.width", Integer.toString((int) inMM(getMachine().getWidth())));
     // machine.height
     props.setProperty("machine.height", Integer.toString((int) inMM(getMachine().getHeight())));
+
+    // image filename
+    props.setProperty("controller.image.filename", (getImageFilename() == null) ? "" : getImageFilename());
     
     // image position
     props.setProperty("controller.image.position.x", Integer.toString((int) inMM(getMachine().getImageFrame().getLeft())));
@@ -319,5 +335,53 @@ class Machine
     
     return props;
   }
+
+  void loadImageFromFilename(String filename)
+  {
+    // check for format etc here
+    println("loading from filename: " + filename);
+    this.imageBitmap = loadImage(filename);
+    this.imageFilename = filename;
+  }
+  
+  public void setImage(PImage b)
+  {
+    this.imageBitmap = b;
+  }
+  public void setImageFilename(String filename)
+  {
+    this.loadImageFromFilename(filename);
+  }
+  public String getImageFilename()
+  {
+    return this.imageFilename;
+  }
+  public PImage getImage()
+  {
+    return this.imageBitmap;
+  }
+  
+  public boolean imageIsLoaded()
+  {
+    if (getImage() != null)
+      return true;
+    else
+      return false;
+  }
+
+
+  private void resizeImage(Rectangle r)
+  {
+    println("image:" + getImage());
+    if (imageIsLoaded())
+    {
+      getImage().resize(width, 0);
+    }
+    else
+    {
+      println("No image file loaded to resize.");
+    }    
+  }
+  
 
 }

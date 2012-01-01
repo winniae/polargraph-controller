@@ -1,7 +1,9 @@
 
 
+
 void showPanel()
 {
+  strokeWeight(2);
   stroke(150);
   fill(100);
   rect(panelPositionX, panelPositionY, panelWidth, panelHeight);
