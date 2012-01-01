@@ -21,7 +21,7 @@ Machine machine = new Machine(712, 980, 800.0, 95.0);
 String newMachineName = "PGXXABCD";
 PVector machinePosition = new PVector(130.0, 50.0);
 float machineScaling = 1.0;
-DisplayMachine dMachine = new DisplayMachine(machine, machinePosition, machineScaling);
+DisplayMachine displayMachine = null;
 
 int homeALengthMM = 400;
 int homeBLengthMM = 400;
@@ -429,8 +429,7 @@ void drawImagePage()
   noFill();
   
   // draw machine outline
-  getMachine().setScale(machineScaling);
-  getMachine().draw(machinePosition);
+  getDisplayMachine().draw();
 
   
   stroke(255, 0, 0);
@@ -443,7 +442,7 @@ void drawImagePage()
   showCurrentMachinePosition();
   
   if (displayingInfoTextOnInputPage)
-    showText(30,45);
+    showText(600,45);
   showCommandQueue(panelPositionX+panelWidth+5, 20);
 }
 
@@ -467,7 +466,7 @@ void drawImagePreviewPage()
   
 //  showCurrentMachinePosition();
   if (displayingInfoTextOnInputPage)
-    showText(30,45);
+    showText(600,45);
   showCommandQueue(panelPositionX+panelWidth+5, 20);
 
 }
@@ -561,18 +560,6 @@ void showCurrentMachinePosition()
 
   noFill();
 }
-
-int getALength() 
-{
-  int aLength = getMachine().inSteps(dist(mouseX, mouseY, 0+machinePosition.x, 0+machinePosition.y));
-  return aLength;
-}
-int getBLength() 
-{
-  int bLength = getMachine().inSteps(dist(mouseX, mouseY, getMachine().getWidth()+machinePosition.x, 0+machinePosition.y));
-  return bLength;
-}
-
 
 void showGroupBox()
 {
@@ -694,26 +681,30 @@ void showAllBRows()
   }
 }
 
-
+int rounded(float lineLength)
+{
+  return rounded((int) lineLength);
+}
 int rounded(int lineLength)
 {
-  int lowLine = rowSegmentsForMachine[0];
-  int highLine = lowLine;
-  int result = lowLine + (rowWidth / 2);
-  
-  for (int i = 0; i < (rowSegmentsForMachine.length-1); i++)
-  {
-    lowLine = rowSegmentsForMachine[i];
-    highLine = rowSegmentsForMachine[i+1];
-    
-    if (lineLength >= lowLine 
-    && lineLength <= highLine)
-    {
-      result = lowLine + (rowWidth / 2);
-    }
-  }
-  
-  return result;
+//  int lowLine = rowSegmentsForMachine[0];
+//  int highLine = lowLine;
+//  int result = lowLine + (rowWidth / 2);
+//  
+//  for (int i = 0; i < (rowSegmentsForMachine.length-1); i++)
+//  {
+//    lowLine = rowSegmentsForMachine[i];
+//    highLine = rowSegmentsForMachine[i+1];
+//    
+//    if (lineLength >= lowLine 
+//    && lineLength <= highLine)
+//    {
+//      result = lowLine + (rowWidth / 2);
+//    }
+//  }
+//  
+//  return result;
+  return lineLength;
 }
 
 void loadImageWithFileChooser()
@@ -860,7 +851,7 @@ Map<Integer, Integer> getCurrentPanel()
   return panels.get(getCurrentPage());
 }
 
-void zoomInToMachine(float inc)
+void zoomOutFromMachine(float inc)
 {
   if (machineScaling > inc)
   {
@@ -868,9 +859,11 @@ void zoomInToMachine(float inc)
     machineScaling =  Math.round(machineScaling*100.0)/100.0;
   }
 }
-void zoomOutFromMachine(float inc)
+
+public final float MAX_ZOOM = 2.0;
+void zoomInToMachine(float inc)
 {
-  if (machineScaling <= (1 - inc))
+  if (machineScaling <= (MAX_ZOOM - inc))
   {
     machineScaling = machineScaling + inc;
     machineScaling =  Math.round(machineScaling*100.0)/100.0;
@@ -1558,17 +1551,17 @@ boolean isRowsSpecified()
 
 void setRowsVector1()
 {
-  int roundedA = rounded(getALength())-rowWidth;
-  int roundedB = rounded(getBLength())-rowWidth;
-  PVector posInMachine = new PVector(roundedA, roundedB);
-  rowsVector1 = posInMachine;
+//  int roundedA = rounded(getALength())-rowWidth;
+//  int roundedB = rounded(getBLength())-rowWidth;
+//  PVector posInMachine = new PVector(roundedA, roundedB);
+//  rowsVector1 = posInMachine;
 }
 void setRowsVector2()
 {
-  int roundedA = rounded(getALength());
-  int roundedB = rounded(getBLength());
-  PVector posInMachine = new PVector(roundedA, roundedB);
-  rowsVector2 = posInMachine;
+//  int roundedA = rounded(getALength());
+//  int roundedB = rounded(getBLength());
+//  PVector posInMachine = new PVector(roundedA, roundedB);
+//  rowsVector2 = posInMachine;
 }
 
 boolean isBoxSpecified()
@@ -1635,25 +1628,48 @@ void showText(int xPosOrigin, int yPosOrigin)
 {
   noStroke();
   fill(0, 0, 0, 80);
-  rect(xPosOrigin-4, yPosOrigin-4, xPosOrigin+250, yPosOrigin+370);
+  rect(xPosOrigin, yPosOrigin, 200, 400);
   
   
   textSize(12);
   fill(255);
   int tRow = 15;
-  int textPositionX = xPosOrigin;
-  int textPositionY = yPosOrigin;
+  int textPositionX = xPosOrigin+4;
+  int textPositionY = yPosOrigin+4;
   
   int tRowNo = 1;
+  PVector screenCoordsCart = getMouseVector();
+ 
+  text("Cursor position: " + mouseX + ", " + mouseY, textPositionX, textPositionY+(tRow*tRowNo++));
   
-  int calcALength = 0;//int(sqrt(pow(mouseX,2) + pow(mouseY,2)));
-  int calcBLength = 0;//int(sqrt(pow(machineWidth-mouseX,2)+pow(mouseY,2)));
+//  text("Pixel Length A: " + dist(getDisplayMachine().getLeft(), getDisplayMachine().getTop(), screenCoordsCart.x, screenCoordsCart.y), textPositionX, textPositionY+(tRow*tRowNo++));
+//  text("Pixel Length B: " + dist(getDisplayMachine().getRight(), getDisplayMachine().getTop(), screenCoordsCart.x, screenCoordsCart.y), textPositionX, textPositionY+(tRow*tRowNo++));
+//
+  
+  text("MM Per Step: " + getMachine().getMMPerStep(),textPositionX, textPositionY+(tRow*tRowNo++));
+  text("Steps Per MM: " + getMachine().getStepsPerMM() ,textPositionX, textPositionY+(tRow*tRowNo++));
 
-  text(mouseX + ", " + mouseY, textPositionX, textPositionY+(tRow*tRowNo++));
-  text("Pixel Length A: " + getMachine().inMM(getALength()) + " (" + calcALength + ")", textPositionX, textPositionY+(tRow*tRowNo++));
-  text("Pixel Length B: " + getMachine().inMM(getBLength()) + " (" + calcBLength + ")", textPositionX, textPositionY+(tRow*tRowNo++));
-  text("Steps Length A: " + getALength(), textPositionX, textPositionY+(tRow*tRowNo++));
-  text("Steps Length B: " + getBLength(), textPositionX, textPositionY+(tRow*tRowNo++));
+  if (getDisplayMachine().getOutline().surrounds(screenCoordsCart))
+  {
+    PVector mmCoordsCartesian = getDisplayMachine().asCartesianCoords(screenCoordsCart);
+    text("Machine x/y mm: " + mmCoordsCartesian.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
+    
+//    ellipse(mmCoordsCartesian.x, mmCoordsCartesian.y, 5,5);
+    
+    PVector mmCoordsNative = getDisplayMachine().asNativeCoordsMM(screenCoordsCart);
+    text("Machine a/b mm: " + mmCoordsNative.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
+  
+    PVector stepCoords = getDisplayMachine().asNativeCoords(screenCoordsCart);
+    text("Machine a/b steps: " + stepCoords.toString(), textPositionX, textPositionY+(tRow*tRowNo++));
+  }
+  else
+  {
+    text("Machine x/y mm: --,--", textPositionX, textPositionY+(tRow*tRowNo++));
+    text("Machine a/b mm: --,--", textPositionX, textPositionY+(tRow*tRowNo++));
+    text("Machine a/b steps: --,--", textPositionX, textPositionY+(tRow*tRowNo++));
+  }
+  
+
 
   drawStatusText(textPositionX, textPositionY+(tRow*tRowNo++));  
     
@@ -1909,6 +1925,15 @@ PVector getBoxPosition()
 public Machine getMachine()
 {
   return this.machine;
+}
+public DisplayMachine getDisplayMachine()
+{
+  if (displayMachine == null)
+    displayMachine = new DisplayMachine(getMachine(), machinePosition, machineScaling);
+    
+  displayMachine.setOffset(machinePosition);
+  displayMachine.setScale(machineScaling);
+  return displayMachine;
 }
 
 void serialEvent(Serial myPort) 

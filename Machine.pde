@@ -34,6 +34,10 @@ class Machine
     this.machineSize = s;
     maxLength = null;
   }
+  public PVector getSize()
+  {
+    return this.machineSize;
+  }
   public Float getMaxLength()
   {
     if (maxLength == null)
@@ -120,21 +124,21 @@ class Machine
     return stepsPerMM;
   }
   
-  private int inSteps(int inMM) 
+  public int inSteps(int inMM) 
   {
     double steps = inMM * getStepsPerMM();
     int stepsInt = (int) steps;
     return stepsInt;
   }
   
-  private int inSteps(float inMM) 
+  public int inSteps(float inMM) 
   {
     double steps = inMM * getStepsPerMM();
     int stepsInt = (int) steps;
     return stepsInt;
   }
   
-  private PVector inSteps(PVector mm)
+  public PVector inSteps(PVector mm)
   {
     mm.x = inSteps(mm.x);
     mm.y = inSteps(mm.y);
@@ -222,6 +226,10 @@ class Machine
     else return false;
   }
   
+//  public PVector asNativeCoords(int x, int y)
+//  {
+//    return this.asNativeCoords((float)x, (float)y);
+//  }
   public PVector asNativeCoords(PVector cartCoords)
   {
     return asNativeCoords(cartCoords.x, cartCoords.y);
@@ -230,14 +238,14 @@ class Machine
   {
     float distA = dist(0,0,cartX, cartY);
     float distB = dist(getWidth(),0,cartX, cartY);
-    PVector pgCoords = new PVector(inSteps(distA), inSteps(distB));
+    PVector pgCoords = new PVector(distA, distB);
     return pgCoords;
   }
   public PVector asCartesian(PVector pgCoords)
   {
     float calcX = int((pow(getWidth(), 2) - pow(pgCoords.y, 2) + pow(pgCoords.x, 2)) / (getWidth()*2));
     float calcY = int(sqrt(pow(pgCoords.x,2)-pow(calcX,2)));
-    PVector vect = new PVector(inMM(calcX), inMM(calcY));
+    PVector vect = new PVector(calcX, calcY);
     return vect;
   }
   
@@ -308,71 +316,5 @@ class Machine
     
     return props;
   }
-  
-  private Scaler getScaler()
-  {
-    return scaler;
-  }
-  
-  public void setScale(float scale)
-  {
-    this.scaler = new Scaler(scale, getMMPerStep());
-  }
-  public float sc(float val)
-  {
-    return getScaler().scale(val);
-  }
-  public void setDisplayPosition(PVector offset)
-  {
-    this.displayPosition = offset;
-  }
-  public PVector
-  
-  public void draw(PVector pos)
-  {
-    // work out the scaling factor.
-    
-    // draw machine outline
-    rect(pos.x, pos.y, sc(getWidth()), sc(getHeight()));
-    
-    // draw page
-    rect(pos.x+sc(getPage().getLeft()), 
-      pos.y+sc(getPage().getTop()), 
-      sc(getPage().getWidth()), 
-      sc(getPage().getHeight()));
 
-    // draw image
-    rect(pos.x+sc(getImageFrame().getLeft()), 
-      pos.y+sc(getImageFrame().getTop()), 
-      sc(getImageFrame().getWidth()), 
-      sc(getImageFrame().getHeight()));
-
-    showARow(pos);
-    showBRow(pos);
-
-    line(pos.x, pos.y, mouseX, mouseY);
-    line(pos.x+sc(getWidth()), pos.y, mouseX, mouseY);
-  }
-  
-  
-  
-  void showARow(PVector pos)
-  {
-    int roundedLength = getMachine().inMM(rounded(getALength()));
-    int dia = roundedLength*2;
-    int rowMM = inMM(rowWidth);
-    ellipse(pos.x, pos.y, dia, dia);
-  }
-  void showBRow(PVector pos)
-  {
-    int roundedLength = getMachine().inMM(rounded(getBLength()));
-    int dia = roundedLength*2;
-    ellipse(pos.x+sc(getWidth()), pos.y, dia, dia);
-  }
-  
-  public PVector getALength(PVector coord)
-  {
-    
-  }
-  
 }

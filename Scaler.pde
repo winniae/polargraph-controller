@@ -8,6 +8,10 @@ class Scaler
     this.scale = scale;
     this.mmPerStep = mmPerStep;
   }
+  public void setScale(float scale)
+  {
+    this.scale = scale;
+  }
   
   public float scale(float in)
   {

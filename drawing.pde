@@ -30,6 +30,7 @@ static final String CMD_CHANGEMACHINESTEPSPERREV = "C30,";
 static final String CMD_SETMOTORSPEED = "C31,";
 static final String CMD_SETMOTORACCEL = "C32,";
 
+private PVector mouseVector = new PVector(0,0);
 void sendResetMachine()
 {
   String command = CMD_RESETMACHINE + "END";
@@ -53,14 +54,27 @@ void sendMachineSpec()
   commandQueue.add(command);
 }
 
-
+public PVector getMouseVector()
+{
+  if (mouseVector == null)
+  {
+    mouseVector = new PVector(0,0);
+  }
+  
+  mouseVector.x = mouseX;
+  mouseVector.y = mouseY;
+  return mouseVector;
+}
 void sendMoveToPosition(boolean direct)
 {
   String command = null;
+  PVector p = getDisplayMachine().asNativeCoords(getMouseVector());
   if (direct)
-    command = CMD_CHANGELENGTHDIRECT+getALength()+","+getBLength()+","+getMaxSegmentLength()+",END";
+  {
+    command = CMD_CHANGELENGTHDIRECT+p.x+","+p.y+","+getMaxSegmentLength()+",END";
+  }
   else
-    command = CMD_CHANGELENGTH+getALength()+","+getBLength()+",END";
+    command = CMD_CHANGELENGTH+p.x+","+p.y+",END";
   
   commandQueue.add(command);
 }
@@ -96,7 +110,8 @@ void sendTestPenWidth()
 
 void sendSetPosition()
 {
-  String command = CMD_SETPOSITION+getALength()+","+getBLength()+",END";
+  PVector p = getDisplayMachine().asNativeCoords(getMouseVector());
+  String command = CMD_SETPOSITION+p.x+","+p.y+",END";
   commandQueue.add(command);
 }
 
