@@ -3,32 +3,6 @@
 
 void showPanel()
 {
-  strokeWeight(2);
-  stroke(150);
-  fill(100);
-  rect(panelPositionX, panelPositionY, panelWidth, panelHeight);
-  noFill();
-  
-  Map<Integer, Integer> panelButtons = panels.get(getCurrentPage());
-  for (int i = 0; i < noOfButtons; i++)
-  {
-    if (panelButtons.containsKey(i))
-    {
-      Integer mode = panelButtons.get(i);
-      if (currentMode == mode)
-        stroke(255);
-      else
-        stroke(150);
-      noFill();
-      rect(panelPositionX+2, panelPositionY+(i*buttonHeight)+2, panelWidth-4,  buttonHeight-4);
-      stroke(255);
-      fill(255);
-      text(buttonLabels.get(mode), panelPositionX+6, panelPositionY+(i*buttonHeight)+20);
-    }
-    noFill();
-  }
-  
-  noStroke();
 }
 
 String getButtonLabel(Integer butNo)
@@ -56,9 +30,53 @@ void showPreviewMachine()
   
 }
 
+Map<String, List<String>> getButtonsForPanels()
+{
+  Map<String, List<String>> map = new HashMap<String, List<String>>();
+  map.put(TAB_NAME_INPUT, getButtonsForInputPanel());
+  return map;
+}
+
+List<String> getButtonsForInputPanel()
+{
+  List<String> buttonNames = new ArrayList<String>();
+  
+  buttonNames.add(MODE_BEGIN);
+  buttonNames.add(MODE_SET_POSITION_HOME);
+  buttonNames.add(MODE_SET_POSITION);
+  buttonNames.add(MODE_DRAW_TO_POSITION);
+  buttonNames.add(MODE_DRAW_DIRECT);
+
+  buttonNames.add(MODE_INPUT_BOX_TOP_LEFT);
+  buttonNames.add(MODE_INPUT_BOX_BOT_RIGHT);
+
+  buttonNames.add(MODE_CONVERT_BOX_TO_PICTUREFRAME);
+  buttonNames.add(MODE_SELECT_PICTUREFRAME);
+
+  buttonNames.add(MODE_LOAD_IMAGE);
+  buttonNames.add(MODE_MOVE_IMAGE);
+  buttonNames.add(MODE_FIT_IMAGE_TO_BOX);
+  
+  buttonNames.add(MODE_RENDER_SQUARE_PIXELS);
+  buttonNames.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
+  buttonNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
+  buttonNames.add(MODE_RENDER_SCRIBBLE_PIXELS);
+
+  buttonNames.add(MODE_DRAW_TEST_PENWIDTH);
+
+  buttonNames.add(MODE_INC_ROWSIZE);
+  buttonNames.add(MODE_DEC_ROWSIZE);
+
+  buttonNames.add(MODE_DRAW_GRID);
+  buttonNames.add(MODE_DRAW_OUTLINE_BOX);
+  buttonNames.add(MODE_DRAW_OUTLINE_BOX_ROWS);
+  buttonNames.add(MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
+
+  return buttonNames;
+}
 
 
-Map<Integer, Map<Integer, Integer>> buildPanels()
+Map<Integer, Map<Integer, Integer>> buildPanelsButtons()
 {
   Map<Integer, Map<Integer, Integer>> panelMap = new HashMap<Integer, Map<Integer, Integer>>(5);
   

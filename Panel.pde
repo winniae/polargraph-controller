@@ -2,15 +2,13 @@ class Panel
 {
   private Rectangle outline = null;
   private String name = null;
-  private List<Integer> buttons = null;
+  private List<Button> buttons = null;
   private List<PVector> buttonPositions = null;
 
-  public Panel(String name, Rectangle outline, List<Integer> buttons, List<PVector> buttonPositions)
+  public Panel(String name, Rectangle outline)
   {
     this.name = name;
     this.outline = outline;
-    this.buttons = buttons;
-    this.buttonPositions = buttonPositions;
   }
   
   public Rectangle getOutline()
@@ -31,11 +29,11 @@ class Panel
     this.name = name;
   }
   
-  public List<Integer> getButtons()
+  public List<Button> getButtons()
   {
     return this.buttons;
   }
-  public void setButtons(List<Integer> b)
+  public void setButtons(List<Button> b)
   {
     this.buttons = b;
   }
@@ -47,6 +45,14 @@ class Panel
   public void setButtonPositions(List<PVector> bp)
   {
     this.buttonPositions = bp;
+  }
+  
+  public void draw()
+  {
+    stroke(200,200,200,255);
+    strokeWeight(2);
+    rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
+    
   }
   
   

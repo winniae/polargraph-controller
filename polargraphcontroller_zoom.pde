@@ -10,7 +10,7 @@ import processing.serial.*;
 import controlP5.*;
 import java.awt.event.KeyEvent;
 
-ControlP5 controlP5;
+ControlP5 cp5;
 
 boolean drawbotReady = false;
 boolean drawbotConnected = false;
@@ -113,55 +113,104 @@ int machineUsedMem = 0;
 int machineMinAvailMem = 2048;
 
 
-static final int MODE_BEGIN = 0;
-static final int MODE_INPUT_BOX_TOP_LEFT = 1;
-static final int MODE_INPUT_BOX_BOT_RIGHT = 2;
-static final int MODE_DRAW_OUTLINE_BOX = 4;
-static final int MODE_DRAW_OUTLINE_BOX_ROWS = 5;
-static final int MODE_DRAW_SHADE_BOX_ROWS_PIXELS = 6;
-static final int MODE_DRAW_TO_POSITION = 7;
-static final int MODE_RENDER_SQUARE_PIXELS = 8;
-static final int MODE_RENDER_SAW_PIXELS = 9;
-static final int MODE_RENDER_CIRCLE_PIXELS = 10;
-static final int MODE_INPUT_ROW_START = 11;
-static final int MODE_INPUT_ROW_END = 12;
-static final int MODE_SET_POSITION = 13;
-static final int MODE_DRAW_TESTPATTERN = 14;
-static final int INS_INC_ROWSIZE = 15;
-static final int INS_DEC_ROWSIZE = 16;
-static final int MODE_DRAW_GRID = 17;
-static final int PLACE_IMAGE = 18;
-static final int LOAD_IMAGE = 19;
-static final int PAUSE_QUEUE = 20;
-static final int RUN_QUEUE = 21;
-static final int CLEAR_QUEUE = 22;
-static final int MODE_SET_POSITION_HOME = 23;
-static final int MODE_INPUT_SINGLE_PIXEL = 24;
-static final int MODE_DRAW_TEST_PENWIDTH = 25;
-static final int MODE_RENDER_SCALED_SQUARE_PIXELS = 26;
-static final int MODE_RENDER_SOLID_SQUARE_PIXELS = 27;
-static final int MODE_RENDER_SCRIBBLE_PIXELS = 28;
-static final int MODE_LOAD_SD_IMAGE = 29;
-static final int MODE_START_ROVING = 30;
-static final int MODE_STOP_ROVING = 31;
-static final int MODE_SET_ROVE_AREA = 32;
-static final int MODE_CREATE_MACHINE_TEXT_BITMAP = 34;
-static final int MODE_CHANGE_MACHINE_SPEC = 35;
-static final int MODE_REQUEST_MACHINE_SIZE = 37;
-static final int MODE_RESET_MACHINE = 38;
-static final int MODE_SAVE_PROPERTIES = 39;
-static final int MODE_INC_SAMPLE_AREA = 40;
-static final int MODE_DEC_SAMPLE_AREA = 41;
-static final int MODE_MOVE_IMAGE = 42;
-static final int MODE_INPUT_IMAGE = 43;
-static final int MODE_CONVERT_BOX_TO_PICTUREFRAME = 44;
-static final int MODE_SELECT_PICTUREFRAME = 45;
-static final int MODE_EXPORT_QUEUE = 46;
-static final int MODE_IMPORT_QUEUE = 47;
-static final int MODE_CLEAR_QUEUE = 48;
-static final int MODE_FIT_IMAGE_TO_BOX = 49;
-static final int MODE_DRAW_DIRECT = 50;
-static final int MODE_RENDER_COMMAND_QUEUE = 51;
+//static final int MODE_BEGIN = 0;
+//static final int MODE_INPUT_BOX_TOP_LEFT = 1;
+//static final int MODE_INPUT_BOX_BOT_RIGHT = 2;
+//static final int MODE_DRAW_OUTLINE_BOX = 4;
+//static final int MODE_DRAW_OUTLINE_BOX_ROWS = 5;
+//static final int MODE_DRAW_SHADE_BOX_ROWS_PIXELS = 6;
+//static final int MODE_DRAW_TO_POSITION = 7;
+//static final int MODE_RENDER_SQUARE_PIXELS = 8;
+//static final int MODE_RENDER_SAW_PIXELS = 9;
+//static final int MODE_RENDER_CIRCLE_PIXELS = 10;
+//static final int MODE_INPUT_ROW_START = 11;
+//static final int MODE_INPUT_ROW_END = 12;
+//static final int MODE_SET_POSITION = 13;
+//static final int MODE_DRAW_TESTPATTERN = 14;
+//static final int INS_INC_ROWSIZE = 15;
+//static final int INS_DEC_ROWSIZE = 16;
+//static final int MODE_DRAW_GRID = 17;
+//static final int PLACE_IMAGE = 18;
+//static final int LOAD_IMAGE = 19;
+//static final int PAUSE_QUEUE = 20;
+//static final int RUN_QUEUE = 21;
+//static final int CLEAR_QUEUE = 22;
+//static final int MODE_SET_POSITION_HOME = 23;
+//static final int MODE_INPUT_SINGLE_PIXEL = 24;
+//static final int MODE_DRAW_TEST_PENWIDTH = 25;
+//static final int MODE_RENDER_SCALED_SQUARE_PIXELS = 26;
+//static final int MODE_RENDER_SOLID_SQUARE_PIXELS = 27;
+//static final int MODE_RENDER_SCRIBBLE_PIXELS = 28;
+//static final int MODE_LOAD_SD_IMAGE = 29;
+//static final int MODE_START_ROVING = 30;
+//static final int MODE_STOP_ROVING = 31;
+//static final int MODE_SET_ROVE_AREA = 32;
+//static final int MODE_CREATE_MACHINE_TEXT_BITMAP = 34;
+//static final int MODE_CHANGE_MACHINE_SPEC = 35;
+//static final int MODE_REQUEST_MACHINE_SIZE = 37;
+//static final int MODE_RESET_MACHINE = 38;
+//static final int MODE_SAVE_PROPERTIES = 39;
+//static final int MODE_INC_SAMPLE_AREA = 40;
+//static final int MODE_DEC_SAMPLE_AREA = 41;
+//static final int MODE_MOVE_IMAGE = 42;
+//static final int MODE_INPUT_IMAGE = 43;
+//static final int MODE_CONVERT_BOX_TO_PICTUREFRAME = 44;
+//static final int MODE_SELECT_PICTUREFRAME = 45;
+//static final int MODE_EXPORT_QUEUE = 46;
+//static final int MODE_IMPORT_QUEUE = 47;
+//static final int MODE_CLEAR_QUEUE = 48;
+//static final int MODE_FIT_IMAGE_TO_BOX = 49;
+//static final int MODE_DRAW_DIRECT = 50;
+//static final int MODE_RENDER_COMMAND_QUEUE = 51;
+
+static final String MODE_BEGIN = "mode_begin";
+static final String MODE_INPUT_BOX_TOP_LEFT = "mode_inputBoxTopLeft";
+static final String MODE_INPUT_BOX_BOT_RIGHT = "mode_inputBoxBotRight";
+static final String MODE_DRAW_OUTLINE_BOX = "mode_drawOutlineBox";
+static final String MODE_DRAW_OUTLINE_BOX_ROWS = "mode_drawOutlineBoxRows";
+static final String MODE_DRAW_SHADE_BOX_ROWS_PIXELS = "mode_drawShadeBoxRowsPixels";
+static final String MODE_DRAW_TO_POSITION = "mode_drawToPosition";
+static final String MODE_RENDER_SQUARE_PIXELS = "mode_renderSquarePixel";
+static final String MODE_RENDER_SAW_PIXELS = "mode_renderSawPixel";
+static final String MODE_RENDER_CIRCLE_PIXELS = "mode_renderCirclePixel";
+static final String MODE_INPUT_ROW_START = "mode_inputRowStart";
+static final String MODE_INPUT_ROW_END = "mode_inputRowEnd";
+static final String MODE_SET_POSITION = "mode_setPosition";
+static final String MODE_DRAW_TESTPATTERN = "mode_drawTestPattern";
+static final String MODE_INC_ROW_SIZE = "mode_incRowSize";
+static final String MODE_DEC_ROW_SIZE = "mode_decRowSize";
+static final String MODE_DRAW_GRID = "mode_drawGrid";
+static final String MODE_PLACE_IMAGE = "mode_placeImage";
+static final String MODE_LOAD_IMAGE = "mode_loadImage";
+static final String MODE_PAUSE_QUEUE = "mode_pauseQueue";
+static final String MODE_RUN_QUEUE = "mode_runQueue";
+static final String MODE_SET_POSITION_HOME = "mode_setPositionHome";
+static final String MODE_INPUT_SINGLE_PIXEL = "mode_inputSinglePixel";
+static final String MODE_DRAW_TEST_PENWIDTH = "mode_drawTestPenWidth";
+static final String MODE_RENDER_SCALED_SQUARE_PIXELS = "mode_renderScaledSquarePixels";
+static final String MODE_RENDER_SOLID_SQUARE_PIXELS = "mode_renderSolidSquarePixels";
+static final String MODE_RENDER_SCRIBBLE_PIXELS = "mode_renderScribblePixels";
+static final String MODE_LOAD_SD_IMAGE = "mode_loadSdImage";
+static final String MODE_START_ROVING = "mode_startRoving";
+static final String MODE_STOP_ROVING = "mode_stopRoving";
+static final String MODE_SET_ROVE_AREA = "mode_setRoveArea";
+static final String MODE_CREATE_MACHINE_TEXT_BITMAP = "mode_createMachineTextBitmap";
+static final String MODE_CHANGE_MACHINE_SPEC = "mode_changeMachineSpec";
+static final String MODE_REQUEST_MACHINE_SIZE = "mode_requestMachineSize";
+static final String MODE_RESET_MACHINE = "mode_resetMachine";
+static final String MODE_SAVE_PROPERTIES = "mode_saveProperties";
+static final String MODE_INC_SAMPLE_AREA = "mode_incSampleArea";
+static final String MODE_DEC_SAMPLE_AREA = "mode_decSampleArea";
+static final String MODE_MOVE_IMAGE = "mode_moveImage";
+static final String MODE_INPUT_IMAGE = "mode_inputImage";
+static final String MODE_CONVERT_BOX_TO_PICTUREFRAME = "mode_convertBoxToPictureframe";
+static final String MODE_SELECT_PICTUREFRAME = "mode_selectPictureframe";
+static final String MODE_EXPORT_QUEUE = "mode_exportQueue";
+static final String MODE_IMPORT_QUEUE = "mode_importQueue";
+static final String MODE_CLEAR_QUEUE = "mode_clearQueue";
+static final String MODE_FIT_IMAGE_TO_BOX = "mode_fitImageToBox";
+static final String MODE_DRAW_DIRECT = "mode_drawDirect";
+static final String MODE_RENDER_COMMAND_QUEUE = "mode_renderCommandQueue";
 
 //String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
 String testPenWidthCommand = CMD_TESTPENWIDTHSQUARE;
@@ -176,7 +225,8 @@ Map<Integer, String> buttonLabels = buildButtonLabels();
 
 public Map<String, Panel> panels = null;
 
-static int currentMode = MODE_BEGIN;
+static String currentMode = MODE_BEGIN;
+static String lastMode = MODE_BEGIN;
 
 static PVector boxVector1 = null;
 static PVector boxVector2 = null;
@@ -224,6 +274,24 @@ public static Integer serialPortNumber = -1;
 
 Properties props = null;
 public static String propertiesFilename = "polargraph.properties.txt";
+
+public static final String TAB_NAME_DEFAULT= "default";
+public static final String TAB_LABEL_INPUT = "input";
+public static final String TAB_NAME_INPUT = "tab_input";
+public static final String TAB_NAME_PREVIEW = "tab_preview";
+public static final String TAB_NAME_DETAILS = "tab_details";
+public static final String TAB_NAME_QUEUE = "tab_queue";
+
+
+public Set<Button> allButtons = new HashSet<Button>();
+
+void hideAllButtons()
+{
+  for (Button b : allButtons)
+  {
+    b.hide();
+  }
+}
 
 void setup()
 {
@@ -291,19 +359,34 @@ void setup()
   this.panels = buildPanels();
   size(windowWidth, windowHeight);
   
-//  this.controlP5 = new ControlP5(this);
+  this.cp5 = new ControlP5(this);
+  cp5.tab(TAB_NAME_PREVIEW).activateEvent(true);
+  cp5.tab(TAB_NAME_DEFAULT).setLabel(TAB_LABEL_INPUT);
+  cp5.tab(TAB_NAME_DEFAULT).activateEvent(true);
+  cp5.tab(TAB_NAME_DETAILS).activateEvent(true);
+  cp5.tab(TAB_NAME_QUEUE).activateEvent(true);
 }
 
+
+public List<String> tabs = buildTabs();
+
+List<String> buildTabs()
+{
+  List<String> t = new ArrayList<String>(4);
+  t.add(TAB_NAME_INPUT);
+  t.add(TAB_NAME_PREVIEW);
+  t.add(TAB_NAME_DETAILS);
+  t.add(TAB_NAME_QUEUE);
+  return t;
+}
 Map<String, Panel> buildPanels()
 {
   Map<String, Panel> panels = new HashMap<String, Panel>(4);
   for (String tabName : tabs)
   {
     Rectangle panelOutline = new Rectangle(10,10, 10+200, 10+500);
-    List<Button> buttons = new ArrayList<Button>();
-    List<PVector> buttonPositions = new ArrayList<PVector>();
-    Panel p = new Panel(tabName, panelOutline, buttons, buttonPositions);
-    
+    Panel p = new Panel(tabName, panelOutline);
+    panels.put(tabName, p);
   }
   
   return panels;
@@ -385,6 +468,10 @@ void drawDialogBox()
 
 
 
+Panel getPanel(String tabName)
+{
+  return panels.get(tabName);
+}
 
 void drawImagePage()
 {
@@ -415,7 +502,7 @@ void drawImagePage()
   stroke(255, 0, 0);
   showSelectedCentres(new PVector(0,0));
   
-  showPanel();
+  getPanel("tab_input").draw();
   
   showGroupBox();
 
@@ -815,18 +902,8 @@ boolean mouseOverQueue()
   return result;
 }
 
-Integer mouseOverButton()
-{
-  int posInPanel = mouseY - panelPositionY;
-  int overButton = posInPanel / buttonHeight;
-  
-  if (getCurrentPanel().containsKey(overButton))
-    return getCurrentPanel().get(overButton);
-  else  
-    return null;
-}
 
-Map<Integer, Integer> getCurrentPanel()
+Panel getCurrentPanel()
 {
   return panels.get(getCurrentPage());
 }
@@ -986,7 +1063,7 @@ void mouseClicked()
 {
   if (mouseOverPanel())
   { // changing mode
-    panelClicked();
+//    panelClicked();
   }
   else if (mouseOverQueue())
   {// stopping or starting 
@@ -999,207 +1076,110 @@ void mouseClicked()
   }
 }
 
+//void machineClicked()
+//{
+//  switch (currentMode)
+//  {
+//    case MODE_BEGIN:
+//      currentMode = MODE_INPUT_BOX_TOP_LEFT;
+//      break;
+//    case MODE_INPUT_BOX_TOP_LEFT:
+//      setBoxVector1();
+//      extractRowsFromBox();
+//      currentMode = MODE_INPUT_BOX_BOT_RIGHT;
+//      break;
+//    case MODE_INPUT_BOX_BOT_RIGHT:
+//      setBoxVector2();
+//      extractRowsFromBox();
+//      break;
+//    case MODE_DRAW_OUTLINE_BOX_ROWS:
+//      break;
+//    case MODE_DRAW_SHADE_BOX_ROWS_PIXELS:
+//      setRowsVector1();
+//      setRowsVector2();
+//      extractRows();
+//      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//        sendOutlineOfPixels();
+//      break;
+//    case MODE_DRAW_OUTLINE_BOX:
+//      break;
+//    case MODE_SET_POSITION:
+//      sendSetPosition();
+//      break;
+//    case MODE_INPUT_ROW_START:
+//      setRowsVector1();
+//      extractRows();
+//      currentMode = MODE_INPUT_ROW_END;
+//      break;
+//    case MODE_INPUT_ROW_END:
+//      setRowsVector2();
+//      extractRows();
+//      break;
+//    case MODE_DRAW_DIRECT:
+//      sendMoveToPosition(true);
+//      break;
+//    case MODE_DRAW_TO_POSITION:
+//      sendMoveToPosition(false);
+//      break;
+//    case MODE_MOVE_IMAGE:
+//      float ix = mouseX - (new Float(getMachine().getImageFrame().getWidth())/2);
+//      float iy = mouseY - (new Float(getMachine().getImageFrame().getHeight())/2);
+//      getMachine().getImageFrame().setPosition(ix, iy);
+//      extractRowsFromBox();
+//      break;
+//    default:
+//      break;
+//  }
+//}  
 void machineClicked()
 {
-  switch (currentMode)
+  if (currentMode.equals(MODE_BEGIN))
+    currentMode = MODE_INPUT_BOX_TOP_LEFT;
+  else if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT))
   {
-    case MODE_BEGIN:
-      currentMode = MODE_INPUT_BOX_TOP_LEFT;
-      break;
-    case MODE_INPUT_BOX_TOP_LEFT:
-      setBoxVector1();
-      extractRowsFromBox();
-      currentMode = MODE_INPUT_BOX_BOT_RIGHT;
-      break;
-    case MODE_INPUT_BOX_BOT_RIGHT:
-      setBoxVector2();
-      extractRowsFromBox();
-      break;
-    case MODE_DRAW_OUTLINE_BOX_ROWS:
-      break;
-    case MODE_DRAW_SHADE_BOX_ROWS_PIXELS:
-      setRowsVector1();
-      setRowsVector2();
-      extractRows();
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendOutlineOfPixels();
-      break;
-    case MODE_DRAW_OUTLINE_BOX:
-      break;
-    case MODE_SET_POSITION:
-      sendSetPosition();
-      break;
-    case MODE_INPUT_ROW_START:
-      setRowsVector1();
-      extractRows();
-      currentMode = MODE_INPUT_ROW_END;
-      break;
-    case MODE_INPUT_ROW_END:
-      setRowsVector2();
-      extractRows();
-      break;
-    case MODE_DRAW_DIRECT:
-      sendMoveToPosition(true);
-      break;
-    case MODE_DRAW_TO_POSITION:
-      sendMoveToPosition(false);
-      break;
-    case MODE_MOVE_IMAGE:
-      float ix = mouseX - (new Float(getMachine().getImageFrame().getWidth())/2);
-      float iy = mouseY - (new Float(getMachine().getImageFrame().getHeight())/2);
-      getMachine().getImageFrame().setPosition(ix, iy);
-      extractRowsFromBox();
-      break;
-    default:
-      break;
+    setBoxVector1();
+    extractRowsFromBox();
+    currentMode = MODE_INPUT_BOX_BOT_RIGHT;
+  }
+  else if (currentMode.equals(MODE_INPUT_BOX_BOT_RIGHT))
+  {
+    setBoxVector2();
+    extractRowsFromBox();
+  }
+  else if (currentMode.equals(MODE_DRAW_SHADE_BOX_ROWS_PIXELS))
+  {
+    setRowsVector1();
+    setRowsVector2();
+    extractRows();
+    if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+      sendOutlineOfPixels();
+  }
+  else if (currentMode.equals(MODE_SET_POSITION))
+    sendSetPosition();
+  else if (currentMode.equals(MODE_INPUT_ROW_START))
+  {
+    setRowsVector1();
+    extractRows();
+    currentMode = MODE_INPUT_ROW_END;
+  }
+  else if (currentMode.equals(MODE_INPUT_ROW_END))
+  {
+    setRowsVector2();
+    extractRows();
+  }
+  else if (currentMode.equals(MODE_DRAW_DIRECT))
+    sendMoveToPosition(true);
+  else if (currentMode.equals(MODE_DRAW_TO_POSITION))
+    sendMoveToPosition(false);
+  else if (currentMode.equals(MODE_MOVE_IMAGE))
+  {
+    float ix = mouseX - (new Float(getMachine().getImageFrame().getWidth())/2);
+    float iy = mouseY - (new Float(getMachine().getImageFrame().getHeight())/2);
+    getMachine().getImageFrame().setPosition(ix, iy);
+    extractRowsFromBox();
   }
 }  
-
-void panelClicked()
-{
-  Integer newMode = mouseOverButton();
-  Integer lastMode = null;
-  if (newMode != null)
-  {
-    lastMode = currentMode;
-    currentMode = newMode;
-  }
-  
-  
-  switch (currentMode)
-  {
-    case MODE_BEGIN:
-      resetQueue();
-      break;
-    case MODE_DRAW_GRID:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendGridOfBox();
-      break;
-    case MODE_DRAW_OUTLINE_BOX_ROWS:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendOutlineOfRows();
-      break;
-    case MODE_DRAW_SHADE_BOX_ROWS_PIXELS:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendOutlineOfPixels();
-      break;
-    case MODE_DRAW_OUTLINE_BOX:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendOutlineOfBox();
-      break;
-    case INS_INC_ROWSIZE:
-      rowWidth+=5;
-      rebuildRows();
-      extractRowsFromBox();
-      extractRows();
-      currentMode = lastMode;
-      break;
-    case INS_DEC_ROWSIZE:
-      rowWidth-=5;
-      rebuildRows();
-      extractRowsFromBox();
-      extractRows();
-      currentMode = lastMode;
-      break;
-    case MODE_INC_SAMPLE_AREA:
-      sampleArea+=1;
-      rebuildRows();
-      extractRowsFromBox();
-      extractRows();
-      currentMode = lastMode;
-      break;
-    case MODE_DEC_SAMPLE_AREA:
-      if (sampleArea < 2)
-        sampleArea = getMachine().inMM(rowWidth/2);
-      else
-        sampleArea-=1;
-        
-      rebuildRows();
-      extractRowsFromBox();
-      extractRows();
-      currentMode = lastMode;
-      break;
-    case MODE_RENDER_SQUARE_PIXELS:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendSquarePixels();
-      break;
-    case MODE_RENDER_SCALED_SQUARE_PIXELS:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendScaledSquarePixels();
-      break;
-    case MODE_RENDER_SOLID_SQUARE_PIXELS:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendSolidSquarePixels();
-      break;
-    case MODE_RENDER_SCRIBBLE_PIXELS:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendScribblePixels();
-      break;
-    case MODE_RENDER_SAW_PIXELS:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendSawtoothPixels();
-      break;
-    case MODE_RENDER_CIRCLE_PIXELS:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-        sendCircularPixels();
-      break;
-    case MODE_SET_POSITION:
-      break;
-    case MODE_DRAW_TESTPATTERN:
-      sendTestPattern();
-      break;
-    case MODE_DRAW_TEST_PENWIDTH:
-      sendTestPenWidth();
-      break;
-    case MODE_SET_POSITION_HOME:
-      sendSetHomePosition();
-      break;
-    case MODE_CHANGE_MACHINE_SPEC:
-      sendMachineSpec();
-      break;
-    case MODE_REQUEST_MACHINE_SIZE:
-      sendRequestMachineSize();
-      break;
-    case MODE_RESET_MACHINE:
-      sendResetMachine();
-      break;
-    case MODE_SAVE_PROPERTIES:
-      savePropertiesFile();
-      // clear old properties.
-      props = null;
-      loadFromPropertiesFile();
-      break;
-    case LOAD_IMAGE:
-      loadImageWithFileChooser();
-      println("Loaded image: " + getMachine().getImageFilename());
-      break;
-    case MODE_FIT_IMAGE_TO_BOX:
-      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-      {
-        sizeImageToFitBox();
-      }
-      extractRowsFromBox();
-      println("fitted image to box.");
-      break;
-    case MODE_CONVERT_BOX_TO_PICTUREFRAME:
-      setPictureFrameDimensionsToBox();
-      break;
-    case MODE_SELECT_PICTUREFRAME:
-      setBoxToPictureframeDimensions();
-      break;
-    case MODE_EXPORT_QUEUE:
-      exportQueueToFile();
-      break;
-    case MODE_IMPORT_QUEUE:
-      importQueueFromFile();
-      break;
-    case MODE_RENDER_COMMAND_QUEUE:
-      previewQueue();
-      break;
-    default:
-      break;
-  }
-}
+ 
 
 boolean isPreviewable(String command)
 {
