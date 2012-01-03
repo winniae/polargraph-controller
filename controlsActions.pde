@@ -1,154 +1,154 @@
-void mode_begin()
+void button_mode_begin()
 {
-  mode_clearQueue();
+  button_mode_clearQueue();
 }
-void mode_inputBoxTopLeft()
+void button_mode_inputBoxTopLeft()
 {
   setMode(MODE_INPUT_BOX_TOP_LEFT);
 }
-void mode_inputBoxBotRight()
+void button_mode_inputBoxBotRight()
 {
   setMode(MODE_INPUT_BOX_BOT_RIGHT);
 }
-void mode_drawOutlineBox()
+void button_mode_drawOutlineBox()
 {
   setMode(MODE_DRAW_OUTLINE_BOX);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendOutlineOfBox();
 }
-void mode_drawOutlineBoxRows()
+void button_mode_drawOutlineBoxRows()
 {
   setMode(MODE_DRAW_OUTLINE_BOX_ROWS);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendOutlineOfRows();
 }
-void mode_drawShadeBoxRowsPixels()
+void button_mode_drawShadeBoxRowsPixels()
 {
   setMode(MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendOutlineOfPixels();
 }
-void mode_drawToPosition()
+void button_mode_drawToPosition()
 {
   setMode(MODE_DRAW_TO_POSITION);
 }
-void mode_renderSquarePixel()
+void button_mode_renderSquarePixel()
 {
   setMode(MODE_RENDER_SQUARE_PIXELS);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendSquarePixels();
 }
-void mode_renderSawPixel()
+void button_mode_renderSawPixel()
 {
   setMode(MODE_RENDER_SAW_PIXELS);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendSawtoothPixels();
 }
-void mode_renderCirclePixel()
+void button_mode_renderCirclePixel()
 {
   setMode(MODE_RENDER_CIRCLE_PIXELS);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendCircularPixels();
 }
-void mode_inputRowStart()
+void button_mode_inputRowStart()
 {
   setMode(MODE_INPUT_ROW_START);
 }
-void mode_inputRowEnd()
+void button_mode_inputRowEnd()
 {
   setMode(MODE_INPUT_ROW_END);
 }
-void mode_setPosition()
+void button_mode_setPosition()
 {
   setMode(MODE_SET_POSITION);
 }
-void mode_drawTestPattern()
+void button_mode_drawTestPattern()
 {
   setMode(MODE_DRAW_TESTPATTERN);
   sendTestPattern();
 }
-void mode_incRowSize()
+void button_mode_incRowSize()
 {
   rowWidth+=5;
   rebuildRows();
   extractRowsFromBox();
   extractRows();
 }
-void mode_decRowSize()
+void button_mode_decRowSize()
 {
   rowWidth-=5;
   rebuildRows();
   extractRowsFromBox();
   extractRows();
 }
-void mode_drawGrid()
+void button_mode_drawGrid()
 {
   setMode(MODE_DRAW_GRID);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendGridOfBox();
 }
-void mode_loadImage()
+void button_mode_loadImage()
 {
   setMode(MODE_LOAD_IMAGE);
 //  loadImageWithFileChooser();
 }
-void mode_pauseQueue()
+void button_mode_pauseQueue()
 {
   setMode(MODE_PAUSE_QUEUE);
 }
-void mode_runQueue()
+void button_mode_runQueue()
 {
   setMode(MODE_RUN_QUEUE);
 }
-void mode_clearQueue()
+void button_mode_clearQueue()
 {
   setMode(MODE_CLEAR_QUEUE);
   resetQueue();
 }
-void mode_setPositionHome()
+void button_mode_setPositionHome()
 {
   setMode(MODE_SET_POSITION_HOME);
   sendSetHomePosition();
 }
-void mode_drawTestPenWidth()
+void button_mode_drawTestPenWidth()
 {
   setMode(MODE_DRAW_TEST_PENWIDTH);
   sendTestPenWidth();
 }
-void mode_renderScaledSquarePixels()
+void button_mode_renderScaledSquarePixels()
 {
   setMode(MODE_RENDER_SCALED_SQUARE_PIXELS);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendScaledSquarePixels();
 }
-void mode_renderSolidSquarePixels()
+void button_mode_renderSolidSquarePixels()
 {
   setMode(MODE_RENDER_SOLID_SQUARE_PIXELS);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendSolidSquarePixels();
 }
-void mode_renderScribblePixels()
+void button_mode_renderScribblePixels()
 {
   setMode(MODE_RENDER_SCRIBBLE_PIXELS);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
     sendScribblePixels();
 }
-void mode_changeMachineSpec()
+void button_mode_changeMachineSpec()
 {
   setMode(MODE_CHANGE_MACHINE_SPEC);
   sendMachineSpec();
 }
-void mode_requestMachineSize()
+void button_mode_requestMachineSize()
 {
   setMode(MODE_REQUEST_MACHINE_SIZE);
   sendRequestMachineSize();
 }
-void mode_resetMachine()
+void button_mode_resetMachine()
 {
   setMode(MODE_RESET_MACHINE);
   sendResetMachine();
 }
-void mode_saveProperties()
+void button_mode_saveProperties()
 {
   setMode(MODE_SAVE_PROPERTIES);
   savePropertiesFile();
@@ -156,14 +156,14 @@ void mode_saveProperties()
   props = null;
   loadFromPropertiesFile();
 }
-void mode_incSampleArea()
+void button_mode_incSampleArea()
 {
   sampleArea+=1;
   rebuildRows();
   extractRowsFromBox();
   extractRows();
 }
-void mode_decSampleArea()
+void button_mode_decSampleArea()
 {
 //  if (sampleArea < 2)
 //    sampleArea = inMM(rowWidth/2);
@@ -174,31 +174,31 @@ void mode_decSampleArea()
   extractRowsFromBox();
   extractRows();
 }
-void mode_moveImage()
+void button_mode_moveImage()
 {
   setMode(MODE_MOVE_IMAGE);
 }
-void mode_convertBoxToPictureframe()
+void button_mode_convertBoxToPictureframe()
 {
   setMode(MODE_CONVERT_BOX_TO_PICTUREFRAME);
   setPictureFrameDimensionsToBox();
 }
-void mode_selectPictureframe()
+void button_mode_selectPictureframe()
 {
   setMode(MODE_SELECT_PICTUREFRAME);
   setBoxToPictureframeDimensions();
 }
-void mode_exportQueue()
+void button_mode_exportQueue()
 {
   setMode(MODE_EXPORT_QUEUE);
   exportQueueToFile();
 }
-void mode_importQueue()
+void button_mode_importQueue()
 {
   setMode(MODE_IMPORT_QUEUE);
   importQueueFromFile();
 }
-void mode_fitImageToBox()
+void button_mode_fitImageToBox()
 {
   setMode(MODE_FIT_IMAGE_TO_BOX);
   if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
@@ -208,7 +208,7 @@ void mode_fitImageToBox()
   extractRowsFromBox();
   println("fitted image to box.");
 }
-void mode_drawDirect()
+void button_mode_drawDirect()
 {
   setMode(MODE_DRAW_DIRECT);
 }

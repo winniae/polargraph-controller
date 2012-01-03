@@ -113,105 +113,6 @@ int machineUsedMem = 0;
 int machineMinAvailMem = 2048;
 
 
-//static final int MODE_BEGIN = 0;
-//static final int MODE_INPUT_BOX_TOP_LEFT = 1;
-//static final int MODE_INPUT_BOX_BOT_RIGHT = 2;
-//static final int MODE_DRAW_OUTLINE_BOX = 4;
-//static final int MODE_DRAW_OUTLINE_BOX_ROWS = 5;
-//static final int MODE_DRAW_SHADE_BOX_ROWS_PIXELS = 6;
-//static final int MODE_DRAW_TO_POSITION = 7;
-//static final int MODE_RENDER_SQUARE_PIXELS = 8;
-//static final int MODE_RENDER_SAW_PIXELS = 9;
-//static final int MODE_RENDER_CIRCLE_PIXELS = 10;
-//static final int MODE_INPUT_ROW_START = 11;
-//static final int MODE_INPUT_ROW_END = 12;
-//static final int MODE_SET_POSITION = 13;
-//static final int MODE_DRAW_TESTPATTERN = 14;
-//static final int INS_INC_ROWSIZE = 15;
-//static final int INS_DEC_ROWSIZE = 16;
-//static final int MODE_DRAW_GRID = 17;
-//static final int PLACE_IMAGE = 18;
-//static final int LOAD_IMAGE = 19;
-//static final int PAUSE_QUEUE = 20;
-//static final int RUN_QUEUE = 21;
-//static final int CLEAR_QUEUE = 22;
-//static final int MODE_SET_POSITION_HOME = 23;
-//static final int MODE_INPUT_SINGLE_PIXEL = 24;
-//static final int MODE_DRAW_TEST_PENWIDTH = 25;
-//static final int MODE_RENDER_SCALED_SQUARE_PIXELS = 26;
-//static final int MODE_RENDER_SOLID_SQUARE_PIXELS = 27;
-//static final int MODE_RENDER_SCRIBBLE_PIXELS = 28;
-//static final int MODE_LOAD_SD_IMAGE = 29;
-//static final int MODE_START_ROVING = 30;
-//static final int MODE_STOP_ROVING = 31;
-//static final int MODE_SET_ROVE_AREA = 32;
-//static final int MODE_CREATE_MACHINE_TEXT_BITMAP = 34;
-//static final int MODE_CHANGE_MACHINE_SPEC = 35;
-//static final int MODE_REQUEST_MACHINE_SIZE = 37;
-//static final int MODE_RESET_MACHINE = 38;
-//static final int MODE_SAVE_PROPERTIES = 39;
-//static final int MODE_INC_SAMPLE_AREA = 40;
-//static final int MODE_DEC_SAMPLE_AREA = 41;
-//static final int MODE_MOVE_IMAGE = 42;
-//static final int MODE_INPUT_IMAGE = 43;
-//static final int MODE_CONVERT_BOX_TO_PICTUREFRAME = 44;
-//static final int MODE_SELECT_PICTUREFRAME = 45;
-//static final int MODE_EXPORT_QUEUE = 46;
-//static final int MODE_IMPORT_QUEUE = 47;
-//static final int MODE_CLEAR_QUEUE = 48;
-//static final int MODE_FIT_IMAGE_TO_BOX = 49;
-//static final int MODE_DRAW_DIRECT = 50;
-//static final int MODE_RENDER_COMMAND_QUEUE = 51;
-
-static final String MODE_BEGIN = "mode_begin";
-static final String MODE_INPUT_BOX_TOP_LEFT = "mode_inputBoxTopLeft";
-static final String MODE_INPUT_BOX_BOT_RIGHT = "mode_inputBoxBotRight";
-static final String MODE_DRAW_OUTLINE_BOX = "mode_drawOutlineBox";
-static final String MODE_DRAW_OUTLINE_BOX_ROWS = "mode_drawOutlineBoxRows";
-static final String MODE_DRAW_SHADE_BOX_ROWS_PIXELS = "mode_drawShadeBoxRowsPixels";
-static final String MODE_DRAW_TO_POSITION = "mode_drawToPosition";
-static final String MODE_RENDER_SQUARE_PIXELS = "mode_renderSquarePixel";
-static final String MODE_RENDER_SAW_PIXELS = "mode_renderSawPixel";
-static final String MODE_RENDER_CIRCLE_PIXELS = "mode_renderCirclePixel";
-static final String MODE_INPUT_ROW_START = "mode_inputRowStart";
-static final String MODE_INPUT_ROW_END = "mode_inputRowEnd";
-static final String MODE_SET_POSITION = "mode_setPosition";
-static final String MODE_DRAW_TESTPATTERN = "mode_drawTestPattern";
-static final String MODE_INC_ROW_SIZE = "mode_incRowSize";
-static final String MODE_DEC_ROW_SIZE = "mode_decRowSize";
-static final String MODE_DRAW_GRID = "mode_drawGrid";
-static final String MODE_PLACE_IMAGE = "mode_placeImage";
-static final String MODE_LOAD_IMAGE = "mode_loadImage";
-static final String MODE_PAUSE_QUEUE = "mode_pauseQueue";
-static final String MODE_RUN_QUEUE = "mode_runQueue";
-static final String MODE_SET_POSITION_HOME = "mode_setPositionHome";
-static final String MODE_INPUT_SINGLE_PIXEL = "mode_inputSinglePixel";
-static final String MODE_DRAW_TEST_PENWIDTH = "mode_drawTestPenWidth";
-static final String MODE_RENDER_SCALED_SQUARE_PIXELS = "mode_renderScaledSquarePixels";
-static final String MODE_RENDER_SOLID_SQUARE_PIXELS = "mode_renderSolidSquarePixels";
-static final String MODE_RENDER_SCRIBBLE_PIXELS = "mode_renderScribblePixels";
-static final String MODE_LOAD_SD_IMAGE = "mode_loadSdImage";
-static final String MODE_START_ROVING = "mode_startRoving";
-static final String MODE_STOP_ROVING = "mode_stopRoving";
-static final String MODE_SET_ROVE_AREA = "mode_setRoveArea";
-static final String MODE_CREATE_MACHINE_TEXT_BITMAP = "mode_createMachineTextBitmap";
-static final String MODE_CHANGE_MACHINE_SPEC = "mode_changeMachineSpec";
-static final String MODE_REQUEST_MACHINE_SIZE = "mode_requestMachineSize";
-static final String MODE_RESET_MACHINE = "mode_resetMachine";
-static final String MODE_SAVE_PROPERTIES = "mode_saveProperties";
-static final String MODE_INC_SAMPLE_AREA = "mode_incSampleArea";
-static final String MODE_DEC_SAMPLE_AREA = "mode_decSampleArea";
-static final String MODE_MOVE_IMAGE = "mode_moveImage";
-static final String MODE_INPUT_IMAGE = "mode_inputImage";
-static final String MODE_CONVERT_BOX_TO_PICTUREFRAME = "mode_convertBoxToPictureframe";
-static final String MODE_SELECT_PICTUREFRAME = "mode_selectPictureframe";
-static final String MODE_EXPORT_QUEUE = "mode_exportQueue";
-static final String MODE_IMPORT_QUEUE = "mode_importQueue";
-static final String MODE_CLEAR_QUEUE = "mode_clearQueue";
-static final String MODE_FIT_IMAGE_TO_BOX = "mode_fitImageToBox";
-static final String MODE_DRAW_DIRECT = "mode_drawDirect";
-static final String MODE_RENDER_COMMAND_QUEUE = "mode_renderCommandQueue";
-
 //String testPenWidthCommand = "TESTPENWIDTHSCRIBBLE,";
 String testPenWidthCommand = CMD_TESTPENWIDTHSQUARE;
 float testPenWidthStartSize = 0.5;
@@ -220,10 +121,49 @@ float testPenWidthIncrementSize = 0.5;
 
 int maxSegmentLength = 20;
 
-
-Map<Integer, String> buttonLabels = buildButtonLabels();
-
-public Map<String, Panel> panels = null;
+static final String MODE_BEGIN = "button_mode_begin";
+static final String MODE_INPUT_BOX_TOP_LEFT = "button_mode_inputBoxTopLeft";
+static final String MODE_INPUT_BOX_BOT_RIGHT = "button_mode_inputBoxBotRight";
+static final String MODE_DRAW_OUTLINE_BOX = "button_mode_drawOutlineBox";
+static final String MODE_DRAW_OUTLINE_BOX_ROWS = "button_mode_drawOutlineBoxRows";
+static final String MODE_DRAW_SHADE_BOX_ROWS_PIXELS = "button_mode_drawShadeBoxRowsPixels";
+static final String MODE_DRAW_TO_POSITION = "button_mode_drawToPosition";
+static final String MODE_RENDER_SQUARE_PIXELS = "button_mode_renderSquarePixel";
+static final String MODE_RENDER_SAW_PIXELS = "button_mode_renderSawPixel";
+static final String MODE_RENDER_CIRCLE_PIXELS = "button_mode_renderCirclePixel";
+static final String MODE_INPUT_ROW_START = "button_mode_inputRowStart";
+static final String MODE_INPUT_ROW_END = "button_mode_inputRowEnd";
+static final String MODE_SET_POSITION = "button_mode_setPosition";
+static final String MODE_DRAW_TESTPATTERN = "button_mode_drawTestPattern";
+static final String MODE_INC_ROW_SIZE = "button_mode_incRowSize";
+static final String MODE_DEC_ROW_SIZE = "button_mode_decRowSize";
+static final String MODE_DRAW_GRID = "button_mode_drawGrid";
+static final String MODE_PLACE_IMAGE = "button_mode_placeImage";
+static final String MODE_LOAD_IMAGE = "button_mode_loadImage";
+static final String MODE_PAUSE_QUEUE = "button_mode_pauseQueue";
+static final String MODE_RUN_QUEUE = "button_mode_runQueue";
+static final String MODE_SET_POSITION_HOME = "button_mode_setPositionHome";
+static final String MODE_INPUT_SINGLE_PIXEL = "button_mode_inputSinglePixel";
+static final String MODE_DRAW_TEST_PENWIDTH = "button_mode_drawTestPenWidth";
+static final String MODE_RENDER_SCALED_SQUARE_PIXELS = "button_mode_renderScaledSquarePixels";
+static final String MODE_RENDER_SOLID_SQUARE_PIXELS = "button_mode_renderSolidSquarePixels";
+static final String MODE_RENDER_SCRIBBLE_PIXELS = "button_mode_renderScribblePixels";
+static final String MODE_CHANGE_MACHINE_SPEC = "button_mode_changeMachineSpec";
+static final String MODE_REQUEST_MACHINE_SIZE = "button_mode_requestMachineSize";
+static final String MODE_RESET_MACHINE = "button_mode_resetMachine";
+static final String MODE_SAVE_PROPERTIES = "button_mode_saveProperties";
+static final String MODE_INC_SAMPLE_AREA = "button_mode_incSampleArea";
+static final String MODE_DEC_SAMPLE_AREA = "button_mode_decSampleArea";
+static final String MODE_MOVE_IMAGE = "button_mode_moveImage";
+static final String MODE_INPUT_IMAGE = "button_mode_inputImage";
+static final String MODE_CONVERT_BOX_TO_PICTUREFRAME = "button_mode_convertBoxToPictureframe";
+static final String MODE_SELECT_PICTUREFRAME = "button_mode_selectPictureframe";
+static final String MODE_EXPORT_QUEUE = "button_mode_exportQueue";
+static final String MODE_IMPORT_QUEUE = "button_mode_importQueue";
+static final String MODE_CLEAR_QUEUE = "button_mode_clearQueue";
+static final String MODE_FIT_IMAGE_TO_BOX = "button_mode_fitImageToBox";
+static final String MODE_DRAW_DIRECT = "button_mode_drawDirect";
+static final String MODE_RENDER_COMMAND_QUEUE = "button_mode_renderCommandQueue";
 
 static String currentMode = MODE_BEGIN;
 static String lastMode = MODE_BEGIN;
@@ -254,15 +194,6 @@ static final char BITMAP_BACKGROUND_COLOUR = 0x0F;
 // used in the preview page
 static Integer pageColour = 100;
 
-// Page states
-public static final int PAGE_IMAGE = 1;
-public static final int PAGE_PREVIEW = 2;
-public static final int PAGE_COMMAND_QUEUE = 3;
-public static final int PAGE_LOAD_IMAGE = 4;
-public static final int PAGE_DETAILS = 5;
-public static final int DEFAULT_PAGE = PAGE_IMAGE;
-public int currentPage = DEFAULT_PAGE;
-
 public boolean showingSummaryOverlay = true;
 public boolean showingDialogBox = false;
 
@@ -275,23 +206,40 @@ public static Integer serialPortNumber = -1;
 Properties props = null;
 public static String propertiesFilename = "polargraph.properties.txt";
 
-public static final String TAB_NAME_DEFAULT= "default";
+public static final String TAB_NAME_INPUT= "default";
 public static final String TAB_LABEL_INPUT = "input";
-public static final String TAB_NAME_INPUT = "tab_input";
 public static final String TAB_NAME_PREVIEW = "tab_preview";
+public static final String TAB_LABEL_PREVIEW = "Preview";
 public static final String TAB_NAME_DETAILS = "tab_details";
+public static final String TAB_LABEL_DETAILS = "Details";
 public static final String TAB_NAME_QUEUE = "tab_queue";
+public static final String TAB_LABEL_QUEUE = "Queue";
+
+// Page states
+public String currentTab = TAB_NAME_INPUT;
 
 
-public Set<Button> allButtons = new HashSet<Button>();
+public static final String PANEL_NAME_INPUT = "panel_input";
+public static final String PANEL_NAME_PREVIEW = "panel_preview";
+public static final String PANEL_NAME_DETAILS = "panel_details";
+public static final String PANEL_NAME_QUEUE = "panel_queue";
 
-void hideAllButtons()
-{
-  for (Button b : allButtons)
-  {
-    b.hide();
-  }
-}
+public static final String PANEL_NAME_GENERAL = "panel_general";
+
+public final PVector DEFAULT_CONTROL_SIZE = new PVector(100.0, 20.0);
+public final PVector CONTROL_SPACING = new PVector(2.0, 2.0);
+public PVector mainPanelPosition = new PVector(10.0, 45.0);
+
+public Set<String> panelNames = null;
+public List<String> tabNames = null;
+public Set<String> controlNames = null;
+public Map<String, List<Controller>> controlsForPanels = null;
+
+public Map<String, Controller> allControls = null;
+public Map<String, String> controlLabels = null;
+
+public Map<String, Set<Panel>> panelsForTabs = null;
+public Map<String, Panel> panels = null;
 
 void setup()
 {
@@ -307,9 +255,9 @@ void setup()
   }   
   loadFromPropertiesFile();
   
- 
- 
- 
+  this.cp5 = new ControlP5(this);
+  initTabs();
+
   String[] serialPorts = Serial.list();
   println("Serial ports available on your machine:");
   println(serialPorts);
@@ -347,51 +295,13 @@ void setup()
   {
     useSerialPortConnection = false;
   }
-
-
   rebuildRows();  
-  
   currentMode = MODE_BEGIN;
-  
   preLoadCommandQueue();
-
   frame.setSize(getMachine().getWidth()*2+panelWidth+20, 1020);
-  this.panels = buildPanels();
   size(windowWidth, windowHeight);
-  
-  this.cp5 = new ControlP5(this);
-  cp5.tab(TAB_NAME_PREVIEW).activateEvent(true);
-  cp5.tab(TAB_NAME_DEFAULT).setLabel(TAB_LABEL_INPUT);
-  cp5.tab(TAB_NAME_DEFAULT).activateEvent(true);
-  cp5.tab(TAB_NAME_DETAILS).activateEvent(true);
-  cp5.tab(TAB_NAME_QUEUE).activateEvent(true);
+  changeTab(TAB_NAME_INPUT, TAB_NAME_INPUT);
 }
-
-
-public List<String> tabs = buildTabs();
-
-List<String> buildTabs()
-{
-  List<String> t = new ArrayList<String>(4);
-  t.add(TAB_NAME_INPUT);
-  t.add(TAB_NAME_PREVIEW);
-  t.add(TAB_NAME_DETAILS);
-  t.add(TAB_NAME_QUEUE);
-  return t;
-}
-Map<String, Panel> buildPanels()
-{
-  Map<String, Panel> panels = new HashMap<String, Panel>(4);
-  for (String tabName : tabs)
-  {
-    Rectangle panelOutline = new Rectangle(10,10, 10+200, 10+500);
-    Panel p = new Panel(tabName, panelOutline);
-    panels.put(tabName, p);
-  }
-  
-  return panels;
-}
-
 
 void preLoadCommandQueue()
 {
@@ -403,32 +313,28 @@ void preLoadCommandQueue()
 
 void draw()
 {
-  switch(getCurrentPage())
+  if (getCurrentTab() == TAB_NAME_INPUT)
   {
-    case PAGE_IMAGE: 
-      // draw image page
-      drawImagePage();
-      break;
-    case PAGE_PREVIEW:
-      // draw preview page
-      drawImagePreviewPage();
-      break;
-    case PAGE_COMMAND_QUEUE:
-      // draw command queue
-      drawCommandQueuePage();
-      break;
-    case PAGE_LOAD_IMAGE:
-      // draw image loading page
-      drawImageLoadPage();
-      break;
-    case PAGE_DETAILS:
-      // draw details page
-      drawDetailsPage();
-      break;
-    default:
-      drawDetailsPage();
-    break;
+    drawImagePage();
   }
+  else if (getCurrentTab() == TAB_NAME_PREVIEW)
+  {
+    drawImagePreviewPage();
+  }
+  else if (getCurrentTab() == TAB_NAME_QUEUE)
+  {
+    drawCommandQueuePage();
+  }
+  else if (getCurrentTab() == TAB_NAME_DETAILS)
+  {
+    drawDetailsPage();
+  }
+  else
+  {
+    drawDetailsPage();
+  }
+
+
   if (isShowingSummaryOverlay())
   {
     drawSummaryOverlay();
@@ -445,9 +351,9 @@ void draw()
   
 }
 
-Integer getCurrentPage()
+String getCurrentTab()
 {
-  return this.currentPage;
+  return this.currentTab;
 }
 
 boolean isShowingSummaryOverlay()
@@ -468,9 +374,9 @@ void drawDialogBox()
 
 
 
-Panel getPanel(String tabName)
+Panel getPanel(String panelName)
 {
-  return panels.get(tabName);
+  return getPanels().get(panelName);
 }
 
 void drawImagePage()
@@ -502,7 +408,10 @@ void drawImagePage()
   stroke(255, 0, 0);
   showSelectedCentres(new PVector(0,0));
   
-  getPanel("tab_input").draw();
+  for (Panel panel : getPanelsForTab(TAB_NAME_INPUT))
+  {
+    panel.draw();
+  }
   
   showGroupBox();
 
@@ -527,9 +436,13 @@ void drawImagePreviewPage()
 //  showPictureFrame();
   drawMoveImageOutline();
   
-  stroke(150);
-  showPanel();
-  showPreviewMachine();
+  // draw machine outline
+//  getDisplayMachine().draw();
+
+  for (Panel panel : getPanelsForTab(TAB_NAME_PREVIEW))
+  {
+    panel.draw();
+  }
   
 //  showCurrentMachinePosition();
   if (displayingInfoTextOnInputPage)
@@ -541,18 +454,10 @@ void drawImagePreviewPage()
 void drawDetailsPage()
 {
   cursor(ARROW);
-  // machine outline
-  fill(100);
-  stroke(150);
-  drawMachineOutline();
-  rect(getMachine().getPage().getLeft(), getMachine().getPage().getTop(), getMachine().getPage().getWidth(), getMachine().getPage().getHeight()); // page
-  noStroke();
-
-  showPanel();
-
-  fill(100);
-  noStroke();
-  rect(panelPositionX+panelWidth+5, 0, width, height);
+  for (Panel panel : getPanelsForTab(TAB_NAME_DETAILS))
+  {
+    panel.draw();
+  }
   showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
 
 }
@@ -566,14 +471,15 @@ void drawCommandQueuePage()
   fill(100);
   drawMachineOutline();
   showingSummaryOverlay = false;
-  showPanel();
-  
-  fill(100);
-  noStroke();
   
   showCommandQueue(40, 60);
   
   previewQueue();
+
+  for (Panel panel : getPanelsForTab(TAB_NAME_QUEUE))
+  {
+    panel.draw();
+  }
   
 }
 
@@ -837,16 +743,45 @@ void setBoxToPictureframeDimensions()
   extractRowsFromBox();
 }
 
+void controlEvent(ControlEvent controlEvent) 
+{
+  if (controlEvent.isTab()) 
+  {
+    if (controlEvent.tab().name() == getCurrentTab())
+    {
+      // already here.
+      println("Already here.");
+    }
+    else
+    {
+      changeTab(currentTab, controlEvent.tab().name());
+    }
+  }
+}
+
+void changeTab(String from, String to)
+{
+  // hide old panels
+  currentTab = to;
+  for (Panel panel : getPanelsForTab(currentTab))
+  {
+    for (Controller c : panel.getControls())
+    {
+      c.moveTo(currentTab);
+      c.show();
+    }
+  }
+  
+}
+
+
 
 boolean mouseOverMachine()
 {
   boolean result = false;
   if (isMachineClickable())
   {
-    if (mouseX >= machinePosition.x
-     && mouseX < getMachine().getWidth()+ machinePosition.x
-     && mouseY >= machinePosition.y
-     && mouseY < getMachine().getHeight()+machinePosition.y)
+    if (getDisplayMachine().getOutline().surrounds(getMouseVector()))
       result = true;
     else
       result = false;
@@ -855,20 +790,25 @@ boolean mouseOverMachine()
 }
 boolean isMachineClickable()
 {
-  switch(getCurrentPage())
+  if (getCurrentTab() == TAB_NAME_INPUT)
   {
-    case PAGE_IMAGE:
-      return true;
-    case PAGE_PREVIEW:
-      return true;
-    case PAGE_COMMAND_QUEUE:
-      return false;
-    case PAGE_LOAD_IMAGE:
-      return true;
-    case PAGE_DETAILS:
-      return true;
-    default:
-      return true;
+    return true;
+  }
+  else if (getCurrentTab() == TAB_NAME_PREVIEW)
+  {
+    return true;
+  }
+  else if (getCurrentTab() == TAB_NAME_QUEUE)
+  {
+    return false;
+  }
+  else if (getCurrentTab() == TAB_NAME_DETAILS)
+  {
+    return false;
+  }
+  else
+  {
+    return false;
   }
 }
 boolean isPanelClickable()
@@ -903,11 +843,6 @@ boolean mouseOverQueue()
 }
 
 
-Panel getCurrentPanel()
-{
-  return panels.get(getCurrentPage());
-}
-
 void zoomOutFromMachine(float inc)
 {
   if (machineScaling > inc)
@@ -937,23 +872,7 @@ void keyPressed()
 {
   if (key == CODED)
   {
-    if (keyCode == java.awt.event.KeyEvent.VK_F1)
-    {
-      currentPage = PAGE_IMAGE;
-    }
-    else if (keyCode == java.awt.event.KeyEvent.VK_F2)
-    {
-      currentPage = PAGE_PREVIEW;
-    }
-    else if (keyCode == java.awt.event.KeyEvent.VK_F3)
-    {
-      currentPage = PAGE_DETAILS;
-    }
-    else if (keyCode == java.awt.event.KeyEvent.VK_F4)
-    {
-      currentPage = PAGE_COMMAND_QUEUE;
-    }
-    else if (keyCode == java.awt.event.KeyEvent.VK_PAGE_UP)
+    if (keyCode == java.awt.event.KeyEvent.VK_PAGE_UP)
     {
       zoomInToMachine(getZoomIncrement());
     }
@@ -1076,61 +995,6 @@ void mouseClicked()
   }
 }
 
-//void machineClicked()
-//{
-//  switch (currentMode)
-//  {
-//    case MODE_BEGIN:
-//      currentMode = MODE_INPUT_BOX_TOP_LEFT;
-//      break;
-//    case MODE_INPUT_BOX_TOP_LEFT:
-//      setBoxVector1();
-//      extractRowsFromBox();
-//      currentMode = MODE_INPUT_BOX_BOT_RIGHT;
-//      break;
-//    case MODE_INPUT_BOX_BOT_RIGHT:
-//      setBoxVector2();
-//      extractRowsFromBox();
-//      break;
-//    case MODE_DRAW_OUTLINE_BOX_ROWS:
-//      break;
-//    case MODE_DRAW_SHADE_BOX_ROWS_PIXELS:
-//      setRowsVector1();
-//      setRowsVector2();
-//      extractRows();
-//      if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-//        sendOutlineOfPixels();
-//      break;
-//    case MODE_DRAW_OUTLINE_BOX:
-//      break;
-//    case MODE_SET_POSITION:
-//      sendSetPosition();
-//      break;
-//    case MODE_INPUT_ROW_START:
-//      setRowsVector1();
-//      extractRows();
-//      currentMode = MODE_INPUT_ROW_END;
-//      break;
-//    case MODE_INPUT_ROW_END:
-//      setRowsVector2();
-//      extractRows();
-//      break;
-//    case MODE_DRAW_DIRECT:
-//      sendMoveToPosition(true);
-//      break;
-//    case MODE_DRAW_TO_POSITION:
-//      sendMoveToPosition(false);
-//      break;
-//    case MODE_MOVE_IMAGE:
-//      float ix = mouseX - (new Float(getMachine().getImageFrame().getWidth())/2);
-//      float iy = mouseY - (new Float(getMachine().getImageFrame().getHeight())/2);
-//      getMachine().getImageFrame().setPosition(ix, iy);
-//      extractRowsFromBox();
-//      break;
-//    default:
-//      break;
-//  }
-//}  
 void machineClicked()
 {
   if (currentMode.equals(MODE_BEGIN))
