@@ -71,18 +71,39 @@ class DisplayMachine extends Machine
   {
     return this.offset;
   }
+  public final int DROP_SHADOW_DISTANCE = 4;
   public void draw()
   {
     // work out the scaling factor.
-    
+    noStroke();
     // draw machine outline
-    rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
+
+    fill(80);
+    rect(getOutline().getLeft()+DROP_SHADOW_DISTANCE, getOutline().getTop()+DROP_SHADOW_DISTANCE, getOutline().getWidth(), getOutline().getHeight());
     
+    fill(150);
+    rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
+    text("machine", getOutline().getLeft(), getOutline().getTop());
+    
+    // draw some guides
+    stroke(255,255,255,128);
+    strokeWeight(1);
+    line(getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getTop(),
+      getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getBottom());
+
+    line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()),
+      getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
     // draw page
+    fill(255);
     rect(getOutline().getLeft()+sc(getPage().getLeft()), 
       getOutline().getTop()+sc(getPage().getTop()), 
       sc(getPage().getWidth()), 
       sc(getPage().getHeight()));
+    text("page", getOutline().getLeft()+sc(getPage().getLeft()), 
+      getOutline().getTop()+sc(getPage().getTop()));
+    noFill();
+    
+    
 
     // draw actual image
     if (imageIsLoaded())
@@ -91,8 +112,13 @@ class DisplayMachine extends Machine
       float oy = getOutline().getTop()+sc(getImageFrame().getTop());
       float w = sc(getImageFrame().getWidth());
       float h = sc(getImageFrame().getHeight());
-
       image(getImage(), ox, oy, w, h);
+      strokeWeight(1);
+      stroke(150,150,150,40);
+      rect(ox,oy,w-1,h-1);
+      fill(150,150,150,40);
+      text("image", ox,oy);
+      noFill();
     }
     else
     {
@@ -100,9 +126,17 @@ class DisplayMachine extends Machine
     }
     
     drawPictureFrame();
-      
-    drawHangingStrings();
-    drawRows();
+    
+    if (getOutline().surrounds(getMouseVector()))
+    {  
+      drawHangingStrings();
+      drawRows();
+      cursor(CROSS);
+    }
+    else
+    {
+      cursor(ARROW);
+    }
 
   }
   

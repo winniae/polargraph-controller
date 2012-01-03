@@ -22,6 +22,10 @@ class Rectangle
   {
     return this.size.y;
   }
+  public void setHeight(float h)
+  {
+    this.size.y = h;
+  }
   public PVector getPosition()
   {
     return this.position;

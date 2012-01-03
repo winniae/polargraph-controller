@@ -5,8 +5,8 @@ class Panel
   private List<Controller> controls = null;
   private Map<String, PVector> controlPositions = null;
   private Map<String, PVector> controlSizes = null;
-  
-  
+  private boolean resizable = true;
+  private float minimumHeight = DEFAULT_CONTROL_SIZE.y+4;
   private color outlineColour = color(255);
 
   public Panel(String name, Rectangle outline)
@@ -67,6 +67,24 @@ class Panel
     this.outlineColour = c;
   }
   
+  void setResizable(boolean r)
+  {
+    this.resizable = r;
+  }
+  boolean isResizable()
+  {
+    return this.resizable;
+  }
+  
+  void setMinimumHeight(float h)
+  {
+    this.minimumHeight = h;
+  }
+  float getMinimumHeight()
+  {
+    return this.minimumHeight;
+  }
+  
   public void draw()
   {
 //    stroke(outlineColour);
@@ -85,7 +103,18 @@ class Panel
       float y = pos.y+getOutline().getTop();
       c.setPosition(x, y);
       c.setSize((int)DEFAULT_CONTROL_SIZE.x, (int)DEFAULT_CONTROL_SIZE.y);
-//      c.show();
+    }
+  }
+  
+  void setHeight(float h)
+  {
+    if (this.isResizable())
+    {
+      if (h <= getMinimumHeight())
+        this.getOutline().setHeight(getMinimumHeight());
+      else
+        this.getOutline().setHeight(h);
+      setControlPositions(buildControlPositionsForPanel(this));
     }
   }
   

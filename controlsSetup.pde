@@ -63,6 +63,7 @@ Map<String, Panel> buildPanels()
 
   Rectangle panelOutline = new Rectangle(getMainPanelPosition(), new PVector((DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x)*2, 300.0));
   Panel inputPanel = new Panel(PANEL_NAME_INPUT, panelOutline);
+  inputPanel.setResizable(true);
   inputPanel.setOutlineColour(color(200,200,200));
   // get controls
   inputPanel.setControls(getControlsForPanels().get(PANEL_NAME_INPUT));
@@ -74,6 +75,7 @@ Map<String, Panel> buildPanels()
   Panel previewPanel = new Panel(PANEL_NAME_PREVIEW, panelOutline);
   previewPanel.setOutlineColour(color(200,200,200));
   // get controls
+  previewPanel.setResizable(true);
   previewPanel.setControls(getControlsForPanels().get(PANEL_NAME_PREVIEW));
   // get control positions
   previewPanel.setControlPositions(buildControlPositionsForPanel(previewPanel));
@@ -83,6 +85,7 @@ Map<String, Panel> buildPanels()
   Panel detailsPanel = new Panel(PANEL_NAME_DETAILS, panelOutline);
   detailsPanel.setOutlineColour(color(200,200,200));
   // get controls
+  detailsPanel.setResizable(true);
   detailsPanel.setControls(getControlsForPanels().get(PANEL_NAME_DETAILS));
   // get control positions
   detailsPanel.setControlPositions(buildControlPositionsForPanel(detailsPanel));
@@ -92,6 +95,7 @@ Map<String, Panel> buildPanels()
   Panel queuePanel = new Panel(PANEL_NAME_QUEUE, panelOutline);
   queuePanel.setOutlineColour(color(200,200,200));
   // get controls
+  queuePanel.setResizable(true);
   queuePanel.setControls(getControlsForPanels().get(PANEL_NAME_QUEUE));
   // get control positions
   queuePanel.setControlPositions(buildControlPositionsForPanel(queuePanel));
@@ -100,6 +104,7 @@ Map<String, Panel> buildPanels()
 
   panelOutline = new Rectangle(new PVector(getMainPanelPosition().x, getMainPanelPosition().y-(DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y)), new PVector((DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x)*2, 400.0));
   Panel generalPanel = new Panel(PANEL_NAME_GENERAL, panelOutline);
+  generalPanel.setResizable(false);
   generalPanel.setOutlineColour(color(200,200,200));
   // get controls
   generalPanel.setControls(getControlsForPanels().get(PANEL_NAME_GENERAL));
@@ -175,7 +180,7 @@ Map<String, PVector> buildControlPositionsForPanel(Panel panel)
     map.put(controller.name(), p);
 
     row++;
-    if (p.y + (DEFAULT_CONTROL_SIZE.y*1.5) >= panel.getOutline().getHeight())
+    if (p.y + (DEFAULT_CONTROL_SIZE.y*2) >= panel.getOutline().getHeight())
     {
       row = 0;
       col++;

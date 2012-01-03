@@ -8,7 +8,7 @@
 import javax.swing.*;
 import processing.serial.*;
 import controlP5.*;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 
 ControlP5 cp5;
 
@@ -37,15 +37,6 @@ final int A2_IMP_HEIGHT = 640;
 
 final int A1_WIDTH = 594;
 final int A1_HEIGHT = 841;
-
-int panelPositionX = 10;
-int panelPositionY = 10;
-
-int panelWidth = 100;
-int panelHeight = 400;
-
-int buttonHeight = 30;
-int noOfButtons = 30;
 
 int leftEdgeOfQueue = 800;
 int rightEdgeOfQueue = 1100;
@@ -228,7 +219,9 @@ public static final String PANEL_NAME_GENERAL = "panel_general";
 
 public final PVector DEFAULT_CONTROL_SIZE = new PVector(100.0, 20.0);
 public final PVector CONTROL_SPACING = new PVector(2.0, 2.0);
-public PVector mainPanelPosition = new PVector(10.0, 45.0);
+public PVector mainPanelPosition = new PVector(10.0, 55.0);
+
+public final Integer PANEL_MIN_HEIGHT = 400;
 
 public Set<String> panelNames = null;
 public List<String> tabNames = null;
@@ -245,6 +238,7 @@ void setup()
 {
   println("Running polargraph controller");
   frame.setResizable(true);
+
   try 
   { 
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); 
@@ -298,10 +292,26 @@ void setup()
   rebuildRows();  
   currentMode = MODE_BEGIN;
   preLoadCommandQueue();
-  frame.setSize(getMachine().getWidth()*2+panelWidth+20, 1020);
+//  frame.setSize(getMachine().getWidth()*2+panelWidth+20, 1020);
   size(windowWidth, windowHeight);
   changeTab(TAB_NAME_INPUT, TAB_NAME_INPUT);
+
+  addWindowResizeListener();
 }
+void addWindowResizeListener()
+{
+  frame.addComponentListener(new ComponentAdapter() 
+    {
+      public void componentResized(ComponentEvent event) 
+      {
+        if (event.getSource()==frame) 
+        {
+  	  windowResized();
+        }
+      }
+    }
+  ); 
+}  
 
 void preLoadCommandQueue()
 {
@@ -311,6 +321,17 @@ void preLoadCommandQueue()
   
 }
 
+void windowResized()
+{
+  println("Window resized.");
+  for (String key : getPanels().keySet())
+  {
+    Panel p = getPanels().get(key);
+    println("resizing height to: " + frame.getHeight());
+    p.setHeight(frame.getHeight() - p.getOutline().getTop() - (DEFAULT_CONTROL_SIZE.y*2));
+  }
+  
+}
 void draw()
 {
   if (getCurrentTab() == TAB_NAME_INPUT)
@@ -382,12 +403,6 @@ Panel getPanel(String panelName)
 void drawImagePage()
 {
   strokeWeight(1);
-  if (getDisplayMachine().getPage().surrounds(getMouseVector())) 
-  {
-    cursor(CROSS);
-  } else {
-    cursor(ARROW);
-  }
 
   background(100);
   noFill();
@@ -401,24 +416,27 @@ void drawImagePage()
   stroke(150);
   noFill();
   
-  // draw machine outline
   getDisplayMachine().draw();
+  
 
   
   stroke(255, 0, 0);
   showSelectedCentres(new PVector(0,0));
-  
+ 
   for (Panel panel : getPanelsForTab(TAB_NAME_INPUT))
   {
     panel.draw();
   }
-  
+
   showGroupBox();
 
   showCurrentMachinePosition();
   
   if (displayingInfoTextOnInputPage)
-    showText(600,45);
+    showText(250,45);
+    
+  drawStatusText(245, 12);
+
   showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
 }
 
@@ -446,7 +464,7 @@ void drawImagePreviewPage()
   
 //  showCurrentMachinePosition();
   if (displayingInfoTextOnInputPage)
-    showText(600,45);
+    showText(250,45);
   showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
 
 }
@@ -822,12 +840,12 @@ boolean isQueueClickable()
 
 boolean mouseOverPanel()
 {
-  boolean result = true;
-  if (mouseX < panelPositionX
-    || mouseX > panelPositionX + panelWidth
-    || mouseY < panelPositionY
-    || mouseY > panelPositionY + panelHeight)
-    result = false;
+  boolean result = false;
+  for (Panel panel : getPanelsForTab(currentTab))
+  {
+    if (panel.getOutline().surrounds(getMouseVector()))
+      result = true;
+  }
   return result;
 }
 
@@ -1569,7 +1587,7 @@ void drawStatusText(int x, int y)
       else
       {
         fill(200, 200, 0);
-        drawbotStatus = "BUSY!";
+        drawbotStatus = "BUSY: " + lastCommand;
       }  
     }
     else
