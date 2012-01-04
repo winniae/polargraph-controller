@@ -56,7 +56,7 @@ SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy hh:mm:ss");
 String commandStatus = "Waiting for a click.";
 
 int sampleArea = 10;
-int rowWidth = 75;
+float gridSize = 75.0;
 float currentPenWidth = 1.2;
 float penIncrement = 0.05;
 
@@ -64,15 +64,6 @@ float currentMachineMaxSpeed = 600.0;
 float currentMachineAccel = 400.0;
 float MACHINE_ACCEL_INCREMENT = 25.0;
 float MACHINE_MAXSPEED_INCREMENT = 25.0;
-
-final int TOTAL_ROW_WIDTH = 5000;
-int rows = TOTAL_ROW_WIDTH / rowWidth;
-
-int[] rowSegmentsForScreen = null;
-int[] rowSegmentsForMachine = null;
-
-List<List<PVector>> pixelCentresForScreen = null;
-List<List<PVector>> pixelCentresForMachine = null;
 
 List<String> commandQueue = new ArrayList<String>();
 List<String> realtimeCommandQueue = new ArrayList<String>();
@@ -172,10 +163,10 @@ Date timerStart = null;
 Date timeLastPixelStarted = null;
 
 boolean pixelTimerRunning = false;
-boolean displayingSelectedCentres = false;
-boolean displayingShadedCentres = true;
+boolean displayingSelectedCentres = true;
+boolean displayingShadedCentres = false;
 boolean displayingRowGridlines = false;
-boolean displayingInfoTextOnInputPage = true;
+boolean displayingInfoTextOnInputPage = false;
 
 boolean useSerialPortConnection = false;
 
@@ -289,10 +280,9 @@ void setup()
   {
     useSerialPortConnection = false;
   }
-  rebuildRows();  
+
   currentMode = MODE_BEGIN;
   preLoadCommandQueue();
-//  frame.setSize(getMachine().getWidth()*2+panelWidth+20, 1020);
   size(windowWidth, windowHeight);
   changeTab(TAB_NAME_INPUT, TAB_NAME_INPUT);
 
@@ -323,11 +313,9 @@ void preLoadCommandQueue()
 
 void windowResized()
 {
-  println("Window resized.");
   for (String key : getPanels().keySet())
   {
     Panel p = getPanels().get(key);
-    println("resizing height to: " + frame.getHeight());
     p.setHeight(frame.getHeight() - p.getOutline().getTop() - (DEFAULT_CONTROL_SIZE.y*2));
   }
   
@@ -403,23 +391,14 @@ Panel getPanel(String panelName)
 void drawImagePage()
 {
   strokeWeight(1);
-
   background(100);
   noFill();
-  
   drawMoveImageOutline();
-  
   stroke(255, 150, 255, 100);
   strokeWeight(3);
-  
-  
   stroke(150);
   noFill();
-  
   getDisplayMachine().draw();
-  
-
-  
   stroke(255, 0, 0);
   showSelectedCentres(new PVector(0,0));
  
@@ -429,12 +408,9 @@ void drawImagePage()
   }
 
   showGroupBox();
-
   showCurrentMachinePosition();
-  
   if (displayingInfoTextOnInputPage)
     showText(250,45);
-    
   drawStatusText(245, 12);
 
   showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
@@ -465,18 +441,30 @@ void drawImagePreviewPage()
 //  showCurrentMachinePosition();
   if (displayingInfoTextOnInputPage)
     showText(250,45);
+  drawStatusText(245, 12);
   showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
 
 }
 
 void drawDetailsPage()
 {
+  background(100);
   cursor(ARROW);
   for (Panel panel : getPanelsForTab(TAB_NAME_DETAILS))
   {
     panel.draw();
   }
-  showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
+  drawStatusText(245, 12);
+
+  int right = 0;
+  for (Panel panel : getPanelsForTab(TAB_NAME_DETAILS))
+  {
+    panel.draw();
+    float r = panel.getOutline().getRight();
+    if (r > right)
+      right = (int) r;
+  }
+  showCommandQueue(right, (int)mainPanelPosition.y);
 
 }
 
@@ -484,20 +472,28 @@ void drawDetailsPage()
 void drawCommandQueuePage()
 {
   cursor(ARROW);
+  background(100);
 
   // machine outline
   fill(100);
   drawMachineOutline();
   showingSummaryOverlay = false;
   
-  showCommandQueue(40, 60);
-  
   previewQueue();
 
+  
+  int right = 0;
   for (Panel panel : getPanelsForTab(TAB_NAME_QUEUE))
   {
+    
     panel.draw();
+    float r = panel.getOutline().getRight();
+    if (r > right)
+      right = (int) r;
   }
+  showCommandQueue(right, (int)mainPanelPosition.y);
+  
+  drawStatusText(245, 12);
   
 }
 
@@ -558,43 +554,29 @@ void showGroupBox()
   {
     noFill();
     stroke(255,0,0);
-    rect(boxVector1.x, boxVector1.y, boxVector2.x-boxVector1.x, boxVector2.y-boxVector1.y);
+    strokeWeight(1);
+    PVector topLeft = getDisplayMachine().scaleToScreen(boxVector1);
+    PVector botRight = getDisplayMachine().scaleToScreen(boxVector2);
+    rect(topLeft.x, topLeft.y, botRight.x-topLeft.x, botRight.y-topLeft.y);
   }
 }
 
-//void showMask()
-//{
-//  noStroke();
-//
-//  fill(100,100,100,150);
-//  rect(0, 0, width, getMachine().getPage().getTop()); // top box
-//  rect(0, getMachine().getPage().getTop(), getMachine().getPage().getLeft(), getMachine().getPage().getBottom()); // left box
-//  rect(getMachine().getPage().getRight(), getMachine().getPage().getTop(), width-getMachine().getPage().getRight(), getMachine().getPage().getHeight()); // right box
-//  rect(0, getMachine().getPage().getBottom(), width, height-getMachine().getPage().getBottom()); // bottom box
-//  noFill();
-//  stroke(0);
-//  strokeWeight(2);
-//  rect(getMachine().getPage().getLeft(), getMachine().getPage().getTop(), getMachine().getPage().getWidth(), getMachine().getPage().getHeight()); // page
-//  stroke(255);
-//  rect(getMachine().getPage().getLeft()-2, getMachine().getPage().getTop()-2, getMachine().getPage().getWidth()+4, getMachine().getPage().getHeight()+4); // page
-//  strokeWeight(1);
-//}
 
 void showSelectedCentres(PVector offset)
 {
   if (displayingSelectedCentres)
   {
-    int spotSize = 3;
-    if (pixelCentresForScreen != null)
-    {
-      for (List<PVector> row : pixelCentresForScreen)
-      {
-        for (PVector v : row)
-        {
-          ellipse(offset.x+v.x, offset.y+v.y, spotSize, spotSize);
-        }
-      }
-    }
+//    int spotSize = 3;
+//    if (pixelCentresForScreen != null)
+//    {
+//      for (List<PVector> row : pixelCentresForScreen)
+//      {
+//        for (PVector v : row)
+//        {
+//          ellipse(offset.x+v.x, offset.y+v.y, spotSize, spotSize);
+//        }
+//      }
+//    }
   }
 }
 
@@ -602,18 +584,18 @@ void showShadedCentres(PVector offset)
 {
   if (displayingShadedCentres)
   {
-    int spotSize = getMachine().inMM(rowWidth);
-    if (pixelCentresForScreen != null)
-    {
-      for (List<PVector> row : pixelCentresForScreen)
-      {
-        for (PVector v : row)
-        {
-          fill(v.z);
-          ellipse(offset.x+v.x, offset.y+v.y, spotSize, spotSize);
-        }
-      }
-    }
+//    int spotSize = getMachine().inMM(rowWidth);
+//    if (pixelCentresForScreen != null)
+//    {
+//      for (List<PVector> row : pixelCentresForScreen)
+//      {
+//        for (PVector v : row)
+//        {
+//          fill(v.z);
+//          ellipse(offset.x+v.x, offset.y+v.y, spotSize, spotSize);
+//        }
+//      }
+//    }
   }
   noFill();
 }
@@ -641,36 +623,6 @@ PVector getNativeCoords(float x, float y)
   return result;
 }
 
-void showAllARows()
-{
-  if (displayingRowGridlines)
-  {
-    if (pixelCentresForScreen == null || pixelCentresForScreen.isEmpty())
-      stroke(0, 200, 0, 200);
-    else
-      stroke(0, 200, 0, 30);  
-    for (int i = 0; i < rowSegmentsForScreen.length; i ++)
-    {
-      int dia = rowSegmentsForScreen[i]*2;
-      ellipse(0, 0, dia, dia);
-    }
-  }
-}
-void showAllBRows()
-{
-  if (displayingRowGridlines)
-  {
-    if (pixelCentresForScreen == null || pixelCentresForScreen.isEmpty())
-      stroke(0, 200, 0, 200);
-    else
-      stroke(0, 200, 0, 30);  
-    for (int i = 0; i < rowSegmentsForScreen.length; i ++)
-    {
-      int dia = rowSegmentsForScreen[i]*2;
-      ellipse(getMachine().getWidth(), 0, dia, dia);
-    }
-  }
-}
 
 int rounded(float lineLength)
 {
@@ -747,18 +699,22 @@ void setPictureFrameDimensionsToBox()
 {
   if (boxVector1 != null && boxVector2 != null)
   {
-    getMachine().setPictureFrame(new Rectangle(this.boxVector1, this.boxVector2));
+    getDisplayMachine().setPictureFrame(new Rectangle(this.boxVector1, this.boxVector2));
     this.rowsVector1 = null;
     this.rowsVector2 = null;
   }
 }
 void setBoxToPictureframeDimensions()
 {
-  this.boxVector1 = getMachine().getPictureFrame().getTopLeft();
-  this.boxVector2 = getMachine().getPictureFrame().getBotRight();
-  this.rowsVector1 = null;
-  this.rowsVector2 = null;
-  extractRowsFromBox();
+  this.boxVector1 = getDisplayMachine().getPictureFrame().getTopLeft();
+  this.boxVector2 = getDisplayMachine().getPictureFrame().getBotRight();
+  if (isBoxSpecified())
+    getDisplayMachine().getPixelsPositionsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
+}
+
+float getGridSize()
+{
+  return this.gridSize;
 }
 
 void controlEvent(ControlEvent controlEvent) 
@@ -806,6 +762,8 @@ boolean mouseOverMachine()
   }
   return result;
 }
+
+
 boolean isMachineClickable()
 {
   if (getCurrentTab() == TAB_NAME_INPUT)
@@ -1016,39 +974,29 @@ void mouseClicked()
 void machineClicked()
 {
   if (currentMode.equals(MODE_BEGIN))
+  {
     currentMode = MODE_INPUT_BOX_TOP_LEFT;
+  }
   else if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT))
   {
-    setBoxVector1();
-    extractRowsFromBox();
+    PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+    setBoxVector1(pos);
+    if (isBoxSpecified())
+    {
+      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
+    }
+      
     currentMode = MODE_INPUT_BOX_BOT_RIGHT;
   }
   else if (currentMode.equals(MODE_INPUT_BOX_BOT_RIGHT))
   {
-    setBoxVector2();
-    extractRowsFromBox();
-  }
-  else if (currentMode.equals(MODE_DRAW_SHADE_BOX_ROWS_PIXELS))
-  {
-    setRowsVector1();
-    setRowsVector2();
-    extractRows();
-    if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-      sendOutlineOfPixels();
+    PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+    setBoxVector2(pos);
+    if (isBoxSpecified())
+      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
   }
   else if (currentMode.equals(MODE_SET_POSITION))
     sendSetPosition();
-  else if (currentMode.equals(MODE_INPUT_ROW_START))
-  {
-    setRowsVector1();
-    extractRows();
-    currentMode = MODE_INPUT_ROW_END;
-  }
-  else if (currentMode.equals(MODE_INPUT_ROW_END))
-  {
-    setRowsVector2();
-    extractRows();
-  }
   else if (currentMode.equals(MODE_DRAW_DIRECT))
     sendMoveToPosition(true);
   else if (currentMode.equals(MODE_DRAW_TO_POSITION))
@@ -1058,7 +1006,8 @@ void machineClicked()
     float ix = mouseX - (new Float(getMachine().getImageFrame().getWidth())/2);
     float iy = mouseY - (new Float(getMachine().getImageFrame().getHeight())/2);
     getMachine().getImageFrame().setPosition(ix, iy);
-    extractRowsFromBox();
+    if (isBoxSpecified())
+      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
   }
 }  
  
@@ -1237,150 +1186,7 @@ void queueClicked()
 }
 
 
-void extractRowsFromBox()
-{
-  if (boxVector1 != null && boxVector2 != null)
-  {
-    List<List<PVector>> resultScr = new ArrayList<List<PVector>>();
-    List<List<PVector>> resultMach = new ArrayList<List<PVector>>();
-    
-    for (int i = 0; i < rowSegmentsForMachine.length; i++)
-    {
-      List<PVector> rowListScr = new ArrayList<PVector>();
-      List<PVector> rowListMach = new ArrayList<PVector>();
-      for (int j = 0; j < rowSegmentsForMachine.length; j++)
-      {
-        int rowM = rowSegmentsForMachine[i] + (rowWidth/2);
-        int colM = rowSegmentsForMachine[j] + (rowWidth/2);
 
-        int rowS = rowSegmentsForScreen[i] + getMachine().inMM(rowWidth/2.0);
-        int colS = rowSegmentsForScreen[j] + getMachine().inMM(rowWidth/2.0);
-        
-        PVector centreScr = getCartesian(colS, rowS);
-        
-        boolean pixelIsInsideBox = isPixelInsideBox(centreScr);
-        
-        if (pixelIsInsideBox)
-        {
-          boolean pixelIsChromaKey = getMachine().isPixelChromaKey(centreScr);
-          if (!pixelIsChromaKey)
-          {
-            int density = getMachine().getPixelDensity(centreScr, sampleArea);
-            centreScr.set(centreScr.x, centreScr.y, density);
-            PVector centreMach = new PVector(colM, rowM, density);
-            rowListScr.add(centreScr);
-            rowListMach.add(centreMach);
-          }
-        }
-      }
-      if (!rowListMach.isEmpty())
-      {
-        resultMach.add(rowListMach);
-        resultScr.add(rowListScr);
-      }
-    }
-    
-    pixelCentresForMachine = resultMach;
-    pixelCentresForScreen = resultScr;
-    
-  }
-}
-
-
-List<List<PVector>> extractRowsFromBoxOpposite()
-{
-  List<List<PVector>> resultMach = new ArrayList<List<PVector>>();
-  if (boxVector1 != null && boxVector2 != null)
-  {
-    
-    for (int i = 0; i < rowSegmentsForMachine.length; i++)
-    {
-      List<PVector> rowListMach = new ArrayList<PVector>();
-      for (int j = 0; j < rowSegmentsForMachine.length; j++)
-      {
-        int rowM = rowSegmentsForMachine[j] + (rowWidth/2);
-        int colM = rowSegmentsForMachine[i] + (rowWidth/2);
-
-        int rowS = rowSegmentsForScreen[j] + getMachine().inMM(rowWidth/2.0);
-        int colS = rowSegmentsForScreen[i] + getMachine().inMM(rowWidth/2.0);
-        
-        PVector centreScr = getCartesian(colS, rowS);
-        
-        boolean pixelIsInsideBox = isPixelInsideBox(centreScr);
-        
-        if (pixelIsInsideBox)
-        {
-          int density = getMachine().getPixelDensity(centreScr, 10);
-          centreScr.set(centreScr.x, centreScr.y, density);
-          PVector centreMach = new PVector(colM, rowM, density);
-          rowListMach.add(centreMach);
-        }
-      }
-      if (!rowListMach.isEmpty())
-      {
-        resultMach.add(rowListMach);
-      }
-    }
-  }
-  return resultMach;
-}
-
-void extractRows()
-{
-  if (isRowsSpecified())
-  {
-    List<List<PVector>> resultScr = new ArrayList<List<PVector>>();
-    List<List<PVector>> resultMach = new ArrayList<List<PVector>>();
-
-    int startRow = int(rowsVector1.y);
-    int endRow = int(rowsVector2.y);
-    
-    int startCol = int(rowsVector1.x);
-    int endCol = int(rowsVector2.x);
-    
-    println("Start row: " + startRow +", end row: "+ endRow);
-    println("Start col: " + startCol +", end col: "+ endCol);
-    
-    for (int i = 0; i < rowSegmentsForMachine.length; i++)
-    {
-      println("i:"+i+", rowSegments:" + rowSegmentsForMachine[i]);
-      if (rowSegmentsForMachine[i] >= startRow && rowSegmentsForMachine[i] <= endRow)
-      {
-        println("row!!");
-        List<PVector> rowListScr = new ArrayList<PVector>();
-        List<PVector> rowListMach = new ArrayList<PVector>();
-        for (int j = 0; j < rowSegmentsForMachine.length; j++)
-        {
-          if (rowSegmentsForMachine[j] >= startCol && rowSegmentsForMachine[j] <= endCol)
-          {
-            int row = rowSegmentsForMachine[i] + (rowWidth/2);
-            int col = rowSegmentsForMachine[j] + (rowWidth/2);
-            
-            int rowForScreen = rowSegmentsForScreen[i] + getMachine().inMM(rowWidth/2);
-            int colForScreen = rowSegmentsForScreen[j] + getMachine().inMM(rowWidth/2);
-            
-            PVector centreForScreen = getCartesian(colForScreen, rowForScreen);
-
-            if (getMachine().getPage().surrounds(centreForScreen))
-            {
-              int density = getMachine().getPixelDensity(centreForScreen, getMachine().inMM(rowWidth/2));
-              centreForScreen.set(centreForScreen.x, centreForScreen.y, density);
-              PVector centreForMachine = new PVector(col, row, density);
-              rowListScr.add(centreForScreen);
-              rowListMach.add(centreForMachine);
-            }
-          }
-        }
-        resultScr.add(rowListScr);
-        resultMach.add(rowListMach);
-      }
-    }
-    
-    pixelCentresForScreen = resultScr;
-    pixelCentresForMachine = resultMach;
-    
-  }
-}
 
 boolean isPixelInsideBox(PVector vec)
 {
@@ -1429,31 +1235,23 @@ boolean isBoxSpecified()
     return false;
 }
 
-void setBoxVector1()
+void setBoxVector1(PVector vec)
 {
-  PVector posInMachine = new PVector(mouseX, mouseY);
-  boxVector1 = posInMachine;
+  boxVector1 = vec;
 }
-void setBoxVector2()
+void setBoxVector2(PVector vec)
 {
-  PVector posInMachine = new PVector(mouseX, mouseY);
-  boxVector2 = posInMachine;
+  boxVector2 = vec;
+}
+PVector getBoxVector1()
+{
+  return this.boxVector1;
+}
+PVector getBoxVector2()
+{
+  return this.boxVector2;
 }
 
-void rebuildRows()
-{
-  rows = TOTAL_ROW_WIDTH / rowWidth;
-  rowSegmentsForScreen = new int[rows];
-  rowSegmentsForMachine = new int[rows];
-  
-  for (int i = 0; i < rows; i++)
-  {
-    int r = rowWidth * i;
-    rowSegmentsForMachine[i] = r;
-    rowSegmentsForScreen[i] = int(r / getMachine().getStepsPerMM());
-//    println("Machine Row:"+i+":"+r);
-  }
-}
 
 void flipDirection()
 {
@@ -1537,7 +1335,7 @@ void showText(int xPosOrigin, int yPosOrigin)
 //  textPositionY = yPosOrigin;
 //  tRowNo = 1;
   
-  text("Row size: " + rowWidth, textPositionX, textPositionY+(tRow*tRowNo++));
+  text("Row size: " + getGridSize(), textPositionX, textPositionY+(tRow*tRowNo++));
 //  text("Row segments mach: " + rowSegmentsForMachine.length, textPositionX, textPositionY+(tRow*tRowNo++));
 //  text("Row segments scr: " + rowSegmentsForScreen.length, textPositionX, textPositionY+(tRow*tRowNo++));
   
@@ -1582,7 +1380,7 @@ void drawStatusText(int x, int y)
       if (drawbotReady)
       {
         fill(0, 200, 0);
-        drawbotStatus = "READY!";
+        drawbotStatus = "Polargraph READY!";
       }
       else
       {
@@ -1593,7 +1391,7 @@ void drawStatusText(int x, int y)
     else
     {
       fill(255, 0, 0);
-      drawbotStatus = "Drawbot is not connected.";
+      drawbotStatus = "Polargraph is not connected.";
     }  
   }
   else
@@ -1626,7 +1424,7 @@ void showCommandQueue(int xPos, int yPos)
   rightEdgeOfQueue = textPositionX+300;
   bottomEdgeOfQueue = height;
   
-  drawCommandQueueStatus(textPositionX, commandQueuePos);
+  drawCommandQueueStatus(textPositionX, commandQueuePos, 14);
   commandQueuePos+=queueRowHeight;
   text("Last command: " + ((commandHistory.isEmpty()) ? "-" : commandHistory.get(commandHistory.size()-1)), textPositionX, commandQueuePos);
   commandQueuePos+=queueRowHeight;
@@ -1649,18 +1447,18 @@ void showCommandQueue(int xPos, int yPos)
   }
 }
 
-void drawCommandQueueStatus(int x, int y)
+void drawCommandQueueStatus(int x, int y, int tSize)
 {
   String queueStatus = null;
-  textSize(14);
+  textSize(tSize);
   if (commandQueueRunning)
   {
-    queueStatus = "RUNNING - click to pause";
+    queueStatus = "QUEUE RUNNING - click to pause";
     fill(0, 200, 0);
   }
   else
   {
-    queueStatus = "PAUSED - click to start";
+    queueStatus = "QUEUE PAUSED - click to start";
     fill(255, 0, 0);
   }
 
@@ -2028,7 +1826,7 @@ void loadFromPropertiesFile()
   this.serialPortNumber = getIntProperty("controller.machine.serialport", 0);
 
   // row size
-  this.rowWidth = getIntProperty("controller.row.size", 100);
+  this.gridSize = getFloatProperty("controller.grid.size", 100.0);
   this.sampleArea = getIntProperty("controller.pixel.samplearea", 2);
   // initial screen size
   this.windowWidth = getIntProperty("controller.window.width", 800);
@@ -2056,7 +1854,7 @@ void savePropertiesFile()
   props.setProperty("controller.machine.serialport", getSerialPortNumber().toString());
 
   // row size
-  props.setProperty("controller.row.size", new Integer(rowWidth).toString());
+  props.setProperty("controller.grid.size", new Float(gridSize).toString());
   props.setProperty("controller.pixel.samplearea", new Integer(sampleArea).toString());
   // initial screen size
   props.setProperty("controller.window.width", new Integer(width).toString());

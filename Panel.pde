@@ -115,6 +115,26 @@ class Panel
       else
         this.getOutline().setHeight(h);
       setControlPositions(buildControlPositionsForPanel(this));
+      
+      float left = 0.0;
+      String controlName = "";
+      for (String key : getControlPositions().keySet())
+      {
+        PVector pos = getControlPositions().get(key);
+        if (pos.x >= left)
+        {
+          left = pos.x;
+          controlName = key;
+        }
+      }
+      
+      Map<String, PVector> map = getControlSizes();
+      
+//      PVector size = getControlSizes().get(controlName);
+//      println("size: " + size);
+      float right = left + DEFAULT_CONTROL_SIZE.x;
+      
+      this.getOutline().setWidth(right);
     }
   }
   

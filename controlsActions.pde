@@ -13,20 +13,20 @@ void button_mode_inputBoxBotRight()
 void button_mode_drawOutlineBox()
 {
   setMode(MODE_DRAW_OUTLINE_BOX);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendOutlineOfBox();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendOutlineOfBox();
 }
 void button_mode_drawOutlineBoxRows()
 {
   setMode(MODE_DRAW_OUTLINE_BOX_ROWS);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendOutlineOfRows();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendOutlineOfRows();
 }
 void button_mode_drawShadeBoxRowsPixels()
 {
   setMode(MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendOutlineOfPixels();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendOutlineOfPixels();
 }
 void button_mode_drawToPosition()
 {
@@ -35,20 +35,20 @@ void button_mode_drawToPosition()
 void button_mode_renderSquarePixel()
 {
   setMode(MODE_RENDER_SQUARE_PIXELS);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendSquarePixels();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendSquarePixels();
 }
 void button_mode_renderSawPixel()
 {
   setMode(MODE_RENDER_SAW_PIXELS);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendSawtoothPixels();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendSawtoothPixels();
 }
 void button_mode_renderCirclePixel()
 {
   setMode(MODE_RENDER_CIRCLE_PIXELS);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendCircularPixels();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendCircularPixels();
 }
 void button_mode_inputRowStart()
 {
@@ -69,23 +69,23 @@ void button_mode_drawTestPattern()
 }
 void button_mode_incRowSize()
 {
-  rowWidth+=5;
-  rebuildRows();
-  extractRowsFromBox();
-  extractRows();
+  gridSize+=5.0;
+  getDisplayMachine().setGridSize(gridSize);
+  if (isBoxSpecified())
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
 }
 void button_mode_decRowSize()
 {
-  rowWidth-=5;
-  rebuildRows();
-  extractRowsFromBox();
-  extractRows();
+  gridSize-=5;
+  getDisplayMachine().setGridSize(gridSize);
+  if (isBoxSpecified())
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
 }
 void button_mode_drawGrid()
 {
   setMode(MODE_DRAW_GRID);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendGridOfBox();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendGridOfBox();
 }
 void button_mode_loadImage()
 {
@@ -118,20 +118,20 @@ void button_mode_drawTestPenWidth()
 void button_mode_renderScaledSquarePixels()
 {
   setMode(MODE_RENDER_SCALED_SQUARE_PIXELS);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendScaledSquarePixels();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendScaledSquarePixels();
 }
 void button_mode_renderSolidSquarePixels()
 {
   setMode(MODE_RENDER_SOLID_SQUARE_PIXELS);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendSolidSquarePixels();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendSolidSquarePixels();
 }
 void button_mode_renderScribblePixels()
 {
   setMode(MODE_RENDER_SCRIBBLE_PIXELS);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-    sendScribblePixels();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//    sendScribblePixels();
 }
 void button_mode_changeMachineSpec()
 {
@@ -159,9 +159,9 @@ void button_mode_saveProperties()
 void button_mode_incSampleArea()
 {
   sampleArea+=1;
-  rebuildRows();
-  extractRowsFromBox();
-  extractRows();
+//  rebuildRows();
+//  extractRowsFromBox();
+//  extractRows();
 }
 void button_mode_decSampleArea()
 {
@@ -170,9 +170,9 @@ void button_mode_decSampleArea()
 //  else
 //    sampleArea-=1;
     
-  rebuildRows();
-  extractRowsFromBox();
-  extractRows();
+//  rebuildRows();
+//  extractRowsFromBox();
+//  extractRows();
 }
 void button_mode_moveImage()
 {
@@ -201,11 +201,11 @@ void button_mode_importQueue()
 void button_mode_fitImageToBox()
 {
   setMode(MODE_FIT_IMAGE_TO_BOX);
-  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-  {
-    sizeImageToFitBox();
-  }
-  extractRowsFromBox();
+//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
+//  {
+//    sizeImageToFitBox();
+//  }
+//  extractRowsFromBox();
   println("fitted image to box.");
 }
 void button_mode_drawDirect()

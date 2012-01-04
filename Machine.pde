@@ -19,6 +19,7 @@ class Machine
   protected Float stepsPerMM = null;
   protected Float maxLength = null;
   protected Float gridSize = null;
+  protected List<Float> gridLinePositions = null;
   
   protected PImage imageBitmap = null;
   protected String imageFilename = null;
@@ -383,5 +384,106 @@ class Machine
     }    
   }
   
+  protected void setGridSize(float gridSize)
+  {
+    this.gridSize = gridSize;
+    this.gridLinePositions = generateGridLinePositions(gridSize);
+  }
+  
+  /**
+    This takes in an area defined in cartesian steps,
+    and returns a set of pixels that are included
+    in that area.  Coordinates are specified 
+    in cartesian steps.  The pixels are worked out 
+    based on the gridsize parameter. d*/
+  Set<PVector> getPixelsPositionsFromArea(PVector p, PVector s, float gridSize)
+  {
+    // work out the grid
+    setGridSize(gridSize);
+    float maxLength = getMaxLength();
+    float numberOfGridlines = maxLength / gridSize;
+    float gridIncrement = getMaxLength() / numberOfGridlines;
+    
+    List<Float> gridLinePositions = getGridLinePositions(gridSize);
+    Rectangle selectedArea = new Rectangle (p.x,p.y, s.x,s.y);
+    
+    // now go through all the combinations of the two values.
+    Set<PVector> nativeCoords = new HashSet<PVector>();
+    for (Float a : gridLinePositions)
+    {
+      for (Float b : gridLinePositions)
+      {
+        PVector nativeCoord = new PVector(a, b);
+        PVector cartesianCoord = asCartesianCoords(nativeCoord);
+        if (selectedArea.surrounds(cartesianCoord))
+           nativeCoords.add(nativeCoord);
+      }
+    }
+    
+    return nativeCoords;
+  }
+  
+  protected PVector snapToGrid(PVector loose, float gridSize)
+  {
+    List<Float> pos = getGridLinePositions(gridSize);
+    boolean higherupperFound = false;
+    boolean lowerFound = false;
+    
+    float halfGrid = gridSize / 2.0;
+    float x = loose.x;
+    float y = loose.y;
+    
+    Float snappedX = null;
+    Float snappedY = null;
+    
+    int i = 0;
+    while ((snappedX == null || snappedY == null) && i < pos.size())
+    {
+      float upperBound = pos.get(i)+halfGrid;
+      float lowerBound = pos.get(i)-halfGrid;
+//      println("pos:" +pos.get(i) + "half: "+halfGrid+ ", upper: "+ upperBound + ", lower: " + lowerBound);
+      if (snappedX == null 
+        && x > lowerBound 
+        && x <= upperBound)
+      {
+        snappedX = pos.get(i);
+//        println("snappedX:" + snappedX);
+      }
+
+      if (snappedY == null 
+        && y > lowerBound 
+        && y <= upperBound)
+      {
+        snappedY = pos.get(i);
+//        println("snappedY:" + snappedY);
+      }
+            
+      i++;
+    }
+    
+    PVector snapped = new PVector((snappedX == null) ? 0.0 : snappedX, (snappedY == null) ? 0.0 : snappedY);
+//    println("loose:" + loose);
+//    println("snapped:" + snapped);
+    return snapped;
+  }
+  
+  protected List<Float> getGridLinePositions(float gridSize)
+  {
+    setGridSize(gridSize);
+    return this.gridLinePositions;
+  }
+  
+  private List<Float> generateGridLinePositions(float gridSize)
+  {
+    List<Float> glp = new ArrayList<Float>();
+    float maxLength = getMaxLength();
+    for (float i = gridSize; i <= maxLength; i+=gridSize)
+    {
+      glp.add(i);
+    }
+    return glp;
+  }    
+
+ 
 
 }

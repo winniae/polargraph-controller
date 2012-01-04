@@ -102,7 +102,7 @@ Map<String, Panel> buildPanels()
   // normally would get control sizes - not bothering. use defaults.
   panels.put(PANEL_NAME_QUEUE, queuePanel);
 
-  panelOutline = new Rectangle(new PVector(getMainPanelPosition().x, getMainPanelPosition().y-(DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y)), new PVector((DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x)*2, 400.0));
+  panelOutline = new Rectangle(new PVector(getMainPanelPosition().x, getMainPanelPosition().y-(DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y)), new PVector(DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x, DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y));
   Panel generalPanel = new Panel(PANEL_NAME_GENERAL, panelOutline);
   generalPanel.setResizable(false);
   generalPanel.setOutlineColour(color(200,200,200));
@@ -134,7 +134,7 @@ Map<String, Controller> buildAllControls()
       b.setLabel(getControlLabels().get(controlName));
       b.hide();
       map.put(controlName, b);
-      println("Added control " + controlName);
+//      println("Added control " + controlName);
     }
   }
   return map;
@@ -219,7 +219,7 @@ List<Controller> getControllersForControllerNames(List<String> names)
 List<String> getControlNamesForInputPanel()
 {
   List<String> controlNames = new ArrayList<String>();
-  controlNames.add(MODE_BEGIN);
+  controlNames.add(MODE_CLEAR_QUEUE);
   controlNames.add(MODE_SET_POSITION_HOME);
   controlNames.add(MODE_SET_POSITION);
   controlNames.add(MODE_DRAW_TO_POSITION);
@@ -248,7 +248,7 @@ List<String> getControlNamesForInputPanel()
 List<String> getControlNamesForPreviewPanel()
 {
   List<String> controlNames = new ArrayList<String>();
-  controlNames.add(MODE_BEGIN);
+  controlNames.add(MODE_CLEAR_QUEUE);
   controlNames.add(MODE_SET_POSITION_HOME);
   controlNames.add(MODE_SET_POSITION);
   controlNames.add(MODE_DRAW_TO_POSITION);
@@ -274,15 +274,16 @@ List<String> getControlNamesForDetailPanel()
   controlNames.add(MODE_CHANGE_MACHINE_SPEC);
   controlNames.add(MODE_REQUEST_MACHINE_SIZE);
   controlNames.add(MODE_RESET_MACHINE);
-  controlNames.add(MODE_SAVE_PROPERTIES);
+  controlNames.add(MODE_CLEAR_QUEUE);
+  controlNames.add(MODE_EXPORT_QUEUE);
+  controlNames.add(MODE_IMPORT_QUEUE);
   return controlNames;
 }
 
 List<String> getControlNamesForQueuePanel()
 {
   List<String> controlNames = new ArrayList<String>();
-  controlNames.add(MODE_BEGIN);
-  controlNames.add(MODE_RENDER_COMMAND_QUEUE);
+  controlNames.add(MODE_CLEAR_QUEUE);
   controlNames.add(MODE_EXPORT_QUEUE);
   controlNames.add(MODE_IMPORT_QUEUE);
   return controlNames;
@@ -310,7 +311,7 @@ Map<String, String> buildControlLabels()
   result.put(MODE_DRAW_TO_POSITION, "Move pen to point");
   result.put(MODE_DRAW_DIRECT, "Move direct");
   result.put(MODE_RENDER_SQUARE_PIXELS, "Shade Squarewave");
-  result.put(MODE_RENDER_SCALED_SQUARE_PIXELS, "Shade Scaled Squarewave");
+  result.put(MODE_RENDER_SCALED_SQUARE_PIXELS, "Shade Scaled Square");
   result.put(MODE_RENDER_SAW_PIXELS, "Shade sawtooth");
   result.put(MODE_RENDER_CIRCLE_PIXELS, "Shade circular");
   result.put(MODE_INPUT_ROW_START, "Select Row start");
@@ -340,6 +341,7 @@ Map<String, String> buildControlLabels()
   result.put(MODE_CONVERT_BOX_TO_PICTUREFRAME, "Set frame");
   result.put(MODE_SELECT_PICTUREFRAME, "Select frame");
 
+  result.put(MODE_CLEAR_QUEUE, "Clear queue");
   result.put(MODE_EXPORT_QUEUE, "Export queue");
   result.put(MODE_IMPORT_QUEUE, "Import queue");
   result.put(MODE_FIT_IMAGE_TO_BOX, "Resize image");
@@ -387,6 +389,7 @@ Set<String> buildControlNames()
   result.add(MODE_MOVE_IMAGE);
   result.add(MODE_CONVERT_BOX_TO_PICTUREFRAME);
   result.add(MODE_SELECT_PICTUREFRAME);
+  result.add(MODE_CLEAR_QUEUE);
   result.add(MODE_EXPORT_QUEUE);
   result.add(MODE_IMPORT_QUEUE);
   result.add(MODE_FIT_IMAGE_TO_BOX);

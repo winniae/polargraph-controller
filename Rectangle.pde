@@ -18,6 +18,10 @@ class Rectangle
   {
     return this.size.x;
   }
+  public void setWidth(float w)
+  {
+    this.size.x = w;
+  }
   public float getHeight()
   {
     return this.size.y;
