@@ -1,3 +1,30 @@
+/**
+  Polargraph controller
+  Copyright Sandy Noble 2012.
+
+  This file is part of Polargraph Controller.
+
+  Polargraph Controller is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Polargraph Controller is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
+    
+  Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
+  
+  This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
+
+  sandy.noble@gmail.com
+  http://www.polargraph.co.uk/
+  http://code.google.com/p/polargraph/
+*/
 Set<String> getPanelNames()
 {
   if (this.panelNames == null)
@@ -69,18 +96,18 @@ Map<String, Panel> buildPanels()
   inputPanel.setControls(getControlsForPanels().get(PANEL_NAME_INPUT));
   // get control positions
   inputPanel.setControlPositions(buildControlPositionsForPanel(inputPanel));
-  // normally would get control sizes - not bothering. use defaults.
+  inputPanel.setControlSizes(buildControlSizesForPanel(inputPanel));
   panels.put(PANEL_NAME_INPUT, inputPanel);
 
-  Panel previewPanel = new Panel(PANEL_NAME_PREVIEW, panelOutline);
-  previewPanel.setOutlineColour(color(200,200,200));
-  // get controls
-  previewPanel.setResizable(true);
-  previewPanel.setControls(getControlsForPanels().get(PANEL_NAME_PREVIEW));
-  // get control positions
-  previewPanel.setControlPositions(buildControlPositionsForPanel(previewPanel));
-  // normally would get control sizes - not bothering. use defaults.
-  panels.put(PANEL_NAME_PREVIEW, previewPanel);
+//  Panel previewPanel = new Panel(PANEL_NAME_PREVIEW, panelOutline);
+//  previewPanel.setOutlineColour(color(200,200,200));
+//  // get controls
+//  previewPanel.setResizable(true);
+//  previewPanel.setControls(getControlsForPanels().get(PANEL_NAME_PREVIEW));
+//  // get control positions
+//  previewPanel.setControlPositions(buildControlPositionsForPanel(previewPanel));
+//  previewPanel.setControlSizes(buildControlSizesForPanel(previewPanel));
+//  panels.put(PANEL_NAME_PREVIEW, previewPanel);
   
   Panel detailsPanel = new Panel(PANEL_NAME_DETAILS, panelOutline);
   detailsPanel.setOutlineColour(color(200,200,200));
@@ -89,7 +116,7 @@ Map<String, Panel> buildPanels()
   detailsPanel.setControls(getControlsForPanels().get(PANEL_NAME_DETAILS));
   // get control positions
   detailsPanel.setControlPositions(buildControlPositionsForPanel(detailsPanel));
-  // normally would get control sizes - not bothering. use defaults.
+  detailsPanel.setControlSizes(buildControlSizesForPanel(detailsPanel));
   panels.put(PANEL_NAME_DETAILS, detailsPanel);
 
   Panel queuePanel = new Panel(PANEL_NAME_QUEUE, panelOutline);
@@ -99,7 +126,7 @@ Map<String, Panel> buildPanels()
   queuePanel.setControls(getControlsForPanels().get(PANEL_NAME_QUEUE));
   // get control positions
   queuePanel.setControlPositions(buildControlPositionsForPanel(queuePanel));
-  // normally would get control sizes - not bothering. use defaults.
+  queuePanel.setControlSizes(buildControlSizesForPanel(queuePanel));
   panels.put(PANEL_NAME_QUEUE, queuePanel);
 
   panelOutline = new Rectangle(new PVector(getMainPanelPosition().x, getMainPanelPosition().y-(DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y)), new PVector(DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x, DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y));
@@ -110,7 +137,7 @@ Map<String, Panel> buildPanels()
   generalPanel.setControls(getControlsForPanels().get(PANEL_NAME_GENERAL));
   // get control positions
   generalPanel.setControlPositions(buildControlPositionsForPanel(generalPanel));
-  // normally would get control sizes - not bothering. use defaults.
+  generalPanel.setControlSizes(buildControlSizesForPanel(generalPanel));
   panels.put(PANEL_NAME_GENERAL, generalPanel);
   
   return panels;
@@ -134,19 +161,85 @@ Map<String, Controller> buildAllControls()
       b.setLabel(getControlLabels().get(controlName));
       b.hide();
       map.put(controlName, b);
-      println("Added button " + controlName);
+//      println("Added button " + controlName);
     }
-    if (controlName.startsWith("toggle_"))
+    else if (controlName.startsWith("toggle_"))
     {
       Toggle t = cp5.addToggle(controlName, false, 100, 100, 100, 100);
       t.setLabel(getControlLabels().get(controlName));
       t.hide();
       controlP5.Label l = t.captionLabel();
-      l.style().marginTop = -16
-      ; //move upwards (relative to button size)
+      l.style().marginTop = -17; //move upwards (relative to button size)
       l.style().marginLeft = 4; //move to the right
       map.put(controlName, t);
-      println("Added toggle " + controlName);
+//      println("Added toggle " + controlName);
+    }
+    else if (controlName.startsWith("minitoggle_"))
+    {
+      Toggle t = cp5.addToggle(controlName, false, 100, 100, 100, 100);
+      t.setLabel(getControlLabels().get(controlName));
+      t.hide();
+      controlP5.Label l = t.captionLabel();
+      l.style().marginTop = -17; //move upwards (relative to button size)
+      l.style().marginLeft = 4; //move to the right
+      map.put(controlName, t);
+//      println("Added minitoggle " + controlName);
+    }
+    else if (controlName.startsWith("numberbox_"))
+    {
+      Numberbox n = cp5.addNumberbox(controlName, 100, 100, 100, 100, 20);
+      n.setLabel(getControlLabels().get(controlName));
+      n.hide();
+      n.setDecimalPrecision(0);
+      controlP5.Label l = n.captionLabel();
+      l.style().marginTop = -17; //move upwards (relative to button size)
+      l.style().marginLeft = 40; //move to the right
+      if (controlName.equals(MODE_CHANGE_SAMPLE_AREA))
+      {
+        n.setValue(getSampleArea());
+        n.setMin(1);
+        n.setMultiplier(1);
+      }
+      else if (controlName.equals(MODE_CHANGE_GRID_SIZE))
+      {
+        n.setValue(getGridSize());
+        n.setMin(20);
+        n.setMultiplier(5);
+      }
+      // change the control direction to left/right
+      n.setDirection(Controller.VERTICAL);
+      map.put(controlName, n);
+//      println("Added numberbox " + controlName);
+    }
+  }
+  
+  initialiseMiniToggleValues(map);
+  return map;
+}
+
+Map<String, Controller> initialiseMiniToggleValues(Map<String, Controller> map)
+{
+  for (String key : map.keySet())
+  {
+    if (MODE_SHOW_DENSITY_PREVIEW.equals(key))
+    {
+      Toggle t = (Toggle) map.get(key);
+      t.setValue((displayingDensityPreview) ? 1 : 0);
+    }
+    if (MODE_SHOW_QUEUE_PREVIEW.equals(key))
+    {
+      Toggle t = (Toggle) map.get(key);
+      t.setValue((displayingQueuePreview) ? 1 : 0);
+    }
+    if (MODE_SHOW_IMAGE.equals(key))
+    {
+      Toggle t = (Toggle) map.get(key);
+      t.setValue((displayingImage) ? 1 : 0);
+    }
+    if (MODE_SHOW_VECTOR.equals(key))
+    {
+      Toggle t = (Toggle) map.get(key);
+      t.setValue((displayingVector) ? 1 : 0);
     }
   }
   return map;
@@ -163,22 +256,6 @@ String getControlLabel(String butName)
     return "";
 }
 
-
-void showPreviewMachine()
-{
-  // machine outline
-  stroke(150);
-  rect(0, 0, getMachine().getWidth(), getMachine().getHeight()); // machine
-  fill(pageColour);
-  rect(getMachine().getPage().getLeft(), 
-  getMachine().getPage().getTop(), 
-  getMachine().getPage().getWidth(), 
-  getMachine().getPage().getHeight()); // page
-  noStroke();
-
-  showShadedCentres(new PVector(0, 0));
-}
-
 Map<String, PVector> buildControlPositionsForPanel(Panel panel)
 {
   Map<String, PVector> map = new HashMap<String, PVector>();
@@ -187,15 +264,49 @@ Map<String, PVector> buildControlPositionsForPanel(Panel panel)
   int row = 0;
   for (Controller controller : panel.getControls())
   {
-    PVector p = new PVector(col*(DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x), row*(DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y));
-
-    map.put(controller.name(), p);
-
-    row++;
-    if (p.y + (DEFAULT_CONTROL_SIZE.y*2) >= panel.getOutline().getHeight())
+    if (controller.name().startsWith("minitoggle_"))
     {
-      row = 0;
-      col++;
+      PVector p = new PVector(col*(DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x), row*(DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y));
+      map.put(controller.name(), p);
+      row++;
+      if (p.y + (DEFAULT_CONTROL_SIZE.y*2) >= panel.getOutline().getHeight())
+      {
+        row = 0;
+        col++;
+      }
+    }
+    else
+    {
+      PVector p = new PVector(col*(DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x), row*(DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y));
+      map.put(controller.name(), p);
+      row++;
+      if (p.y + (DEFAULT_CONTROL_SIZE.y*2) >= panel.getOutline().getHeight())
+      {
+        row = 0;
+        col++;
+      }
+    }
+  }
+
+  return map;
+}
+Map<String, PVector> buildControlSizesForPanel(Panel panel)
+{
+  Map<String, PVector> map = new HashMap<String, PVector>();
+  String panelName = panel.getName();
+  int col = 0;
+  int row = 0;
+  for (Controller controller : panel.getControls())
+  {
+    if (controller.name().startsWith("minitoggle_"))
+    {
+      PVector s = new PVector(DEFAULT_CONTROL_SIZE.y, DEFAULT_CONTROL_SIZE.y);
+      map.put(controller.name(), s);
+    }
+    else
+    {
+      PVector s = new PVector(DEFAULT_CONTROL_SIZE.x, DEFAULT_CONTROL_SIZE.y);
+      map.put(controller.name(), s);
     }
   }
 
@@ -208,7 +319,7 @@ Map<String, List<Controller>> buildControlsForPanels()
   println("build controls for panels.");
   Map<String, List<Controller>> map = new HashMap<String, List<Controller>>();
   map.put(PANEL_NAME_INPUT, getControllersForControllerNames(getControlNamesForInputPanel()));
-  map.put(PANEL_NAME_PREVIEW, getControllersForControllerNames(getControlNamesForPreviewPanel()));
+//  map.put(PANEL_NAME_PREVIEW, getControllersForControllerNames(getControlNamesForPreviewPanel()));
   map.put(PANEL_NAME_DETAILS, getControllersForControllerNames(getControlNamesForDetailPanel()));
   map.put(PANEL_NAME_QUEUE, getControllersForControllerNames(getControlNamesForQueuePanel()));
   map.put(PANEL_NAME_GENERAL, getControllersForControllerNames(getControlNamesForGeneralPanel()));
@@ -248,12 +359,16 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SCRIBBLE_PIXELS);
   controlNames.add(MODE_DRAW_TEST_PENWIDTH);
-  controlNames.add(MODE_INC_ROW_SIZE);
-  controlNames.add(MODE_DEC_ROW_SIZE);
+  controlNames.add(MODE_CHANGE_GRID_SIZE);
+  controlNames.add(MODE_CHANGE_SAMPLE_AREA);
   controlNames.add(MODE_DRAW_GRID);
   controlNames.add(MODE_DRAW_OUTLINE_BOX);
   controlNames.add(MODE_DRAW_OUTLINE_BOX_ROWS);
   controlNames.add(MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
+  controlNames.add(MODE_SHOW_IMAGE);
+  controlNames.add(MODE_SHOW_VECTOR);
+  controlNames.add(MODE_SHOW_QUEUE_PREVIEW);
+  controlNames.add(MODE_SHOW_DENSITY_PREVIEW);
   return controlNames;
 }
 
@@ -267,16 +382,14 @@ List<String> getControlNamesForPreviewPanel()
   controlNames.add(MODE_INPUT_BOX_TOP_LEFT);
   controlNames.add(MODE_INPUT_BOX_BOT_RIGHT);
   controlNames.add(MODE_DRAW_OUTLINE_BOX);
-  controlNames.add(MODE_INC_SAMPLE_AREA);
-  controlNames.add(MODE_DEC_SAMPLE_AREA);
   controlNames.add(MODE_MOVE_IMAGE);
   controlNames.add(MODE_RENDER_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SCRIBBLE_PIXELS);
   controlNames.add(MODE_DRAW_TEST_PENWIDTH);
-  controlNames.add(MODE_INC_ROW_SIZE);
-  controlNames.add(MODE_DEC_ROW_SIZE);
+  controlNames.add(MODE_CHANGE_SAMPLE_AREA);
+  controlNames.add(MODE_CHANGE_GRID_SIZE);
   return controlNames;
 }
 
@@ -360,6 +473,14 @@ Map<String, String> buildControlLabels()
 
   result.put(MODE_RENDER_COMMAND_QUEUE, "Preview queue");
 
+  result.put(MODE_CHANGE_GRID_SIZE, "Grid size");
+  result.put(MODE_CHANGE_SAMPLE_AREA, "Sample area");
+  
+  result.put(MODE_SHOW_IMAGE, "Show image");
+  result.put(MODE_SHOW_DENSITY_PREVIEW, "Show density preview");
+  result.put(MODE_SHOW_QUEUE_PREVIEW, "Show Queue preview");
+  result.put(MODE_SHOW_VECTOR, "Show Vector");
+  
   return result;
 }
 
@@ -406,6 +527,15 @@ Set<String> buildControlNames()
   result.add(MODE_IMPORT_QUEUE);
   result.add(MODE_FIT_IMAGE_TO_BOX);
   result.add(MODE_RENDER_COMMAND_QUEUE);
+  
+  result.add(MODE_CHANGE_GRID_SIZE);
+  result.add(MODE_CHANGE_SAMPLE_AREA);
+  
+  result.add(MODE_SHOW_IMAGE);
+  result.add(MODE_SHOW_DENSITY_PREVIEW);
+  result.add(MODE_SHOW_VECTOR);
+  result.add(MODE_SHOW_QUEUE_PREVIEW);
+  
   return result;
 }
 

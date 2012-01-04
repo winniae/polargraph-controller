@@ -1,3 +1,31 @@
+/**
+  Polargraph controller
+  Copyright Sandy Noble 2012.
+
+  This file is part of Polargraph Controller.
+
+  Polargraph Controller is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Polargraph Controller is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
+    
+  Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
+  
+  This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
+
+  sandy.noble@gmail.com
+  http://www.polargraph.co.uk/
+  http://code.google.com/p/polargraph/
+*/
+
 class DisplayMachine extends Machine
 {
   private Rectangle outline = null;
@@ -79,7 +107,7 @@ class DisplayMachine extends Machine
     noStroke();
     // draw machine outline
 
-      fill(80);
+    fill(80);
     rect(getOutline().getLeft()+DROP_SHADOW_DISTANCE, getOutline().getTop()+DROP_SHADOW_DISTANCE, getOutline().getWidth(), getOutline().getHeight());
 
     fill(150);
@@ -95,7 +123,7 @@ class DisplayMachine extends Machine
     line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()), 
     getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
     // draw page
-    fill(255);
+    fill(220);
     rect(getOutline().getLeft()+sc(getPage().getLeft()), 
     getOutline().getTop()+sc(getPage().getTop()), 
     sc(getPage().getWidth()), 
@@ -107,7 +135,7 @@ class DisplayMachine extends Machine
 
 
     // draw actual image
-    if (imageIsLoaded())
+    if (displayingImage && imageIsLoaded())
     {
       float ox = getOutline().getLeft()+sc(getImageFrame().getLeft());
       float oy = getOutline().getTop()+sc(getImageFrame().getTop());
@@ -121,12 +149,18 @@ class DisplayMachine extends Machine
       text("image", ox, oy);
       noFill();
     }
-    else
-    {
-      println("no image loaded.");
-    }
 
     drawPictureFrame();
+
+
+    if (displayingSelectedCentres)
+    {
+      drawExtractedPixelCentres();
+    }
+    if (displayingDensityPreview)
+    {
+      drawExtractedPixelDensities();
+    }
 
     if (getOutline().surrounds(getMouseVector()))
     {  
@@ -139,11 +173,6 @@ class DisplayMachine extends Machine
       cursor(ARROW);
     }
 
-    if (displayingSelectedCentres)
-    {
-      drawExtractedPixelCentres();
-      drawExtractedPixelDensities();
-    }
   }
 
   // this scales a value from the screen to be a position on the machine
@@ -202,24 +231,33 @@ class DisplayMachine extends Machine
   void drawPictureFrame()
   {
     strokeWeight(1);
-    PVector topLeft = new PVector(getOutline().getLeft()+sc(getPictureFrame().getLeft()), 
-    getOutline().getTop()+sc(getPage().getTop()));
 
-    PVector botRight = new PVector(sc(getPage().getWidth()) + topLeft.x, sc(getPage().getHeight()) + topLeft.y);
+    PVector topLeft = scaleToScreen(inMM(getPictureFrame().getTopLeft()));
+    PVector botRight = scaleToScreen(inMM(getPictureFrame().getBotRight()));
 
-    stroke (255, 255, 0);
-    ellipse(topLeft.x, topLeft.y, 10, 10);
+    stroke (255, 0, 0);
 
-    stroke (255, 128, 0);
-    ellipse(botRight.x, topLeft.y, 10, 10);
+    // top left    
+    line(topLeft.x-4, topLeft.y, topLeft.x-10, topLeft.y);
+    line(topLeft.x, topLeft.y-4, topLeft.x, topLeft.y-10);
 
-    stroke (255, 0, 255);
-    ellipse(botRight.x, botRight.y, 10, 10);
+    // top right
+    line(botRight.x+4, topLeft.y, botRight.x+10, topLeft.y);
+    line(botRight.x, topLeft.y-4, botRight.x, topLeft.y-10);
 
-    stroke (255, 0, 128);
-    ellipse(topLeft.x, botRight.y, 10, 10);
+    // bot right
+    line(botRight.x+4, botRight.y, botRight.x+10, botRight.y);
+    line(botRight.x, botRight.y+4, botRight.x, botRight.y+10);
+    
+    // bot left
+    line(topLeft.x-4, botRight.y, topLeft.x-10, botRight.y);
+    line(topLeft.x, botRight.y+4, topLeft.x, botRight.y+10);
 
     stroke(255);
+    
+
+//    float width = inMM(getPictureFrame().getBotRight().x - getPictureFrame().getTopLeft().x);
+//    println("width: "+ width);
   }
 
 
@@ -255,7 +293,7 @@ class DisplayMachine extends Machine
     float rowThickness = inMM(getGridSize()) * getScaling();
     rowThickness = (rowThickness < 1.0) ? 1.0 : rowThickness;
     strokeWeight(rowThickness);
-    stroke(255, 255, 200, 64);
+    stroke(200, 200, 255, 128);
     strokeCap(SQUARE);
 
     float dia = mVect.x*2;
@@ -263,37 +301,6 @@ class DisplayMachine extends Machine
 
     dia = mVect.y*2;
     arc(getOutline().getRight(), getOutline().getTop(), dia, dia, 1.57079633, 3.14159266);
-  }
-
-  void showAllARows()
-  {
-    if (displayingRowGridlines)
-    {
-      //      if (pixelCentresForScreen == null || pixelCentresForScreen.isEmpty())
-      //        stroke(0, 200, 0, 200);
-      //      else
-      //        stroke(0, 200, 0, 30);  
-      //      for (int i = 0; i < rowSegmentsForScreen.length; i ++)
-      //      {
-      //        int dia = rowSegmentsForScreen[i]*2;
-      //        ellipse(0, 0, dia, dia);
-      //      }
-    }
-  }
-  void showAllBRows()
-  {
-    if (displayingRowGridlines)
-    {
-      //      if (pixelCentresForScreen == null || pixelCentresForScreen.isEmpty())
-      //        stroke(0, 200, 0, 200);
-      //      else
-      //        stroke(0, 200, 0, 30);  
-      //      for (int i = 0; i < rowSegmentsForScreen.length; i ++)
-      //      {
-      //        int dia = rowSegmentsForScreen[i]*2;
-      //        ellipse(getMachine().getWidth(), 0, dia, dia);
-      //      }
-    }
   }
 
   void drawExtractedPixelCentres()
@@ -316,7 +323,7 @@ class DisplayMachine extends Machine
     float pixelSize = inMM(getGridSize()) * getScaling();
     pixelSize = (pixelSize < 1.0) ? 1.0 : pixelSize;
     
-    pixelSize = pixelSize * 1.05;
+    pixelSize = pixelSize * 1.1;
 
     for (PVector cartesianPos : getExtractedPixels())
     {

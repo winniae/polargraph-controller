@@ -1,3 +1,30 @@
+/**
+  Polargraph controller
+  Copyright Sandy Noble 2012.
+
+  This file is part of Polargraph Controller.
+
+  Polargraph Controller is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Polargraph Controller is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
+    
+  Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
+  
+  This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
+
+  sandy.noble@gmail.com
+  http://www.polargraph.co.uk/
+  http://code.google.com/p/polargraph/
+*/
 
 Set<Panel> getPanelsForTab(String tabName)
 {
@@ -15,9 +42,9 @@ Map<String, Set<Panel>> buildPanelsForTabs()
   inputPanels.add(getPanel(PANEL_NAME_INPUT));
   inputPanels.add(getPanel(PANEL_NAME_GENERAL));
 
-  Set<Panel> previewPanels = new HashSet<Panel>(2);
-  previewPanels.add(getPanel(PANEL_NAME_PREVIEW));
-  previewPanels.add(getPanel(PANEL_NAME_GENERAL));
+//  Set<Panel> previewPanels = new HashSet<Panel>(2);
+//  previewPanels.add(getPanel(PANEL_NAME_PREVIEW));
+//  previewPanels.add(getPanel(PANEL_NAME_GENERAL));
 
   Set<Panel> detailsPanels = new HashSet<Panel>(2);
   detailsPanels.add(getPanel(PANEL_NAME_DETAILS));
@@ -28,7 +55,7 @@ Map<String, Set<Panel>> buildPanelsForTabs()
   queuePanels.add(getPanel(PANEL_NAME_GENERAL));
   
   map.put(TAB_NAME_INPUT, inputPanels);
-  map.put(TAB_NAME_PREVIEW, previewPanels);
+//  map.put(TAB_NAME_PREVIEW, previewPanels);
   map.put(TAB_NAME_DETAILS, detailsPanels);
   map.put(TAB_NAME_QUEUE, queuePanels);
   
@@ -39,7 +66,7 @@ List<String> buildTabNames()
 {
   List<String> list = new ArrayList<String>(4);
   list.add(TAB_NAME_INPUT);
-  list.add(TAB_NAME_PREVIEW);
+//  list.add(TAB_NAME_PREVIEW);
   list.add(TAB_NAME_DETAILS);
   list.add(TAB_NAME_QUEUE);
   return list;
@@ -51,9 +78,9 @@ void initTabs()
   cp5.tab(TAB_NAME_INPUT).activateEvent(true);
   cp5.tab(TAB_NAME_INPUT).setId(1);
 
-  cp5.tab(TAB_NAME_PREVIEW).setLabel(TAB_LABEL_PREVIEW);
-  cp5.tab(TAB_NAME_PREVIEW).activateEvent(true);
-  cp5.tab(TAB_NAME_PREVIEW).setId(2);
+//  cp5.tab(TAB_NAME_PREVIEW).setLabel(TAB_LABEL_PREVIEW);
+//  cp5.tab(TAB_NAME_PREVIEW).activateEvent(true);
+//  cp5.tab(TAB_NAME_PREVIEW).setId(2);
 
   cp5.tab(TAB_NAME_DETAILS).setLabel(TAB_LABEL_DETAILS);
   cp5.tab(TAB_NAME_DETAILS).activateEvent(true);
@@ -68,7 +95,7 @@ public Set<String> buildPanelNames()
 {
   Set<String> set = new HashSet<String>(5);
   set.add(PANEL_NAME_INPUT);
-  set.add(PANEL_NAME_PREVIEW);
+//  set.add(PANEL_NAME_PREVIEW);
   set.add(PANEL_NAME_DETAILS);
   set.add(PANEL_NAME_QUEUE);
   set.add(PANEL_NAME_GENERAL);

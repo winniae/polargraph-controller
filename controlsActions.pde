@@ -1,26 +1,109 @@
+/**
+  Polargraph controller
+  Copyright Sandy Noble 2012.
+
+  This file is part of Polargraph Controller.
+
+  Polargraph Controller is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Polargraph Controller is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
+    
+  Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
+  
+  This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
+
+  sandy.noble@gmail.com
+  http://www.polargraph.co.uk/
+  http://code.google.com/p/polargraph/
+*/
 void button_mode_begin()
 {
   button_mode_clearQueue();
 }
+void numberbox_mode_changeGridSize(float value)
+{
+  setGridSize(value);
+  if (isBoxSpecified())
+  {
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+  }
+}
+void numberbox_mode_changeSampleArea(float value)
+{
+  setSampleArea(value);
+  if (isBoxSpecified())
+  {
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+  }
+}
+void minitoggle_mode_showImage(boolean flag)
+{
+  this.displayingImage = flag;
+}
+void minitoggle_mode_showVector(boolean flag)
+{
+  this.displayingVector = flag;
+}
+void minitoggle_mode_showDensityPreview(boolean flag)
+{
+  this.displayingDensityPreview = flag;
+}
+void minitoggle_mode_showQueuePreview(boolean flag)
+{
+  this.displayingQueuePreview = flag;
+}
+void unsetOtherToggles(String except)
+{
+  for (String name : getAllControls().keySet())
+  {
+    if (name.startsWith("toggle_"))
+    {
+      if (name.equals(except))
+      {
+//        println("not resetting this one.");
+      }
+      else
+      {
+        getAllControls().get(name).setValue(0);
+      }
+    }
+  }
+}
 void toggle_mode_inputBoxTopLeft(boolean flag)
 {
   if (flag)
+  {
+    unsetOtherToggles(MODE_INPUT_BOX_TOP_LEFT);
     setMode(MODE_INPUT_BOX_TOP_LEFT);
+  }
   else
     currentMode = "";
 }
 void toggle_mode_inputBoxBotRight(boolean flag)
 {
   if (flag)
+  {
+    unsetOtherToggles(MODE_INPUT_BOX_BOT_RIGHT);
     setMode(MODE_INPUT_BOX_BOT_RIGHT);
+    // unset topleft
+  }
   else
     currentMode = "";
 }
 void button_mode_drawOutlineBox()
 {
   setMode(MODE_DRAW_OUTLINE_BOX);
-//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-//    sendOutlineOfBox();
+  if (isBoxSpecified())
+    sendOutlineOfBox();
 }
 void button_mode_drawOutlineBoxRows()
 {
@@ -34,9 +117,14 @@ void button_mode_drawShadeBoxRowsPixels()
 //  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
 //    sendOutlineOfPixels();
 }
-void button_mode_drawToPosition()
+void toggle_mode_drawToPosition(boolean flag)
 {
-  setMode(MODE_DRAW_TO_POSITION);
+  // unset other toggles
+  if (flag)
+  {
+    unsetOtherToggles(MODE_DRAW_TO_POSITION);
+    setMode(MODE_DRAW_TO_POSITION);
+  }
 }
 void button_mode_renderSquarePixel()
 {
@@ -64,9 +152,13 @@ void button_mode_inputRowEnd()
 {
   setMode(MODE_INPUT_ROW_END);
 }
-void button_mode_setPosition()
+void toggle_mode_setPosition(boolean flag)
 {
-  setMode(MODE_SET_POSITION);
+  if (flag)
+  {
+    unsetOtherToggles(MODE_SET_POSITION);
+    setMode(MODE_SET_POSITION);
+  }
 }
 void button_mode_drawTestPattern()
 {
@@ -93,8 +185,11 @@ void button_mode_decRowSize()
 void button_mode_drawGrid()
 {
   setMode(MODE_DRAW_GRID);
-//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-//    sendGridOfBox();
+  if (isBoxSpecified())
+  {
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
+    sendGridOfBox();
+  }
 }
 void button_mode_loadImage()
 {
@@ -165,27 +260,13 @@ void button_mode_saveProperties()
   props = null;
   loadFromPropertiesFile();
 }
-void button_mode_incSampleArea()
+void toggle_mode_moveImage(boolean flag)
 {
-  sampleArea+=1;
-//  rebuildRows();
-//  extractRowsFromBox();
-//  extractRows();
-}
-void button_mode_decSampleArea()
-{
-//  if (sampleArea < 2)
-//    sampleArea = inMM(rowWidth/2);
-//  else
-//    sampleArea-=1;
-    
-//  rebuildRows();
-//  extractRowsFromBox();
-//  extractRows();
-}
-void button_mode_moveImage()
-{
-  setMode(MODE_MOVE_IMAGE);
+  if (flag)
+  {
+    unsetOtherToggles(MODE_MOVE_IMAGE);
+    setMode(MODE_MOVE_IMAGE);
+  }
 }
 void button_mode_convertBoxToPictureframe()
 {
@@ -210,16 +291,18 @@ void button_mode_importQueue()
 void button_mode_fitImageToBox()
 {
   setMode(MODE_FIT_IMAGE_TO_BOX);
-//  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
-//  {
-//    sizeImageToFitBox();
-//  }
-//  extractRowsFromBox();
+  sizeImageToFitBox();
+  if (isBoxSpecified())
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
   println("fitted image to box.");
 }
-void button_mode_drawDirect()
+void toggle_mode_drawDirect(boolean flag)
 {
-  setMode(MODE_DRAW_DIRECT);
+  if (flag)
+  {
+    unsetOtherToggles(MODE_DRAW_DIRECT);
+    setMode(MODE_DRAW_DIRECT);
+  }
 }
 
 void setMode(String m)

@@ -1,3 +1,30 @@
+/**
+  Polargraph controller
+  Copyright Sandy Noble 2012.
+
+  This file is part of Polargraph Controller.
+
+  Polargraph Controller is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Polargraph Controller is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
+    
+  Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
+  
+  This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
+
+  sandy.noble@gmail.com
+  http://www.polargraph.co.uk/
+  http://code.google.com/p/polargraph/
+*/
 static final String CMD_CHANGELENGTH = "C01,";
 static final String CMD_CHANGEPENWIDTH = "C02,";
 static final String CMD_CHANGEMOTORSPEED = "C03,";
@@ -46,11 +73,11 @@ void sendMachineSpec()
   // ask for input to get the new machine size
   String command = CMD_CHANGEMACHINENAME+newMachineName+",END";
   commandQueue.add(command);
-  command = CMD_CHANGEMACHINESIZE+getMachine().getWidth()+","+getMachine().getHeight()+",END";
+  command = CMD_CHANGEMACHINESIZE+getDisplayMachine().getWidth()+","+getDisplayMachine().getHeight()+",END";
   commandQueue.add(command);
-  command = CMD_CHANGEMACHINEMMPERREV+getMachine().getMMPerRev()+",END";
+  command = CMD_CHANGEMACHINEMMPERREV+getDisplayMachine().getMMPerRev()+",END";
   commandQueue.add(command);
-  command = CMD_CHANGEMACHINESTEPSPERREV+getMachine().getStepsPerRev()+",END";
+  command = CMD_CHANGEMACHINESTEPSPERREV+getDisplayMachine().getStepsPerRev()+",END";
   commandQueue.add(command);
 }
 
@@ -68,13 +95,15 @@ public PVector getMouseVector()
 void sendMoveToPosition(boolean direct)
 {
   String command = null;
-  PVector p = getDisplayMachine().asNativeCoords(getMouseVector());
+  PVector p = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+  p = getDisplayMachine().inSteps(p);
+  p = getDisplayMachine().asNativeCoords(p);
   if (direct)
   {
     command = CMD_CHANGELENGTHDIRECT+p.x+","+p.y+","+getMaxSegmentLength()+",END";
   }
   else
-    command = CMD_CHANGELENGTH+p.x+","+p.y+",END";
+    command = CMD_CHANGELENGTH+(int)p.x+","+(int)p.y+",END";
   
   commandQueue.add(command);
 }
@@ -110,15 +139,18 @@ void sendTestPenWidth()
 
 void sendSetPosition()
 {
-  PVector p = getDisplayMachine().asNativeCoords(getMouseVector());
+  PVector p = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+  p = getDisplayMachine().convertToNative(p);
+  p = getDisplayMachine().inSteps(p);
+  
   String command = CMD_SETPOSITION+p.x+","+p.y+",END";
   commandQueue.add(command);
 }
 
 void sendSetHomePosition()
 {
-  PVector homePoint = new PVector(getMachine().getWidth()/2, getMachine().getPage().getTop());
-  PVector pgCoords = getMachine().asNativeCoords(homePoint);
+  PVector homePoint = getDisplayMachine().inSteps(getHomePoint());
+  PVector pgCoords = getDisplayMachine().asNativeCoords(homePoint);
   
   String command = CMD_SETPOSITION+pgCoords.x+","+pgCoords.y+",END";
   commandQueue.add(command);
@@ -527,24 +559,30 @@ void sendGridOfBox()
 void sendOutlineOfBox()
 {
   // convert cartesian to native format
-  PVector coords = getMachine().asNativeCoords(boxVector1);
-  String command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
+  PVector tl = getDisplayMachine().inSteps(getBoxVector1());
+  PVector br = getDisplayMachine().inSteps(getBoxVector2());
+
+  PVector tr = new PVector(br.x, tl.y);
+  PVector bl = new PVector(tl.x, br.y);
+  
+  tl = getDisplayMachine().asNativeCoords(tl);
+  tr = getDisplayMachine().asNativeCoords(tr);
+  bl = getDisplayMachine().asNativeCoords(bl);
+  br = getDisplayMachine().asNativeCoords(br);
+  
+  String command = CMD_CHANGELENGTHDIRECT+(int)tl.x+","+(int)tl.y+",END";
   commandQueue.add(command);
 
-  coords = getMachine().asNativeCoords(boxVector2.x, boxVector1.y);
-  command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
+  command = CMD_CHANGELENGTHDIRECT+(int)tr.x+","+(int)tr.y+",END";
   commandQueue.add(command);
 
-  coords = getMachine().asNativeCoords(boxVector2);
-  command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
+  command = CMD_CHANGELENGTHDIRECT+(int)br.x+","+(int)br.y+",END";
   commandQueue.add(command);
 
-  coords = getMachine().asNativeCoords(boxVector1.x, boxVector2.y);
-  command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
+  command = CMD_CHANGELENGTHDIRECT+(int)bl.x+","+(int)bl.y+",END";
   commandQueue.add(command);
 
-  coords = getMachine().asNativeCoords(boxVector1);
-  command = CMD_CHANGELENGTHDIRECT+coords.x+","+coords.y+",END";
+  command = CMD_CHANGELENGTHDIRECT+(int)tl.x+","+(int)tl.y+",END";
   commandQueue.add(command);
 }
 
