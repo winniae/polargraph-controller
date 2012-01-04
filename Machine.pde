@@ -72,7 +72,9 @@ class Machine
   {
     this.imageFrame = r;
     if (resizeImage)
+    {
       resizeImage(this.imageFrame);
+    }
   }
   public Rectangle getImageFrame()
   {
@@ -168,79 +170,65 @@ class Machine
   }
   
   
-  int getPixelDensity(PVector o, int dim)
+  float getPixelBrightness(PVector pos, float dim)
   {
-    int averageDensity = 0;
+    float averageBrightness = 0;
     
-    PVector v = PVector.sub(o, getImageFrame().getTopLeft());
-    
-    if (v.x <= getImage().width && v.x>=0 
-    && v.y>=0 && v.y <= getImage().height)
+    if (getImageFrame().surrounds(pos))
     {
-      // get pixels from the vector coords
-      int centrePixel = getImage().get((int)v.x, (int)v.y);
-      int x = ((int)v.x) - (dim/2);
-      int y = ((int)v.y) - (dim/2);
+      // offset it by image position to get position over image
+      PVector offsetPos = PVector.sub(pos, getImageFrame().getPosition());
+      int originX = (int) offsetPos.x;
+      int originY = (int) offsetPos.y;
       
-      int dimWidth = dim;
-      int dimHeight = dim;
+      int halfDim = (int)dim / (int)2.0;
       
-      if (x+dim > getImage().width)
-        dimWidth = getImage().width-x;
+      // restrict the sample area from going off the top/left edge of the image
+      int startX = originX - halfDim;
+      int startY = originY - halfDim;
+      
+      if (startX < 0)
+        startX = 0;
         
-      if (y+dim > getImage().height)
-        dimHeight = getImage().height-y;
-        
-      PImage block = getImage().get(x, y, dimWidth, dimHeight);
+      if (startY < 0)
+        startY = 0;
+
+      // and do the same for the bottom / right edges
+      int endX = originX+halfDim;
+      int endY = originY+halfDim;
       
+      if (endX > getImage().width)
+        endX = getImage().width;
+        
+      if (endY > getImage().height)
+        endY = getImage().height;
+
+      // now convert end coordinates to width/height
+      
+      int dimWidth = endX - startX;
+      int dimHeight = endY - startY;
+      
+      // get the block of pixels
+      PImage block = getImage().get(startX, startY, dimWidth, dimHeight);
       block.loadPixels();
+
+      // going to go through them and total the brightnesses
       int numberOfPixels = block.pixels.length;
-      float totalPixelDensity = 0;
+      float totalPixelBrightness = 0;
       for (int i = 0; i < numberOfPixels; i++)
       {
         color p = block.pixels[i];
         float r = red(p);
-        totalPixelDensity += r;
-  //      println("Pixel " + i + ", color:" + p + ", red: "+r+", totalpixDensity: "+totalPixelDensity);
+        totalPixelBrightness += r;
       }
       
-      float avD = totalPixelDensity / numberOfPixels;
-      averageDensity = int(avD);
-  //    println("No of pixels: "+numberOfPixels+", average density: " + avD + ", int: " + averageDensity);
+      // and get an average brightness for all of these pixels.
+      averageBrightness = totalPixelBrightness / numberOfPixels;
     }
-    // average them
-    return averageDensity;
+    
+    return averageBrightness;
   }
     
-  boolean isPixelChromaKey(PVector o)
-  {
-    
-    PVector v = PVector.sub(o, getImageFrame().getTopLeft());
-    
-    if (v.x < getImage().width && v.y < getImage().height)
-    {
-      // get pixels from the vector coords
-      color centrePixel = getImage().get((int)v.x, (int)v.y);
-      float r = red(centrePixel);
-      float g = green(centrePixel);
-      float b = blue(centrePixel);
-      
-      if (g > 253.0 
-      && r != g 
-      && b != g)
-      {
-  //      println("is chroma key " + red(centrePixel) + ", "+green(centrePixel)+","+blue(centrePixel));
-        return true;
-      }
-      else
-      {
-  //      println("isn't chroma key " + red(centrePixel) + ", "+green(centrePixel)+","+blue(centrePixel));
-        return false;
-      }
-    }
-    else return false;
-  }
-  
   public PVector asNativeCoords(PVector cartCoords)
   {
     return asNativeCoords(cartCoords.x, cartCoords.y);
@@ -376,7 +364,8 @@ class Machine
     println("image:" + getImage());
     if (imageIsLoaded())
     {
-      getImage().resize(width, 0);
+      
+      getImage().resize((int)r.getWidth(), 0);
     }
     else
     {
@@ -396,7 +385,7 @@ class Machine
     in that area.  Coordinates are specified 
     in cartesian steps.  The pixels are worked out 
     based on the gridsize parameter. d*/
-  Set<PVector> getPixelsPositionsFromArea(PVector p, PVector s, float gridSize)
+  Set<PVector> getPixelsPositionsFromArea(PVector p, PVector s, float gridSize, float sampleSize)
   {
     // work out the grid
     setGridSize(gridSize);
@@ -416,7 +405,14 @@ class Machine
         PVector nativeCoord = new PVector(a, b);
         PVector cartesianCoord = asCartesianCoords(nativeCoord);
         if (selectedArea.surrounds(cartesianCoord))
-           nativeCoords.add(nativeCoord);
+        {
+          if (sampleSize >= 1.0)
+          {
+            float brightness = getPixelBrightness(cartesianCoord, sampleSize);
+            nativeCoord.z = brightness;
+          }
+          nativeCoords.add(nativeCoord);
+        }
       }
     }
     

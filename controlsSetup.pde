@@ -134,7 +134,19 @@ Map<String, Controller> buildAllControls()
       b.setLabel(getControlLabels().get(controlName));
       b.hide();
       map.put(controlName, b);
-//      println("Added control " + controlName);
+      println("Added button " + controlName);
+    }
+    if (controlName.startsWith("toggle_"))
+    {
+      Toggle t = cp5.addToggle(controlName, false, 100, 100, 100, 100);
+      t.setLabel(getControlLabels().get(controlName));
+      t.hide();
+      controlP5.Label l = t.captionLabel();
+      l.style().marginTop = -16
+      ; //move upwards (relative to button size)
+      l.style().marginLeft = 4; //move to the right
+      map.put(controlName, t);
+      println("Added toggle " + controlName);
     }
   }
   return map;

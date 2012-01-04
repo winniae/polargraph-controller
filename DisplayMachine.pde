@@ -142,6 +142,7 @@ class DisplayMachine extends Machine
     if (displayingSelectedCentres)
     {
       drawExtractedPixelCentres();
+      drawExtractedPixelDensities();
     }
   }
 
@@ -308,6 +309,25 @@ class DisplayMachine extends Machine
       line(scaledPos.x-1, scaledPos.y+1, scaledPos.x+1, scaledPos.y-1);
     }
   }
+  
+  void drawExtractedPixelDensities()
+  {
+
+    float pixelSize = inMM(getGridSize()) * getScaling();
+    pixelSize = (pixelSize < 1.0) ? 1.0 : pixelSize;
+    
+    pixelSize = pixelSize * 1.05;
+
+    for (PVector cartesianPos : getExtractedPixels())
+    {
+      // scale em, danno.
+      PVector scaledPos = scaleToScreen(cartesianPos);
+      noStroke();
+      fill(cartesianPos.z);
+      ellipse(scaledPos.x, scaledPos.y, pixelSize, pixelSize);
+    }
+    noFill();
+  }
 
   Set<PVector> getExtractedPixels()
   {
@@ -323,22 +343,19 @@ class DisplayMachine extends Machine
    */
   Set<PVector> getPixelsPositionsFromArea(PVector p, PVector s, float rowSize)
   {
-    extractPixelsFromArea(p, s, rowSize);
+    extractPixelsFromArea(p, s, rowSize, 0.0);
     return getExtractedPixels();
   }
 
-  public void extractPixelsFromArea(PVector p, PVector s, Float rowSize)
-  {
-    extractPixelsFromArea(p, s, rowSize, null);
-  }
+//  public void extractPixelsFromArea(PVector p, PVector s, Float rowSize)
+//  {
+//    extractPixelsFromArea(p, s, rowSize, 0.0);
+//  }
 
-  public void extractPixelsFromArea(PVector p, PVector s, Float rowSize, Float sampleSize)
+  public void extractPixelsFromArea(PVector p, PVector s, float rowSize, float sampleSize)
   {
-    PVector realPos = scaleToDisplayMachine(p);
-    PVector realSize = scaleToDisplayMachine(s);
-
     // get the native positions from the superclass
-    Set<PVector> nativePositions = super.getPixelsPositionsFromArea(inSteps(realPos), inSteps(realSize), rowSize);
+    Set<PVector> nativePositions = super.getPixelsPositionsFromArea(inSteps(p), inSteps(s), rowSize, sampleSize);
 
     // work out the cartesian positions
     Set<PVector> cartesianPositions = new HashSet<PVector>(nativePositions.size());
@@ -347,6 +364,7 @@ class DisplayMachine extends Machine
       // convert to cartesian
       PVector displayPos = super.asCartesianCoords(nativePos);
       displayPos = inMM(displayPos);
+      displayPos.z = nativePos.z;
       cartesianPositions.add(displayPos);
     }
     setExtractedPixels(cartesianPositions);

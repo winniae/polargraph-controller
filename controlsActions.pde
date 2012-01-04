@@ -2,13 +2,19 @@ void button_mode_begin()
 {
   button_mode_clearQueue();
 }
-void button_mode_inputBoxTopLeft()
+void toggle_mode_inputBoxTopLeft(boolean flag)
 {
-  setMode(MODE_INPUT_BOX_TOP_LEFT);
+  if (flag)
+    setMode(MODE_INPUT_BOX_TOP_LEFT);
+  else
+    currentMode = "";
 }
-void button_mode_inputBoxBotRight()
+void toggle_mode_inputBoxBotRight(boolean flag)
 {
-  setMode(MODE_INPUT_BOX_BOT_RIGHT);
+  if (flag)
+    setMode(MODE_INPUT_BOX_BOT_RIGHT);
+  else
+    currentMode = "";
 }
 void button_mode_drawOutlineBox()
 {
@@ -72,15 +78,18 @@ void button_mode_incRowSize()
   gridSize+=5.0;
   getDisplayMachine().setGridSize(gridSize);
   if (isBoxSpecified())
-    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
 }
 void button_mode_decRowSize()
 {
   gridSize-=5;
   getDisplayMachine().setGridSize(gridSize);
   if (isBoxSpecified())
-    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
+  {
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
+  }
 }
+
 void button_mode_drawGrid()
 {
   setMode(MODE_DRAW_GRID);

@@ -55,7 +55,7 @@ SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy hh:mm:ss");
 
 String commandStatus = "Waiting for a click.";
 
-int sampleArea = 10;
+float sampleArea = 10;
 float gridSize = 75.0;
 float currentPenWidth = 1.2;
 float penIncrement = 0.05;
@@ -104,8 +104,8 @@ float testPenWidthIncrementSize = 0.5;
 int maxSegmentLength = 20;
 
 static final String MODE_BEGIN = "button_mode_begin";
-static final String MODE_INPUT_BOX_TOP_LEFT = "button_mode_inputBoxTopLeft";
-static final String MODE_INPUT_BOX_BOT_RIGHT = "button_mode_inputBoxBotRight";
+static final String MODE_INPUT_BOX_TOP_LEFT = "toggle_mode_inputBoxTopLeft";
+static final String MODE_INPUT_BOX_BOT_RIGHT = "toggle_mode_inputBoxBotRight";
 static final String MODE_DRAW_OUTLINE_BOX = "button_mode_drawOutlineBox";
 static final String MODE_DRAW_OUTLINE_BOX_ROWS = "button_mode_drawOutlineBoxRows";
 static final String MODE_DRAW_SHADE_BOX_ROWS_PIXELS = "button_mode_drawShadeBoxRowsPixels";
@@ -504,17 +504,17 @@ void drawImageLoadPage()
 
 void drawMoveImageOutline()
 {
-//  if (MODE_MOVE_IMAGE == currentMode)
-//  {
-//    Float imgX = mouseX - (new Float(bitmap.width)/2);
+  if (MODE_MOVE_IMAGE == currentMode)
+  {
+//    Float imgX = mouseX - (new Float(get.width)/2);
 //    Float imgY = mouseY - (new Float(bitmap.height)/2);
 //    fill(200,200,0,50);
 //    rect(imgX, imgY, bitmap.width, bitmap.height);
 //    
 //    noFill();
-////    imageOffset.x = imgX;
-////    imageOffset.y = imgY;
-//  }
+//    imageOffset.x = imgX;
+//    imageOffset.y = imgY;
+  }
 }
 
 void showPictureFrame()
@@ -550,7 +550,7 @@ void showCurrentMachinePosition()
 
 void showGroupBox()
 {
-  if (boxVector1 != null && boxVector2 != null)
+  if (isBoxSpecified())
   {
     noFill();
     stroke(255,0,0);
@@ -559,6 +559,27 @@ void showGroupBox()
     PVector botRight = getDisplayMachine().scaleToScreen(boxVector2);
     rect(topLeft.x, topLeft.y, botRight.x-topLeft.x, botRight.y-topLeft.y);
   }
+  else 
+  {
+    noFill();
+    stroke(255,0,0);
+    strokeWeight(1);
+
+    if (getBoxVector1() != null)
+    {
+      PVector topLeft = getDisplayMachine().scaleToScreen(boxVector1);
+      line(topLeft.x, topLeft.y, topLeft.x+10, topLeft.y);
+      line(topLeft.x, topLeft.y, topLeft.x, topLeft.y+10);
+    }
+
+    if (getBoxVector2() != null)
+    {
+      PVector botRight = getDisplayMachine().scaleToScreen(boxVector2);
+      line(botRight.x, botRight.y, botRight.x-10, botRight.y);
+      line(botRight.x, botRight.y, botRight.x, botRight.y-10);
+    }
+  }
+  
 }
 
 
@@ -983,9 +1004,11 @@ void machineClicked()
     setBoxVector1(pos);
     if (isBoxSpecified())
     {
-      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
+      PVector size = PVector.sub(getBoxVector2(),getBoxVector1());
+      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
     }
-      
+    getAllControls().get(MODE_INPUT_BOX_TOP_LEFT).setValue(0);
+    getAllControls().get(MODE_INPUT_BOX_BOT_RIGHT).setValue(1);
     currentMode = MODE_INPUT_BOX_BOT_RIGHT;
   }
   else if (currentMode.equals(MODE_INPUT_BOX_BOT_RIGHT))
@@ -993,7 +1016,9 @@ void machineClicked()
     PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
     setBoxVector2(pos);
     if (isBoxSpecified())
-      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
+    {
+      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+    }
   }
   else if (currentMode.equals(MODE_SET_POSITION))
     sendSetPosition();
@@ -1007,7 +1032,7 @@ void machineClicked()
     float iy = mouseY - (new Float(getMachine().getImageFrame().getHeight())/2);
     getMachine().getImageFrame().setPosition(ix, iy);
     if (isBoxSpecified())
-      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVector2(), getGridSize());
+      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
   }
 }  
  
@@ -1091,6 +1116,37 @@ void previewQueue()
 //  }
 //  
 }
+
+//  boolean isPixelChromaKey(PVector o)
+//  {
+//    
+//    PVector v = PVector.sub(o, getImageFrame().getTopLeft());
+//    
+//    if (v.x < getImage().width && v.y < getImage().height)
+//    {
+//      // get pixels from the vector coords
+//      color centrePixel = getImage().get((int)v.x, (int)v.y);
+//      float r = red(centrePixel);
+//      float g = green(centrePixel);
+//      float b = blue(centrePixel);
+//      
+//      if (g > 253.0 
+//      && r != g 
+//      && b != g)
+//      {
+//  //      println("is chroma key " + red(centrePixel) + ", "+green(centrePixel)+","+blue(centrePixel));
+//        return true;
+//      }
+//      else
+//      {
+//  //      println("isn't chroma key " + red(centrePixel) + ", "+green(centrePixel)+","+blue(centrePixel));
+//        return false;
+//      }
+//    }
+//    else return false;
+//  }
+  
+
 
 void sizeImageToFitBox()
 {
@@ -1251,7 +1307,15 @@ PVector getBoxVector2()
 {
   return this.boxVector2;
 }
+PVector getBoxVectorSize()
+{
+  return PVector.sub(getBoxVector2(),getBoxVector1());
+}
 
+float getSampleArea()
+{
+  return this.sampleArea;
+}
 
 void flipDirection()
 {
@@ -1855,7 +1919,7 @@ void savePropertiesFile()
 
   // row size
   props.setProperty("controller.grid.size", new Float(gridSize).toString());
-  props.setProperty("controller.pixel.samplearea", new Integer(sampleArea).toString());
+  props.setProperty("controller.pixel.samplearea", new Float(sampleArea).toString());
   // initial screen size
   props.setProperty("controller.window.width", new Integer(width).toString());
   props.setProperty("controller.window.height", new Integer(height).toString());
