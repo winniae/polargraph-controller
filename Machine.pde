@@ -49,6 +49,7 @@ class Machine
   
   protected PImage imageBitmap = null;
   protected String imageFilename = null;
+  protected boolean imageIsReady = false;
   
   
   public Machine(Integer width, Integer height, Float stepsPerRev, Float mmPerRev)
@@ -452,6 +453,7 @@ class Machine
   void loadImageFromFilename(String filename)
   {
     // check for format etc here
+    imageIsReady = false;
     println("loading from filename: " + filename);
     this.imageBitmap = loadImage(filename);
     this.imageFilename = filename;
@@ -474,27 +476,40 @@ class Machine
     return this.imageBitmap;
   }
   
-  public boolean imageIsLoaded()
+  public boolean imageIsReady()
+  {
+    if (imageBitmapIsLoaded() && this.imageIsReady)
+      return true;
+    else
+      return false;
+  }
+  
+  public boolean imageBitmapIsLoaded()
   {
     if (getImage() != null)
       return true;
     else
       return false;
-  }
+  }    
 
 
   private void resizeImage(Rectangle r)
   {
-    println("image:" + getImage());
-    if (imageIsLoaded())
+    if (imageBitmapIsLoaded())
     {
-      
       getImage().resize((int)r.getWidth(), 0);
+      setImageFrameToImageHeight();
     }
     else
     {
       println("No image file loaded to resize.");
     }    
+    imageIsReady = true;
+  }
+  
+  protected void setImageFrameToImageHeight()
+  {
+    getImageFrame().setHeight(getImage().height);
   }
   
   protected void setGridSize(float gridSize)

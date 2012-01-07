@@ -158,7 +158,6 @@ static final String MODE_RESET_MACHINE = "button_mode_resetMachine";
 static final String MODE_SAVE_PROPERTIES = "button_mode_saveProperties";
 static final String MODE_INC_SAMPLE_AREA = "button_mode_incSampleArea";
 static final String MODE_DEC_SAMPLE_AREA = "button_mode_decSampleArea";
-static final String MODE_MOVE_IMAGE = "button_mode_moveImage";
 static final String MODE_INPUT_IMAGE = "button_mode_inputImage";
 static final String MODE_CONVERT_BOX_TO_PICTUREFRAME = "button_mode_convertBoxToPictureframe";
 static final String MODE_SELECT_PICTUREFRAME = "button_mode_selectPictureframe";
@@ -168,6 +167,7 @@ static final String MODE_CLEAR_QUEUE = "button_mode_clearQueue";
 static final String MODE_FIT_IMAGE_TO_BOX = "button_mode_fitImageToBox";
 static final String MODE_RENDER_COMMAND_QUEUE = "button_mode_renderCommandQueue";
 
+static final String MODE_MOVE_IMAGE = "toggle_mode_moveImage";
 static final String MODE_SET_POSITION = "toggle_mode_setPosition";
 static final String MODE_INPUT_BOX_TOP_LEFT = "toggle_mode_inputBoxTopLeft";
 static final String MODE_INPUT_BOX_BOT_RIGHT = "toggle_mode_inputBoxBotRight";
@@ -266,6 +266,12 @@ public Map<String, String> controlLabels = null;
 public Map<String, Set<Panel>> panelsForTabs = null;
 public Map<String, Panel> panels = null;
 
+// machine moving
+PVector machineDragOffset = new PVector (0.0, 0.0);
+PVector lastMachineDragPosition = new PVector (0.0, 0.0);
+public final float MIN_SCALING = 0.1;
+public final float MAX_SCALING = 4.0;
+
 void setup()
 {
   println("Running polargraph controller");
@@ -327,9 +333,9 @@ void setup()
   size(windowWidth, windowHeight);
   changeTab(TAB_NAME_INPUT, TAB_NAME_INPUT);
 
-  addWindowResizeListener();
+  addEventListeners();
 }
-void addWindowResizeListener()
+void addEventListeners()
 {
   frame.addComponentListener(new ComponentAdapter() 
     {
@@ -342,7 +348,16 @@ void addWindowResizeListener()
       }
     }
   ); 
+  addMouseWheelListener(new java.awt.event.MouseWheelListener() 
+    { 
+      public void mouseWheelMoved(java.awt.event.MouseWheelEvent evt) 
+      { 
+        mouseWheel(evt.getWheelRotation());
+      }
+    }
+  ); 
 }  
+
 
 void preLoadCommandQueue()
 {
@@ -367,10 +382,10 @@ void draw()
   {
     drawImagePage();
   }
-  else if (getCurrentTab() == TAB_NAME_PREVIEW)
-  {
-    drawImagePreviewPage();
-  }
+//  else if (getCurrentTab() == TAB_NAME_PREVIEW)
+//  {
+//    drawImagePreviewPage();
+//  }
   else if (getCurrentTab() == TAB_NAME_QUEUE)
   {
     drawCommandQueuePage();
@@ -434,12 +449,12 @@ void drawImagePage()
   strokeWeight(1);
   background(100);
   noFill();
-  drawMoveImageOutline();
   stroke(255, 150, 255, 100);
   strokeWeight(3);
   stroke(150);
   noFill();
   getDisplayMachine().draw();
+  drawMoveImageOutline();
   stroke(255, 0, 0);
  
   for (Panel panel : getPanelsForTab(TAB_NAME_INPUT))
@@ -460,31 +475,31 @@ void drawMachineOutline()
 {
   rect(machinePosition.x,machinePosition.y, machinePosition.x+getDisplayMachine().getWidth(), machinePosition.y+getDisplayMachine().getHeight());
 }
-void drawImagePreviewPage()
-{
-  cursor(ARROW);
-  
-  strokeWeight(1);
-  background(100);
-  noFill();
-//  showPictureFrame();
-  drawMoveImageOutline();
-  
-  // draw machine outline
-//  getDisplayMachine().draw();
-
-  for (Panel panel : getPanelsForTab(TAB_NAME_PREVIEW))
-  {
-    panel.draw();
-  }
-  
-//  showCurrentMachinePosition();
-  if (displayingInfoTextOnInputPage)
-    showText(250,45);
-  drawStatusText(245, 12);
-  showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
-
-}
+//void drawImagePreviewPage()
+//{
+//  cursor(ARROW);
+//  
+//  strokeWeight(1);
+//  background(100);
+//  noFill();
+////  showPictureFrame();
+//  drawMoveImageOutline();
+//  
+//  // draw machine outline
+////  getDisplayMachine().draw();
+//
+//  for (Panel panel : getPanelsForTab(TAB_NAME_PREVIEW))
+//  {
+//    panel.draw();
+//  }
+//  
+////  showCurrentMachinePosition();
+//  if (displayingInfoTextOnInputPage)
+//    showText(250,45);
+//  drawStatusText(245, 12);
+//  showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
+//
+//}
 
 void drawDetailsPage()
 {
@@ -546,14 +561,27 @@ void drawMoveImageOutline()
 {
   if (MODE_MOVE_IMAGE == currentMode)
   {
-//    Float imgX = mouseX - (new Float(get.width)/2);
-//    Float imgY = mouseY - (new Float(bitmap.height)/2);
-//    fill(200,200,0,50);
-//    rect(imgX, imgY, bitmap.width, bitmap.height);
-//    
-//    noFill();
-//    imageOffset.x = imgX;
-//    imageOffset.y = imgY;
+    // get scaled size of the  image
+    PVector imageSize = getDisplayMachine().inMM(getDisplayMachine().getImageFrame().getSize());
+    PVector imageSizeOnScreen = getDisplayMachine().scaleToScreen(imageSize);
+    imageSizeOnScreen.sub(getDisplayMachine().getOutline().getTopLeft());
+    PVector offset = new PVector(imageSizeOnScreen.x/2.0, imageSizeOnScreen.y/2.0);
+    
+    PVector mVect = getMouseVector();
+    PVector imagePos = new PVector(mVect.x-offset.x, mVect.y-offset.y);
+
+    fill(80,50);
+    noStroke();
+    rect(imagePos.x+imageSizeOnScreen.x, imagePos.y+4, 4, imageSizeOnScreen.y);
+    rect(imagePos.x+4, imageSizeOnScreen.y+imagePos.y, imageSizeOnScreen.x-4, 4);
+    tint(255,180);
+    image(getDisplayMachine().getImage(), imagePos.x, imagePos.y, imageSizeOnScreen.x, imageSizeOnScreen.y);
+    noTint();
+    // decorate image
+    
+    
+    
+    noFill();
   }
 }
 
@@ -641,9 +669,12 @@ void loadImageWithFileChooser()
           PImage img = loadImage(file.getPath());
           if (img != null) 
           {
-            getDisplayMachine().setImageFilename(file.getPath());
-//            getMachine().setImage(loadImage(bitmapFilename));
             img = null;
+            getDisplayMachine().loadNewImageFromFilename(file.getPath());
+            if (isBoxSpecified())
+            {
+              //getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+            }
           }
         }
         else 
@@ -819,30 +850,13 @@ boolean mouseOverQueue()
   return result;
 }
 
-
-void zoomOutFromMachine(float inc)
+void changeMachineScaling(int delta)
 {
-  if (machineScaling > inc)
-  {
-    machineScaling = machineScaling - inc;
-    machineScaling =  Math.round(machineScaling*100.0)/100.0;
-  }
-//  getDisplayMachine().setScaledImage(null);
-}
-
-public final float MAX_ZOOM = 4.0;
-void zoomInToMachine(float inc)
-{
-  if (machineScaling <= (MAX_ZOOM - inc))
-  {
-    machineScaling = machineScaling + inc;
-    machineScaling =  Math.round(machineScaling*100.0)/100.0;
-  }
-//  getDisplayMachine().setScaledImage(null);
-}
-float getZoomIncrement()
-{
-  return 0.05;
+  machineScaling += (delta * 0.1);
+  if (machineScaling <  MIN_SCALING)
+    machineScaling = MIN_SCALING;
+  else if (machineScaling > MAX_SCALING)
+    machineScaling = MAX_SCALING;
 }
 
 void keyPressed()
@@ -851,11 +865,11 @@ void keyPressed()
   {
     if (keyCode == java.awt.event.KeyEvent.VK_PAGE_UP)
     {
-      zoomInToMachine(getZoomIncrement());
+      changeMachineScaling(1);
     }
     else if (keyCode == java.awt.event.KeyEvent.VK_PAGE_DOWN)
     {
-      zoomOutFromMachine(getZoomIncrement());
+      changeMachineScaling(-1);
     }
     else if (keyCode == DOWN)
     {
@@ -952,6 +966,13 @@ void keyPressed()
     this.maxSegmentLength++;
   }
 }
+void mouseDragged()
+{
+  if (mouseOverMachine())
+  {
+    machineDragged();
+  }
+}
   
 void mouseClicked()
 {
@@ -970,7 +991,45 @@ void mouseClicked()
   }
 }
 
+void machineDragged()
+{
+  if (mouseButton == CENTER)
+  {
+    PVector currentPos = getMouseVector();
+    PVector change = PVector.sub(currentPos, lastMachineDragPosition);
+    lastMachineDragPosition = new PVector(currentPos.x, currentPos.y);
+    PVector currentPosition = getDisplayMachine().getOutline().getPosition();
+    getDisplayMachine().getOffset().add(change);
+  }
+}
+
 void machineClicked()
+{
+  if (mouseButton == LEFT)
+  {
+    leftButtonMachineClick();
+  }
+//  else if (mouseButton == CENTER)
+//  {
+//    middleButtonMachineClick();
+//  }
+}
+void mousePressed()
+{
+  if (mouseButton == CENTER)
+  {
+    middleButtonMachinePress();
+    lastMachineDragPosition = getMouseVector();
+  }
+}
+
+void middleButtonMachinePress()
+{
+  PVector machineDragOffset = PVector.sub(getMouseVector(), getDisplayMachine().getOutline().getPosition());
+  this.machineDragOffset = machineDragOffset;
+}
+
+void leftButtonMachineClick()
 {
   if (currentMode.equals(MODE_BEGIN))
   {
@@ -1009,14 +1068,31 @@ void machineClicked()
     sendMoveToPosition(false);
   else if (currentMode.equals(MODE_MOVE_IMAGE))
   {
-    float ix = mouseX - (new Float(getDisplayMachine().getImageFrame().getWidth())/2);
-    float iy = mouseY - (new Float(getDisplayMachine().getImageFrame().getHeight())/2);
-    getDisplayMachine().getImageFrame().setPosition(ix, iy);
+    PVector imageSize = getDisplayMachine().inMM(getDisplayMachine().getImageFrame().getSize());
+    println("image size: "+ imageSize);
+    PVector mVect = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+    println("mPos: "+mVect);
+    PVector offset = new PVector(imageSize.x/2.0, imageSize.y/2.0);
+    println("offset: "+offset);
+    PVector imagePos = new PVector(mVect.x-offset.x, mVect.y-offset.y);
+    println("imagePos: " + imagePos);
+
+    imagePos = getDisplayMachine().inSteps(imagePos);
+    getDisplayMachine().getImageFrame().setPosition(imagePos.x, imagePos.y);
+
     if (isBoxSpecified())
       getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
   }
-}  
- 
+  
+}
+
+void mouseWheel(int delta) 
+{
+  if (getDisplayMachine().getOutline().surrounds(getMouseVector()))
+  {
+    changeMachineScaling(delta);
+  }
+} 
 
 boolean isPreviewable(String command)
 {

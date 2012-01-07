@@ -32,6 +32,7 @@ class DisplayMachine extends Machine
   private float scaling = 1.0;
   private Scaler scaler = null;
   private PVector offset = null;
+  private float imageTransparency = 1.0;
 
   private Set<PVector> extractedPixels = new HashSet<PVector>(0);
 
@@ -100,6 +101,27 @@ class DisplayMachine extends Machine
   {
     return this.offset;
   }
+  public void setImageTransparency(float trans)
+  {
+    this.imageTransparency = trans;
+  }
+  public int getImageTransparency()
+  {
+    float f = 255.0 * this.imageTransparency;
+    f += 0.5;
+    int result = (int) f;
+    return result;
+  }
+  
+  public void loadNewImageFromFilename(String filename)
+  {
+    super.loadImageFromFilename(filename);
+    this.setExtractedPixels(new HashSet<PVector>(0));
+
+    Rectangle imageFrame = new Rectangle(super.getImageFrame());
+    setImageFrame(imageFrame); // this automatically resizes the image if nec
+  }
+  
   public final int DROP_SHADOW_DISTANCE = 4;
   public void draw()
   {
@@ -117,11 +139,14 @@ class DisplayMachine extends Machine
     // draw some guides
     stroke(255, 255, 255, 128);
     strokeWeight(1);
+    // centre line
     line(getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getTop(), 
     getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getBottom());
 
+    // page top line
     line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()), 
     getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
+
     // draw page
     fill(220);
     rect(getOutline().getLeft()+sc(getPage().getLeft()), 
@@ -135,13 +160,17 @@ class DisplayMachine extends Machine
 
 
     // draw actual image
-    if (displayingImage && imageIsLoaded())
+    if (displayingImage && imageIsReady())
     {
       float ox = getOutline().getLeft()+sc(getImageFrame().getLeft());
       float oy = getOutline().getTop()+sc(getImageFrame().getTop());
-      float w = sc(getImageFrame().getWidth());
-      float h = sc(getImageFrame().getHeight());
+//      float w = sc(getImageFrame().getWidth());
+//      float h = sc(getImageFrame().getHeight());
+      float w = sc(getImage().width);
+      float h = sc(getImage().height);
+      tint(255, getImageTransparency());
       image(getImage(), ox, oy, w, h);
+      noTint();
       strokeWeight(1);
       stroke(150, 150, 150, 40);
       rect(ox, oy, w-1, h-1);
@@ -150,7 +179,6 @@ class DisplayMachine extends Machine
       noFill();
     }
 
-    drawPictureFrame();
 
 
     if (displayingSelectedCentres)
@@ -161,8 +189,11 @@ class DisplayMachine extends Machine
     {
       drawExtractedPixelDensities();
     }
+    drawPictureFrame();
 
-    if (getOutline().surrounds(getMouseVector()))
+    if (getOutline().surrounds(getMouseVector())
+      && currentMode != MODE_MOVE_IMAGE
+    )
     {  
       drawHangingStrings();
       drawRows();
@@ -325,13 +356,16 @@ class DisplayMachine extends Machine
     
     pixelSize = pixelSize * 1.1;
 
-    for (PVector cartesianPos : getExtractedPixels())
+    if (getExtractedPixels() != null)
     {
-      // scale em, danno.
-      PVector scaledPos = scaleToScreen(cartesianPos);
-      noStroke();
-      fill(cartesianPos.z);
-      ellipse(scaledPos.x, scaledPos.y, pixelSize, pixelSize);
+      for (PVector cartesianPos : getExtractedPixels())
+      {
+        // scale em, danno.
+        PVector scaledPos = scaleToScreen(cartesianPos);
+        noStroke();
+        fill(cartesianPos.z);
+        ellipse(scaledPos.x, scaledPos.y, pixelSize, pixelSize);
+      }
     }
     noFill();
   }

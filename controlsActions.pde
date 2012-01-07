@@ -194,7 +194,7 @@ void button_mode_drawGrid()
 void button_mode_loadImage()
 {
   setMode(MODE_LOAD_IMAGE);
-//  loadImageWithFileChooser();
+  loadImageWithFileChooser();
 }
 void button_mode_pauseQueue()
 {
@@ -266,6 +266,10 @@ void toggle_mode_moveImage(boolean flag)
   {
     unsetOtherToggles(MODE_MOVE_IMAGE);
     setMode(MODE_MOVE_IMAGE);
+  }
+  else
+  {
+    setMode("");
   }
 }
 void button_mode_convertBoxToPictureframe()

@@ -40,6 +40,11 @@ class Rectangle
     this.position = position;
     this.size = size;
   }
+  public Rectangle(Rectangle r)
+  {
+    this.position = new PVector(r.getPosition().x, r.getPosition().y);
+    this.size = new PVector(r.getSize().x, r.getSize().y);
+  }
   
   public float getWidth()
   {
