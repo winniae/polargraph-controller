@@ -123,6 +123,24 @@ class DisplayMachine extends Machine
   }
   
   public final int DROP_SHADOW_DISTANCE = 4;
+  public String getZoomText()
+  {
+    NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+    DecimalFormat df = (DecimalFormat)nf;  
+    df.applyPattern("###");
+    String zoom = df.format(scaling * 100) + "% zoom";
+    return zoom;
+  }
+  
+  public String getDimensionsAsText(Rectangle r)
+  {
+    return getDimensionsAsText(r.getSize());
+  }
+  public String getDimensionsAsText(PVector p)
+  {
+    String dim = inMM(p.x) + " x " + inMM(p.y) + "mm";
+    return dim;
+  }
   public void draw()
   {
     // work out the scaling factor.
@@ -134,18 +152,21 @@ class DisplayMachine extends Machine
 
     fill(150);
     rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
-    text("machine", getOutline().getLeft(), getOutline().getTop());
+    text("machine " + getDimensionsAsText(getSize()) + " " + getZoomText(), getOutline().getLeft(), getOutline().getTop());
 
-    // draw some guides
-    stroke(255, 255, 255, 128);
-    strokeWeight(1);
-    // centre line
-    line(getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getTop(), 
-    getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getBottom());
-
-    // page top line
-    line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()), 
-    getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
+    if (displayingGuides)
+    {
+      // draw some guides
+      stroke(255, 255, 255, 128);
+      strokeWeight(1);
+      // centre line
+      line(getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getTop(), 
+      getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getBottom());
+  
+      // page top line
+      line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()), 
+      getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
+    }
 
     // draw page
     fill(220);
@@ -153,7 +174,7 @@ class DisplayMachine extends Machine
     getOutline().getTop()+sc(getPage().getTop()), 
     sc(getPage().getWidth()), 
     sc(getPage().getHeight()));
-    text("page", getOutline().getLeft()+sc(getPage().getLeft()), 
+    text("page " + getDimensionsAsText(getPage()), getOutline().getLeft()+sc(getPage().getLeft()), 
     getOutline().getTop()+sc(getPage().getTop()));
     noFill();
 
@@ -189,9 +210,13 @@ class DisplayMachine extends Machine
     {
       drawExtractedPixelDensities();
     }
-    drawPictureFrame();
+    if (displayingGuides)
+    {
+      drawPictureFrame();
+    }
 
-    if (getOutline().surrounds(getMouseVector())
+    if (displayingGuides 
+      && getOutline().surrounds(getMouseVector())
       && currentMode != MODE_MOVE_IMAGE
     )
     {  
@@ -324,7 +349,7 @@ class DisplayMachine extends Machine
     float rowThickness = inMM(getGridSize()) * getScaling();
     rowThickness = (rowThickness < 1.0) ? 1.0 : rowThickness;
     strokeWeight(rowThickness);
-    stroke(200, 200, 255, 128);
+    stroke(150, 200, 255, 50);
     strokeCap(SQUARE);
 
     float dia = mVect.x*2;
@@ -409,6 +434,13 @@ class DisplayMachine extends Machine
       cartesianPositions.add(displayPos);
     }
     setExtractedPixels(cartesianPositions);
+  }
+  
+  public Set<PVector> extractNativePixelsFromArea(PVector p, PVector s, float rowSize, float sampleSize)
+  {
+    // get the native positions from the superclass
+    Set<PVector> nativePositions = super.getPixelsPositionsFromArea(inSteps(p), inSteps(s), rowSize, sampleSize);
+    return nativePositions;
   }
 
   protected PVector snapToGrid(PVector loose, float rowSize)

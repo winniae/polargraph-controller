@@ -74,6 +74,15 @@ Map<String, Panel> getPanels()
   return this.panels;
 }
 
+Set<String> getControlsToEnableWhenBoxSpecified()
+{
+  if (this.controlsToEnableWhenBoxSpecified == null)
+  {
+    this.controlsToEnableWhenBoxSpecified = buildControlsToEnableWhenBoxSpecified();
+  }
+  return this.controlsToEnableWhenBoxSpecified;
+}
+
 
 void hideAllControls()
 {
@@ -146,6 +155,26 @@ Map<String, Panel> buildPanels()
 PVector getMainPanelPosition()
 {
   return this.mainPanelPosition;
+}
+
+Set<String> buildControlsToEnableWhenBoxSpecified()
+{
+  Set<String> result = new HashSet<String>();
+  result.add(MODE_DRAW_OUTLINE_BOX);
+  result.add(MODE_DRAW_OUTLINE_BOX_ROWS);
+  result.add(MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
+  result.add(MODE_RENDER_SQUARE_PIXELS);
+  result.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
+  result.add(MODE_RENDER_SAW_PIXELS);
+  result.add(MODE_RENDER_CIRCLE_PIXELS);
+  result.add(MODE_DRAW_GRID);
+  result.add(MODE_DRAW_TESTPATTERN);
+  result.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
+  result.add(MODE_RENDER_SCRIBBLE_PIXELS);
+  result.add(MODE_CONVERT_BOX_TO_PICTUREFRAME);
+  result.add(MODE_FIT_IMAGE_TO_BOX);
+  
+  return result; 
 }
 
 Map<String, Controller> buildAllControls()
@@ -240,6 +269,11 @@ Map<String, Controller> initialiseMiniToggleValues(Map<String, Controller> map)
     {
       Toggle t = (Toggle) map.get(key);
       t.setValue((displayingVector) ? 1 : 0);
+    }
+    if (MODE_SHOW_GUIDES.equals(key))
+    {
+      Toggle t = (Toggle) map.get(key);
+      t.setValue((displayingGuides) ? 1 : 0);
     }
   }
   return map;
@@ -348,7 +382,7 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_DRAW_TO_POSITION);
   controlNames.add(MODE_DRAW_DIRECT);
   controlNames.add(MODE_INPUT_BOX_TOP_LEFT);
-  controlNames.add(MODE_INPUT_BOX_BOT_RIGHT);
+//  controlNames.add(MODE_INPUT_BOX_BOT_RIGHT);
   controlNames.add(MODE_CONVERT_BOX_TO_PICTUREFRAME);
   controlNames.add(MODE_SELECT_PICTUREFRAME);
   controlNames.add(MODE_LOAD_IMAGE);
@@ -369,6 +403,7 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_SHOW_VECTOR);
   controlNames.add(MODE_SHOW_QUEUE_PREVIEW);
   controlNames.add(MODE_SHOW_DENSITY_PREVIEW);
+  controlNames.add(MODE_SHOW_GUIDES);
   return controlNames;
 }
 
@@ -380,7 +415,7 @@ List<String> getControlNamesForPreviewPanel()
   controlNames.add(MODE_SET_POSITION);
   controlNames.add(MODE_DRAW_TO_POSITION);
   controlNames.add(MODE_INPUT_BOX_TOP_LEFT);
-  controlNames.add(MODE_INPUT_BOX_BOT_RIGHT);
+//  controlNames.add(MODE_INPUT_BOX_BOT_RIGHT);
   controlNames.add(MODE_DRAW_OUTLINE_BOX);
   controlNames.add(MODE_MOVE_IMAGE);
   controlNames.add(MODE_RENDER_SQUARE_PIXELS);
@@ -428,7 +463,7 @@ Map<String, String> buildControlLabels()
   Map<String, String> result = new HashMap<String, String>();
 
   result.put(MODE_BEGIN, "Reset queue");
-  result.put(MODE_INPUT_BOX_TOP_LEFT, "Select TopLeft");
+  result.put(MODE_INPUT_BOX_TOP_LEFT, "Select Area");
   result.put(MODE_INPUT_BOX_BOT_RIGHT, "Select BotRight");
   result.put(MODE_DRAW_OUTLINE_BOX, "Draw Outline box");
   result.put(MODE_DRAW_OUTLINE_BOX_ROWS, "Draw Outline rows");
@@ -463,7 +498,7 @@ Map<String, String> buildControlLabels()
   result.put(MODE_DEC_SAMPLE_AREA, "Dec sample size");
 
   result.put(MODE_MOVE_IMAGE, "Move image");
-  result.put(MODE_CONVERT_BOX_TO_PICTUREFRAME, "Set frame");
+  result.put(MODE_CONVERT_BOX_TO_PICTUREFRAME, "Set frame to area");
   result.put(MODE_SELECT_PICTUREFRAME, "Select frame");
 
   result.put(MODE_CLEAR_QUEUE, "Clear queue");
@@ -480,6 +515,7 @@ Map<String, String> buildControlLabels()
   result.put(MODE_SHOW_DENSITY_PREVIEW, "Show density preview");
   result.put(MODE_SHOW_QUEUE_PREVIEW, "Show Queue preview");
   result.put(MODE_SHOW_VECTOR, "Show Vector");
+  result.put(MODE_SHOW_GUIDES, "Show Guides");
   
   return result;
 }
@@ -535,6 +571,7 @@ Set<String> buildControlNames()
   result.add(MODE_SHOW_DENSITY_PREVIEW);
   result.add(MODE_SHOW_VECTOR);
   result.add(MODE_SHOW_QUEUE_PREVIEW);
+  result.add(MODE_SHOW_GUIDES);
   
   return result;
 }

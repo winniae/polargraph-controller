@@ -143,7 +143,7 @@ void sendSetPosition()
   p = getDisplayMachine().convertToNative(p);
   p = getDisplayMachine().inSteps(p);
   
-  String command = CMD_SETPOSITION+p.x+","+p.y+",END";
+  String command = CMD_SETPOSITION+int(p.x+0.5)+","+int(p.y+0.5)+",END";
   commandQueue.add(command);
 }
 
@@ -152,85 +152,15 @@ void sendSetHomePosition()
   PVector homePoint = getDisplayMachine().inSteps(getHomePoint());
   PVector pgCoords = getDisplayMachine().asNativeCoords(homePoint);
   
-  String command = CMD_SETPOSITION+pgCoords.x+","+pgCoords.y+",END";
+  String command = CMD_SETPOSITION+int(pgCoords.x+0.5)+","+int(pgCoords.y+0.5)+",END";
   commandQueue.add(command);
-}
-
-void sendSawtoothPixels()
-{
-//  for (List<PVector> row : pixelCentresForMachine)
-//  {
-//    if (drawDirection == DRAW_DIR_SE)
-//    {
-//      for (PVector v : row) // left to right
-//      {
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        String command = CMD_DRAWSAWPIXEL+inX+","+inY+","+rowWidth+","+density+",END";
-//        commandQueue.add(command);
-//      }
-//    }
-//    else
-//    {
-//      for (int i = row.size()-1; i >= 0; i--) // right to left
-//      {
-//        PVector v = row.get(i);
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        String command = CMD_DRAWSAWPIXEL+inX+","+inY+","+rowWidth+","+density+",END";
-//        commandQueue.add(command);
-//      }
-//    }
-//    flipDirection();
-//    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-//    commandQueue.add(command);
-//  }
-}
-
-void sendCircularPixels()
-{
-//  for (List<PVector> row : pixelCentresForMachine)
-//  {
-//    if (drawDirection == DRAW_DIR_SE)
-//    {
-//      for (PVector v : row) // left to right
-//      {
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        String command = CMD_DRAWROUNDPIXEL+inX+","+inY+","+int(rowWidth)+","+density+",END";
-//        commandQueue.add(command);
-//      }
-//    }
-//    else
-//    {
-//      for (int i = row.size()-1; i >= 0; i--) // right to left
-//      {
-//        PVector v = row.get(i);
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        String command = CMD_DRAWROUNDPIXEL+inX+","+inY+","+int(rowWidth)+","+density+",END";
-//        commandQueue.add(command);
-//      }
-//    }
-//    flipDirection();
-//    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-//    commandQueue.add(command);
-//  }
 }
 
 int scaleDensity(int inDens, int inMax, int outMax)
 {
   float reducedDens = (float(inDens) / float(inMax)) * float(outMax);
   reducedDens = outMax-reducedDens;
-  println("inDens:"+inDens+", inMax:"+inMax+", outMax:"+outMax+", reduced:"+reducedDens);
+//  println("inDens:"+inDens+", inMax:"+inMax+", outMax:"+outMax+", reduced:"+reducedDens);
   
   // round up if bigger than .5
   int result = int(reducedDens);
@@ -241,318 +171,283 @@ int scaleDensity(int inDens, int inMax, int outMax)
   return result;
 }
 
-void sendScaledSquarePixels()
+SortedMap<Float, List<PVector>> divideIntoRows(Set<PVector> pixels, int direction)
 {
-  commandQueue.add(CMD_PENDOWN+"END");
-  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-  commandQueue.add(changeDir);
-//  for (List<PVector> row : pixelCentresForMachine)
-//  {
-//    if (drawDirection == DRAW_DIR_SE)
-//    {
-//      for (PVector v : row) // left to right
-//      {
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        int pixelSize = scaleDensity(density, 255, rowWidth);
-//        String command = CMD_DRAWPIXEL+inX+","+inY+","+(pixelSize)+",0,END";
-//
-//        commandQueue.add(command);
-//      }
-//    }
-//    else
-//    {
-//      for (int i = row.size()-1; i >= 0; i--) // right to left
-//      {
-//        PVector v = row.get(i);
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        int pixelSize = scaleDensity(density, 255, rowWidth);
-//        String command = CMD_DRAWPIXEL+inX+","+inY+","+(pixelSize)+",0,END";
-//        commandQueue.add(command);
-//      }
-//    }
-//    flipDirection();
-//    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-//    commandQueue.add(command);
-//  }
-  commandQueue.add(CMD_PENUP+"END");
-  numberOfPixelsTotal = commandQueue.size();
-  startPixelTimer();
+  SortedMap<Float, List<PVector>> inRows = new TreeMap<Float, List<PVector>>();
+  
+  for (PVector p : pixels)
+  {
+    Float row = p.x;
+    if (direction == DRAW_DIR_SE || direction == DRAW_DIR_NW)
+      row = p.y;
+      
+    if (!inRows.containsKey(row))
+    {
+      inRows.put(row, new ArrayList<PVector>());
+    }
+    inRows.get(row).add(p);
+  }
+  return inRows;
 }
 
-void sendSolidSquarePixels()
+PVector sortPixelsInRowsAlternating(SortedMap<Float, List<PVector>> inRows, int initialDirection, float maxPixelSize)
 {
-  commandQueue.add(CMD_PENDOWN+"END");
-  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-  commandQueue.add(changeDir);
-//  for (List<PVector> row : pixelCentresForMachine)
-//  {
-//    if (drawDirection == DRAW_DIR_SE)
-//    {
-//      for (PVector v : row) // left to right
-//      {
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+",0,END";
-//
-//        commandQueue.add(command);
-//      }
-//    }
-//    else
-//    {
-//      for (int i = row.size()-1; i >= 0; i--) // right to left
-//      {
-//        PVector v = row.get(i);
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+",0,END";
-//        commandQueue.add(command);
-//      }
-//    }
-//    flipDirection();
-//    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-//    commandQueue.add(command);
-//  }
-  commandQueue.add(CMD_PENUP+"END");
-  numberOfPixelsTotal = commandQueue.size();
-  startPixelTimer();
+  PVector startPoint = null;
+  Comparator comp = null;
+  boolean rowIsAlongXAxis = true;
+  
+  if (initialDirection == DRAW_DIR_SE || initialDirection == DRAW_DIR_NW)
+  {
+    rowIsAlongXAxis = true;
+    comp = xAscending;
+  }
+  else
+  {
+    rowIsAlongXAxis = false;
+    comp = yAscending;
+  }
+  
+  // now sort each row, reversing the direction after each row
+  boolean reverse = false;
+  for (Float rowCoord : inRows.keySet())
+  {
+    println("row: " + rowCoord);
+    List<PVector> row = inRows.get(rowCoord);
+
+    if (reverse)
+    {
+      // reverse it (descending)
+      Collections.sort(row, comp);
+      Collections.reverse(row);
+      if (startPoint == null)
+      {
+        if (rowIsAlongXAxis)
+          startPoint = new PVector(row.get(0).x+(maxPixelSize/2.0), row.get(0).y);
+        else
+          startPoint = new PVector(row.get(0).x, row.get(0).y-(maxPixelSize/2.0));
+      }
+      reverse = false;
+    }
+    else
+    {
+      // sort row ascending
+      Collections.sort(row, comp);
+      if (startPoint == null)
+      {
+        if (rowIsAlongXAxis)
+          startPoint = new PVector(row.get(0).x-(maxPixelSize/2.0), row.get(0).y);
+        else
+          startPoint = new PVector(row.get(0).x, row.get(0).y+(maxPixelSize/2.0));
+      }
+      reverse = true;
+    }
+  }
+  return startPoint;
+}
+   
+void sortPixelsInRows(SortedMap<Float, List<PVector>> inRows, int initialDirection)
+{
+  PVector startPoint = null;
+  Comparator comp = null;
+  boolean rowIsAlongXAxis = true;
+  
+  if (initialDirection == DRAW_DIR_SE || initialDirection == DRAW_DIR_NW)
+  {
+    rowIsAlongXAxis = true;
+    comp = xAscending;
+  }
+  else
+  {
+    rowIsAlongXAxis = false;
+    comp = yAscending;
+  }
+  
+  // now sort each row, reversing the direction after each row
+  for (Float rowCoord : inRows.keySet())
+  {
+    println("row: " + rowCoord);
+    List<PVector> row = inRows.get(rowCoord);
+    // sort row ascending
+    Collections.sort(row, comp);
+    
+    if (initialDirection == DRAW_DIR_NW || initialDirection == DRAW_DIR_NE)
+      Collections.reverse(row);
+  }
 }
 
-void sendSquarePixels()
+
+void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, float maxPixelSize, boolean scaleSizeToDensity)
 {
-  commandQueue.add(CMD_PENDOWN+"END");
+  // sort it into a map of rows, keyed by y coordinate value
+  SortedMap<Float, List<PVector>> inRows = divideIntoRows(pixels, initialDirection);
+  
+  PVector startPoint = sortPixelsInRowsAlternating(inRows, initialDirection, maxPixelSize);
+  
+  // that was easy.
+  // load the queue
+  // add a preamble
+  
+  // set the first direction
+  int drawDirection = initialDirection;
   String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
   commandQueue.add(changeDir);
+  
+  // and move the pen to just next to the first pixel
+  if (startPoint != null)
+  {
+    String touchdown = CMD_CHANGELENGTH+int(startPoint.x+0.5)+","+int(startPoint.y+0.5)+",END";
+    commandQueue.add(touchdown);
+    commandQueue.add(CMD_PENDOWN+"END");
+  }
+    
+  
+  for (Float key : inRows.keySet())
+  {
+    List<PVector> row = inRows.get(key);
+    for (PVector v : row)
+    {
+      // now convert to ints 
+      int inX = int(v.x);
+      int inY = int(v.y);
+      Integer density = int(v.z);
+      int pixelSize = int(maxPixelSize);
+      if (scaleSizeToDensity)
+      {
+        pixelSize = scaleDensity(density, 255, int(maxPixelSize));
+        density = 0;
+      }
+      String command = pixelCommand+inX+","+inY+","+int(pixelSize+0.5)+","+density+",END";
 
-//  for (List<PVector> row : pixelCentresForMachine)
-//  {
-//    if (drawDirection == DRAW_DIR_SE)
-//    {
-//      for (PVector v : row) // left to right
-//      {
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
-//
-//        commandQueue.add(command);
-//      }
-//    }
-//    else
-//    {
-//      for (int i = row.size()-1; i >= 0; i--) // right to left
-//      {
-//        PVector v = row.get(i);
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        String command = CMD_DRAWPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
-//        commandQueue.add(command);
-//      }
-//    }
-//    flipDirection();
-//    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-//    commandQueue.add(command);
-//  }
+      commandQueue.add(command);
+    }
+
+    drawDirection = flipDrawDirection(drawDirection);
+    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
+    commandQueue.add(command);
+  }
   
   commandQueue.add(CMD_PENUP+"END");
   numberOfPixelsTotal = commandQueue.size();
   startPixelTimer();
 }
+
+int flipDrawDirection(int curr)
+{
+  if (curr == DRAW_DIR_SE)
+    return DRAW_DIR_NW;
+  else if (curr == DRAW_DIR_NW)
+    return DRAW_DIR_SE;
+  else if (curr == DRAW_DIR_NE)
+    return DRAW_DIR_SW;
+  else if (curr == DRAW_DIR_SW)
+    return DRAW_DIR_NE;
+  else return DRAW_DIR_SE;
+}
+  
 
 int getPixelDirectionMode()
 {
   return pixelDirectionMode;
 }
-void sendScribblePixels()
-{
-  commandQueue.add(CMD_PENDOWN+"END");
-  String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-  commandQueue.add(changeDir);
 
-//  for (List<PVector> row : pixelCentresForMachine)
-//  {
-//    if (drawDirection == DRAW_DIR_SE)
-//    {
-//      for (PVector v : row) // left to right
-//      {
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        String command = CMD_DRAWSCRIBBLEPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
-//
-//        commandQueue.add(command);
-//      }
-//    }
-//    else
-//    {
-//      for (int i = row.size()-1; i >= 0; i--) // right to left
-//      {
-//        PVector v = row.get(i);
-//        // now convert to ints 
-//        int inX = int(v.x);
-//        int inY = int(v.y);
-//        Integer density = int(v.z);
-//        String command = CMD_DRAWSCRIBBLEPIXEL+inX+","+inY+","+(rowWidth)+","+density+",END";
-//        commandQueue.add(command);
-//      }
-//    }
-//    flipDirection();
-//    String command = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
-//    commandQueue.add(command);
-//  }
-  
-  commandQueue.add(CMD_PENUP+"END");
-  numberOfPixelsTotal = commandQueue.size();
-  startPixelTimer();
+
+void sendSawtoothPixels(Set<PVector> pixels)
+{
+  sendPixels(pixels, CMD_DRAWSAWPIXEL, DRAW_DIR_SE, getGridSize(), false);
+}
+void sendCircularPixels(Set<PVector> pixels)
+{
+  sendPixels(pixels, CMD_DRAWROUNDPIXEL, DRAW_DIR_SE, getGridSize(), false);
+}
+
+void sendScaledSquarePixels(Set<PVector> pixels)
+{
+  sendPixels(pixels, CMD_DRAWPIXEL, DRAW_DIR_SE, getGridSize(), true);
+}
+
+void sendSolidSquarePixels(Set<PVector> pixels)
+{
+  for (PVector p : pixels)
+  {
+    p.z = 0.0;
+  }
+  sendPixels(pixels, CMD_DRAWPIXEL, DRAW_DIR_SE, getGridSize(), false);
+}
+
+void sendSquarePixels(Set<PVector> pixels)
+{
+  sendPixels(pixels, CMD_DRAWPIXEL, DRAW_DIR_SE, getGridSize(), false);
+}
+
+void sendScribblePixels(Set<PVector> pixels)
+{
+  sendPixels(pixels, CMD_DRAWSCRIBBLEPIXEL, DRAW_DIR_SE, getGridSize(), false);
 }
 
 
-void sendOutlineOfPixels()
+void sendOutlineOfPixels(Set<PVector> pixels)
 {
-  PVector offset = new PVector(gridSize/2.0, gridSize/2.0);
+  // sort it into a map of rows, keyed by y coordinate value
+  SortedMap<Float, List<PVector>> inRows = divideIntoRows(pixels, DRAW_DIR_SE);
+  
+  sortPixelsInRowsAlternating(inRows, DRAW_DIR_SE, getGridSize());
 
-//  for (List<PVector> row : pixelCentresForMachine)
-//  {
-//    for (PVector v : row)
-//    {
-//      // now convert to native format
-//      // now offset by row size
-//      PVector startPoint = PVector.sub(v, offset);
-//      PVector endPoint = PVector.add(v, offset);
-//      // now convert to steps
-//      String command = CMD_DRAWRECT+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
-//      commandQueue.add(command);
-//    }
-//  }
+  float halfGrid = getGridSize() / 2.0;
+  for (Float key : inRows.keySet())
+  {
+    for (PVector p : inRows.get(key))
+    {
+      PVector startPoint = new PVector(p.x-halfGrid, p.y-halfGrid);
+      PVector endPoint = new PVector(p.x+halfGrid, p.y+halfGrid);
+      String command = CMD_DRAWRECT + int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
+      commandQueue.add(command);
+    }
+  }  
 }
 
-void sendOutlineOfRows()
+void sendOutlineOfRows(Set<PVector> pixels, int drawDirection)
 {
-//  for (List<PVector> row : pixelCentresForMachine)
-//  {
-//    PVector first = row.get(0);
-//    PVector last = row.get(row.size()-1);
-//    
-//    // now offset by row size
-//    PVector offset = new PVector(rowWidth/2.0, rowWidth/2.0);
-//    
-//    PVector startPoint = PVector.sub(first, offset);
-//    PVector endPoint = PVector.add(last, offset);
-//    
-//    // now convert to steps
-//    String command = CMD_DRAWRECT+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
-//    commandQueue.add(command);
-//  }
+  // sort it into a map of rows, keyed by y coordinate value
+  SortedMap<Float, List<PVector>> inRows = divideIntoRows(pixels, drawDirection);
   
-  // now do it in the opposite axis
-  
-//  List<List<PVector>> otherWay = extractRowsFromBoxOpposite();
-//  for (List<PVector> row : otherWay)
-//  {
-//    PVector first = row.get(0);
-//    PVector last = row.get(row.size()-1);
-//    
-//    // now offset by row size
-//    PVector offset = new PVector(rowWidth/2.0, rowWidth/2.0);
-//    
-//    PVector startPoint = PVector.sub(first, offset);
-//    PVector endPoint = PVector.add(last, offset);
-//    
-//    // now convert to steps
-//    String command = CMD_DRAWRECT+int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
-//    commandQueue.add(command);
-//  }
+  sortPixelsInRows(inRows, drawDirection);
 
+  PVector offset = new PVector(getGridSize() / 2.0, getGridSize() / 2.0);
+  for (Float key : inRows.keySet())
+  {
+    PVector startPoint = inRows.get(key).get(0);
+    PVector endPoint = inRows.get(key).get(inRows.get(key).size()-1);
+    
+    if (drawDirection == DRAW_DIR_SE)
+    {
+      startPoint.sub(offset);
+      endPoint.add(offset);
+    }
+    else if (drawDirection == DRAW_DIR_NW)
+    {
+      startPoint.add(offset);
+      endPoint.sub(offset);
+    }
+    else if (drawDirection == DRAW_DIR_SW)
+    {
+      startPoint.add(offset);
+      endPoint.sub(offset);
+    }
+    else if (drawDirection == DRAW_DIR_NW)
+    {
+      startPoint.add(offset);
+      endPoint.sub(offset);
+    }
+    
+    String command = CMD_DRAWRECT + int(startPoint.x)+","+int(startPoint.y)+","+int(endPoint.x)+","+int(endPoint.y)+",END";
+    commandQueue.add(command);
+  }  
 }
 
-void sendGridOfBox()
+void sendGridOfBox(Set<PVector> pixels)
 {
-  String rowDirection = "LTR";
-  float halfRow = gridSize/2.0;
-  PVector startPoint = null;
-  PVector endPoint = null;
-
-//  for (List<PVector> row : pixelCentresForMachine)
-//  {
-//    PVector first = row.get(0);
-//    PVector last = row.get(row.size()-1);
-//
-//
-//    if (rowDirection.equals("LTR"))
-//    {
-//      // now offset by row size
-//      startPoint = new PVector(first.x-halfRow, first.y-halfRow);
-//      endPoint = new PVector(last.x+halfRow, last.y-halfRow);
-//    }
-//    else
-//    {
-//      // now offset by row size
-//      startPoint = new PVector(last.x+halfRow, last.y-halfRow);
-//      endPoint = new PVector(first.x-halfRow, first.y-halfRow);
-//    }      
-//      
-//    
-//    // goto beginning of long line (probably the shortline)
-//    String command = CMD_CHANGELENGTH+int(startPoint.x)+","+int(startPoint.y)+",END";
-//    commandQueue.add(command);
-//    
-//    // draw long line
-//    command=CMD_CHANGELENGTH+int(endPoint.x)+","+int(endPoint.y)+",END";
-//    commandQueue.add(command);
-//    
-//    if (rowDirection.equals("LTR"))
-//      rowDirection = "RTL";
-//    else
-//      rowDirection = "LTR";
-//  }
-//  
-//  // now do it in the opposite axis
-//  
-//  List<List<PVector>> otherWay = extractRowsFromBoxOpposite();
-//  for (List<PVector> row : otherWay)
-//  {
-//    PVector first = row.get(0);
-//    PVector last = row.get(row.size()-1);
-//    
-//    if (rowDirection.equals("LTR"))
-//    {
-//      // now offset by row size
-//      startPoint = new PVector(first.x-halfRow, first.y+halfRow);
-//      endPoint = new PVector(last.x-halfRow, last.y-halfRow);
-//    }
-//    else
-//    {
-//      // now offset by row size
-//      startPoint = new PVector(last.x-halfRow, last.y-halfRow);
-//      endPoint = new PVector(first.x-halfRow, first.y+halfRow);
-//    }
-//      
-//    
-//    // goto beginning of line (probably the shortline)
-//    String command = CMD_CHANGELENGTH+int(startPoint.x)+","+int(startPoint.y)+",END";
-//    commandQueue.add(command);
-//    
-//    // draw long line
-//    command=CMD_CHANGELENGTH+int(endPoint.x)+","+int(endPoint.y)+",END";
-//    commandQueue.add(command);
-//    
-//    if (rowDirection.equals("LTR"))
-//      rowDirection = "RTL";
-//    else
-//      rowDirection = "LTR";
-//  }
-
+  sendOutlineOfRows(pixels, DRAW_DIR_SE);
+  sendOutlineOfRows(pixels, DRAW_DIR_SW);
 }
 
 

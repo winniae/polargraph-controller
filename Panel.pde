@@ -35,6 +35,11 @@ class Panel
   private boolean resizable = true;
   private float minimumHeight = DEFAULT_CONTROL_SIZE.y+4;
   private color outlineColour = color(255);
+  
+  public final color CONTROL_COL_BG_DEFAULT = color(0,54,82);
+  public final color CONTROL_COL_BG_DISABLED = color(20,44,62);
+  public final color CONTROL_COL_LABEL_DEFAULT = color(255);
+  public final color CONTROL_COL_LABEL_DISABLED = color(200);
 
   public Panel(String name, Rectangle outline)
   {
@@ -129,11 +134,38 @@ class Panel
       float x = pos.x+getOutline().getLeft();
       float y = pos.y+getOutline().getTop();
       c.setPosition(x, y);
-      
+
       PVector cSize = getControlSizes().get(c.name());
       c.setSize((int)cSize.x, (int)cSize.y);
+
+      boolean locked = false;
+      if (!isBoxSpecified())
+      { 
+        if (getControlsToEnableWhenBoxSpecified().contains(c.name()))
+        {
+          locked = true;        
+        }
+      }
+
+      int col = c.getColor().getBackground();      
+      setLock(c, locked);
     }
   }
+  
+  void setLock(Controller c, boolean locked) 
+  {
+    c.setLock(locked);
+    if (locked) 
+    {
+      c.setColorBackground(CONTROL_COL_BG_DISABLED);
+      c.setColorLabel(CONTROL_COL_LABEL_DISABLED);
+    } 
+    else 
+    {
+      c.setColorBackground(CONTROL_COL_BG_DEFAULT);
+      c.setColorLabel(CONTROL_COL_LABEL_DEFAULT);
+    }
+  }  
   
   void setHeight(float h)
   {

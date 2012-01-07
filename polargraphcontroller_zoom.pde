@@ -106,7 +106,6 @@ static final int DRAW_DIR_N = 5;
 static final int DRAW_DIR_E = 6;
 static final int DRAW_DIR_S = 7;
 static final int DRAW_DIR_W = 8;
-static int drawDirection = DRAW_DIR_SE;
 
 static final int DRAW_DIR_MODE_AUTO = 1;
 static final int DRAW_DIR_MODE_PRESET = 2;
@@ -181,6 +180,8 @@ static final String MODE_SHOW_DENSITY_PREVIEW = "minitoggle_mode_showDensityPrev
 static final String MODE_SHOW_IMAGE = "minitoggle_mode_showImage";
 static final String MODE_SHOW_QUEUE_PREVIEW = "minitoggle_mode_showQueuePreview";
 static final String MODE_SHOW_VECTOR = "minitoggle_mode_showVector";
+static final String MODE_SHOW_GUIDES = "minitoggle_mode_showGuides";
+
 
 static String currentMode = MODE_BEGIN;
 static String lastMode = MODE_BEGIN;
@@ -204,8 +205,10 @@ boolean displayingInfoTextOnInputPage = false;
 
 boolean displayingImage = true;
 boolean displayingVector = true;
-boolean displayingQueuePreview = false;
+boolean displayingQueuePreview = true;
 boolean displayingDensityPreview = false;
+
+boolean displayingGuides = true;
 
 boolean useSerialPortConnection = false;
 
@@ -262,6 +265,7 @@ public Map<String, List<Controller>> controlsForPanels = null;
 
 public Map<String, Controller> allControls = null;
 public Map<String, String> controlLabels = null;
+public Set<String> controlsToEnableWhenBoxSpecified = null;
 
 public Map<String, Set<Panel>> panelsForTabs = null;
 public Map<String, Panel> panels = null;
@@ -464,9 +468,11 @@ void drawImagePage()
 
   showGroupBox();
   showCurrentMachinePosition();
+  if (displayingQueuePreview)
+    previewQueue();
   if (displayingInfoTextOnInputPage)
     showText(250,45);
-  drawStatusText(245, 12);
+  drawStatusText(170, 12);
 
   showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
 }
@@ -606,7 +612,7 @@ void showCurrentMachinePosition()
 {
   noStroke();
   fill(255,0,255,150);
-  PVector pgCoord = getDisplayMachine().asCartesianCoords(currentMachinePos);
+  PVector pgCoord = getDisplayMachine().scaleToScreen(currentMachinePos);
   ellipse(pgCoord.x, pgCoord.y, 20, 20);
 
   // also show cartesian position if reported
@@ -618,33 +624,36 @@ void showCurrentMachinePosition()
 
 void showGroupBox()
 {
-  if (isBoxSpecified())
+  if (displayingGuides)
   {
-    noFill();
-    stroke(255,0,0);
-    strokeWeight(1);
-    PVector topLeft = getDisplayMachine().scaleToScreen(boxVector1);
-    PVector botRight = getDisplayMachine().scaleToScreen(boxVector2);
-    rect(topLeft.x, topLeft.y, botRight.x-topLeft.x, botRight.y-topLeft.y);
-  }
-  else 
-  {
-    noFill();
-    stroke(255,0,0);
-    strokeWeight(1);
-
-    if (getBoxVector1() != null)
+    if (isBoxSpecified())
     {
+      noFill();
+      stroke(255,0,0);
+      strokeWeight(1);
       PVector topLeft = getDisplayMachine().scaleToScreen(boxVector1);
-      line(topLeft.x, topLeft.y, topLeft.x-10, topLeft.y);
-      line(topLeft.x, topLeft.y, topLeft.x, topLeft.y-10);
-    }
-
-    if (getBoxVector2() != null)
-    {
       PVector botRight = getDisplayMachine().scaleToScreen(boxVector2);
-      line(botRight.x, botRight.y, botRight.x+10, botRight.y);
-      line(botRight.x, botRight.y, botRight.x, botRight.y+10);
+      rect(topLeft.x, topLeft.y, botRight.x-topLeft.x, botRight.y-topLeft.y);
+    }
+    else 
+    {
+      noFill();
+      stroke(255,0,0);
+      strokeWeight(1);
+  
+      if (getBoxVector1() != null)
+      {
+        PVector topLeft = getDisplayMachine().scaleToScreen(boxVector1);
+        line(topLeft.x, topLeft.y, topLeft.x-10, topLeft.y);
+        line(topLeft.x, topLeft.y, topLeft.x, topLeft.y-10);
+      }
+  
+      if (getBoxVector2() != null)
+      {
+        PVector botRight = getDisplayMachine().scaleToScreen(boxVector2);
+        line(botRight.x, botRight.y, botRight.x+10, botRight.y);
+        line(botRight.x, botRight.y, botRight.x, botRight.y+10);
+      }
     }
   }
   
@@ -889,7 +898,20 @@ void keyPressed()
     }
   }
   else if (key == 'g' || key == 'G')
-    displayingRowGridlines = (displayingRowGridlines) ? false : true;
+  {
+    Toggle t = (Toggle) getAllControls().get(MODE_SHOW_GUIDES);
+    if (displayingGuides)
+    {
+      minitoggle_mode_showGuides(false);
+      t.setValue(0);
+    }
+    else
+    {
+      minitoggle_mode_showGuides(true);
+      t.setValue(1);
+    }
+    t.update();
+  }
   else if (key == 's' || key == 'S')
     displayingSelectedCentres = (displayingSelectedCentres) ? false : true;
   else if (key == 'i' || key == 'I')
@@ -958,7 +980,7 @@ void keyPressed()
   }
   else if (key == '<' || key == ',')
   {
-    if (this.maxSegmentLength > 4)
+    if (this.maxSegmentLength > 1)
       this.maxSegmentLength--;
   }
   else if (key == '>' || key == '.')
@@ -1001,6 +1023,15 @@ void machineDragged()
     PVector currentPosition = getDisplayMachine().getOutline().getPosition();
     getDisplayMachine().getOffset().add(change);
   }
+  else if (mouseButton == LEFT)
+  {
+    if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT))
+    {
+      // dragging a selection area
+      PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+      setBoxVector2(pos);
+    }
+  }
 }
 
 void machineClicked()
@@ -1021,6 +1052,42 @@ void mousePressed()
     middleButtonMachinePress();
     lastMachineDragPosition = getMouseVector();
   }
+  else if (mouseButton == LEFT)
+  {
+    if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT) && mouseOverMachine())
+    {
+      minitoggle_mode_showImage(true);
+      minitoggle_mode_showDensityPreview(false);
+      PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+      setBoxVector1(pos);
+      if (isBoxSpecified())
+      {
+        getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+//        minitoggle_mode_showImage(false);
+//        minitoggle_mode_showDensityPreview(true);
+      }
+    }
+  }
+}
+
+void mouseReleased()
+{
+  if (mouseButton == LEFT)
+  {
+    if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT) && mouseOverMachine())
+    {
+      PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+      setBoxVector2(pos);
+      if (isBoxSpecified())
+      {
+        getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+        minitoggle_mode_showImage(false);
+        minitoggle_mode_showDensityPreview(true);
+        getAllControls().get(MODE_SHOW_IMAGE).setValue(0);
+        getAllControls().get(MODE_SHOW_DENSITY_PREVIEW).setValue(1);
+      }
+    }
+  }
 }
 
 void middleButtonMachinePress()
@@ -1035,31 +1102,6 @@ void leftButtonMachineClick()
   {
     currentMode = MODE_INPUT_BOX_TOP_LEFT;
   }
-  else if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT))
-  {
-    PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
-    setBoxVector1(pos);
-    if (isBoxSpecified())
-    {
-      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
-      minitoggle_mode_showImage(false);
-      minitoggle_mode_showDensityPreview(true);
-    }
-    getAllControls().get(MODE_INPUT_BOX_TOP_LEFT).setValue(0);
-    getAllControls().get(MODE_INPUT_BOX_BOT_RIGHT).setValue(1);
-    currentMode = MODE_INPUT_BOX_BOT_RIGHT;
-  }
-  else if (currentMode.equals(MODE_INPUT_BOX_BOT_RIGHT))
-  {
-    PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
-    setBoxVector2(pos);
-    if (isBoxSpecified())
-    {
-      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
-      minitoggle_mode_showImage(false);
-      minitoggle_mode_showDensityPreview(true);
-    }
-  }
   else if (currentMode.equals(MODE_SET_POSITION))
     sendSetPosition();
   else if (currentMode.equals(MODE_DRAW_DIRECT))
@@ -1069,13 +1111,9 @@ void leftButtonMachineClick()
   else if (currentMode.equals(MODE_MOVE_IMAGE))
   {
     PVector imageSize = getDisplayMachine().inMM(getDisplayMachine().getImageFrame().getSize());
-    println("image size: "+ imageSize);
     PVector mVect = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
-    println("mPos: "+mVect);
     PVector offset = new PVector(imageSize.x/2.0, imageSize.y/2.0);
-    println("offset: "+offset);
     PVector imagePos = new PVector(mVect.x-offset.x, mVect.y-offset.y);
-    println("imagePos: " + imagePos);
 
     imagePos = getDisplayMachine().inSteps(imagePos);
     getDisplayMachine().getImageFrame().setPosition(imagePos.x, imagePos.y);
@@ -1096,7 +1134,8 @@ void mouseWheel(int delta)
 
 boolean isPreviewable(String command)
 {
-  if ((command.startsWith(CMD_CHANGELENGTHDIRECT) || command.startsWith(CMD_CHANGELENGTH)))
+  if ((command.startsWith(CMD_CHANGELENGTHDIRECT) 
+    || command.startsWith(CMD_CHANGELENGTH)))
   {
     return true;
   }
@@ -1112,66 +1151,71 @@ boolean isPreviewable(String command)
 */
 void previewQueue()
 {
-//  
-//  PVector startPoint = null;
-//  
-//  List<String> fullList = new ArrayList<String>();
-//  if (!commandHistory.isEmpty())
-//  {
-//    Integer commandPosition = commandHistory.size()-1;
-//    String lastCommand = "";
-//    while (commandPosition>=0)
-//    {
-//      lastCommand = commandHistory.get(commandPosition);
-//      if (isPreviewable(lastCommand))
-//      {
-//        fullList.add(lastCommand);
-//        break;
-//      }
-//      commandPosition--;
-//    }
-//  }
-//
-//  for (String command : commandQueue)
-//  {
-//    if ((command.startsWith(CMD_CHANGELENGTHDIRECT) || command.startsWith(CMD_CHANGELENGTH)))
-//    {
-//      fullList.add(command);
-//    }
-//  }
-//  
-//  for (String command : fullList)
-//  {
-//    String[] splitted = split(command, ",");
-//    String aLenStr = splitted[1];
-//    String bLenStr = splitted[2];
-//    int aLen = getMachine().inMM(Integer.parseInt(aLenStr));
-//    int bLen = getMachine().inMM(Integer.parseInt(bLenStr));
-//    PVector endPoint = getCartesian(aLen, bLen);
-//    
-//    if (startPoint == null)
-//    {
-//      noStroke();
-//      fill(255,0,255,150);
-//      startPoint = getMachine().asCartesian(currentMachinePos);
-//      ellipse(startPoint.x, startPoint.y, 20, 20);
-//      noFill();
-//    }
-//    
-//    stroke(255);
-//    line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-//    startPoint = endPoint;
-//  }
-//  
-//
-//  if (startPoint != null)
-//  {
-//    noStroke();
-//    fill(200,0,0,128);
-//    ellipse(startPoint.x, startPoint.y, 15,15);
-//    noFill();
-//  }
-//  
+  
+  PVector startPoint = null;
+  
+  List<String> fullList = new ArrayList<String>();
+  if (!commandHistory.isEmpty())
+  {
+    Integer commandPosition = commandHistory.size()-1;
+    String lastCommand = "";
+    while (commandPosition>=0)
+    {
+      lastCommand = commandHistory.get(commandPosition);
+      if (isPreviewable(lastCommand))
+      {
+        fullList.add(lastCommand);
+        break;
+      }
+      commandPosition--;
+    }
+  }
+
+  for (String command : commandQueue)
+  {
+    if ((command.startsWith(CMD_CHANGELENGTHDIRECT) || command.startsWith(CMD_CHANGELENGTH)))
+    {
+      fullList.add(command);
+    }
+  }
+  
+  for (String command : fullList)
+  {
+    String[] splitted = split(command, ",");
+    String aLenStr = splitted[1];
+    String bLenStr = splitted[2];
+    
+    
+    
+    PVector endPoint = new PVector(Integer.parseInt(aLenStr), Integer.parseInt(bLenStr));
+    endPoint = getDisplayMachine().asCartesianCoords(endPoint);
+    endPoint = getDisplayMachine().inMM(endPoint);
+    
+    endPoint = getDisplayMachine().scaleToScreen(endPoint);
+    
+    if (startPoint == null)
+    {
+      noStroke();
+      fill(255,0,255,150);
+      startPoint = getDisplayMachine().scaleToScreen(currentMachinePos);
+      ellipse(startPoint.x, startPoint.y, 20, 20);
+      noFill();
+    }
+    
+    stroke(0);
+    line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+    startPoint = endPoint;
+  }
+  
+
+  if (startPoint != null)
+  {
+    noStroke();
+    fill(200,0,0,128);
+    ellipse(startPoint.x, startPoint.y, 15,15);
+    noFill();
+  }
+  
 }
 
 //  boolean isPixelChromaKey(PVector o)
@@ -1341,24 +1385,6 @@ float getSampleArea()
   return this.sampleArea;
 }
 
-void flipDirection()
-{
-  switch (drawDirection)
-  {
-    case DRAW_DIR_SE:  
-      drawDirection = DRAW_DIR_NW; 
-      break;
-    case DRAW_DIR_SW:  
-      drawDirection = DRAW_DIR_NE; 
-      break;
-    case DRAW_DIR_NW:  
-      drawDirection = DRAW_DIR_SE; 
-      break;
-    case DRAW_DIR_NE:
-      drawDirection = DRAW_DIR_SW; 
-      break;
-  }
-}
 
 void resetQueue()
 {
@@ -1461,7 +1487,10 @@ void drawStatusText(int x, int y)
       else
       {
         fill(200, 200, 0);
-        drawbotStatus = "BUSY: " + lastCommand;
+        String busyDoing = lastCommand;
+        if ("".equals(busyDoing))
+          busyDoing = commandHistory.get(commandHistory.size()-1);
+        drawbotStatus = "BUSY: " + busyDoing;
       }  
     }
     else
@@ -1725,6 +1754,7 @@ void readMachinePosition(String sync)
     Float b = Float.valueOf(currentBPos).floatValue();
     currentMachinePos.x = a;
     currentMachinePos.y = b;  
+    currentMachinePos = getDisplayMachine().inMM(getDisplayMachine().asCartesianCoords(currentMachinePos));
   }
 }
 void readCartesianMachinePosition(String sync)
