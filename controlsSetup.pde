@@ -157,6 +157,11 @@ PVector getMainPanelPosition()
   return this.mainPanelPosition;
 }
 
+void updateNumberboxValues()
+{
+  initialiseNumberboxValues(getAllControls());
+}
+
 Set<String> buildControlsToEnableWhenBoxSpecified()
 {
   Set<String> result = new HashSet<String>();
@@ -223,18 +228,6 @@ Map<String, Controller> buildAllControls()
       controlP5.Label l = n.captionLabel();
       l.style().marginTop = -17; //move upwards (relative to button size)
       l.style().marginLeft = 40; //move to the right
-      if (controlName.equals(MODE_CHANGE_SAMPLE_AREA))
-      {
-        n.setValue(getSampleArea());
-        n.setMin(1);
-        n.setMultiplier(1);
-      }
-      else if (controlName.equals(MODE_CHANGE_GRID_SIZE))
-      {
-        n.setValue(getGridSize());
-        n.setMin(20);
-        n.setMultiplier(5);
-      }
       // change the control direction to left/right
       n.setDirection(Controller.VERTICAL);
       map.put(controlName, n);
@@ -243,8 +236,128 @@ Map<String, Controller> buildAllControls()
   }
   
   initialiseMiniToggleValues(map);
+  initialiseNumberboxValues(map);
   return map;
 }
+
+Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
+{
+  for (String key : map.keySet())
+  {
+    if (key.startsWith("numberbox_"))
+    {
+      Numberbox n = (Numberbox) map.get(key);
+      
+      if (MODE_CHANGE_SAMPLE_AREA.equals(key))
+      {
+        n.setValue(getSampleArea());
+        n.setMin(1);
+        n.setMultiplier(1);
+      }
+      else if (MODE_CHANGE_GRID_SIZE.equals(key))
+      {
+        n.setValue(getGridSize());
+        n.setMin(20);
+        n.setMultiplier(5);
+      }
+      else if (MODE_CHANGE_MACHINE_WIDTH.equals(key))
+      {
+        n.setValue(getDisplayMachine().inMM(getDisplayMachine().getWidth()));
+        n.setMin(20);
+        n.setMultiplier(1);
+      }
+      else if (MODE_CHANGE_MACHINE_HEIGHT.equals(key))
+      {
+        n.setValue(getDisplayMachine().inMM(getDisplayMachine().getHeight()));
+        n.setMin(20);
+        n.setMultiplier(5);
+      }
+      else if (MODE_CHANGE_MM_PER_REV.equals(key))
+      {
+        n.setValue(getDisplayMachine().getMMPerRev());
+        n.setMin(20);
+        n.setMultiplier(5);
+      }
+      else if (MODE_CHANGE_STEPS_PER_REV.equals(key))
+      {
+        n.setValue(getDisplayMachine().getStepsPerRev());
+        n.setMin(20);
+        n.setMultiplier(1);
+      }
+      else if (MODE_CHANGE_PAGE_WIDTH.equals(key))
+      {
+        n.setValue(getDisplayMachine().inMM(getDisplayMachine().getPage().getWidth()));
+        n.setMin(10);
+        n.setMultiplier(1);
+      }
+      else if (MODE_CHANGE_PAGE_HEIGHT.equals(key))
+      {
+        n.setValue(getDisplayMachine().inMM(getDisplayMachine().getPage().getHeight()));
+        n.setMin(10);
+        n.setMultiplier(1);
+      }
+      else if (MODE_CHANGE_PAGE_OFFSET_X.equals(key))
+      {
+        n.setValue(getDisplayMachine().inMM(getDisplayMachine().getPage().getLeft()));
+        n.setMin(0);
+        n.setMultiplier(1);
+      }
+      else if (MODE_CHANGE_PAGE_OFFSET_Y.equals(key))
+      {
+        n.setValue(getDisplayMachine().inMM(getDisplayMachine().getPage().getTop()));
+        n.setMin(0);
+        n.setMultiplier(1);
+      }
+
+      else if (MODE_CHANGE_PEN_WIDTH.equals(key))
+      {
+        n.setDecimalPrecision(2);
+        n.setValue(currentPenWidth);
+        n.setMin(0.01);
+        n.setMultiplier(0.01);
+      }
+      else if (MODE_CHANGE_PEN_TEST_START_WIDTH.equals(key))
+      {
+        n.setDecimalPrecision(2);
+        n.setValue(testPenWidthStartSize);
+        n.setMin(0.01);
+        n.setMultiplier(0.01);
+      }
+      else if (MODE_CHANGE_PEN_TEST_END_WIDTH.equals(key))
+      {
+        n.setDecimalPrecision(2);
+        n.setValue(testPenWidthEndSize);
+        n.setMin(0.01);
+        n.setMultiplier(0.01);
+      }
+      else if (MODE_CHANGE_PEN_TEST_INCREMENT_SIZE.equals(key))
+      {
+        n.setDecimalPrecision(2);
+        n.setValue(testPenWidthIncrementSize);
+        n.setMin(0.01);
+        n.setMultiplier(0.01);
+      }
+      else if (MODE_CHANGE_MACHINE_MAX_SPEED.equals(key))
+      {
+        n.setDecimalPrecision(0);
+        n.setValue(currentMachineMaxSpeed);
+        n.setMin(1);
+        n.setMultiplier(1);
+      }
+      else if (MODE_CHANGE_MACHINE_ACCELERATION.equals(key))
+      {
+        n.setDecimalPrecision(0);
+        n.setValue(currentMachineAccel);
+        n.setMin(1);
+        n.setMultiplier(1);
+      }
+
+
+    }
+  }
+  return map;
+}
+
 
 Map<String, Controller> initialiseMiniToggleValues(Map<String, Controller> map)
 {
@@ -392,7 +505,6 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SCRIBBLE_PIXELS);
-  controlNames.add(MODE_DRAW_TEST_PENWIDTH);
   controlNames.add(MODE_CHANGE_GRID_SIZE);
   controlNames.add(MODE_CHANGE_SAMPLE_AREA);
   controlNames.add(MODE_DRAW_GRID);
@@ -434,9 +546,30 @@ List<String> getControlNamesForDetailPanel()
   controlNames.add(MODE_CHANGE_MACHINE_SPEC);
   controlNames.add(MODE_REQUEST_MACHINE_SIZE);
   controlNames.add(MODE_RESET_MACHINE);
-  controlNames.add(MODE_CLEAR_QUEUE);
-  controlNames.add(MODE_EXPORT_QUEUE);
-  controlNames.add(MODE_IMPORT_QUEUE);
+
+  controlNames.add(MODE_CHANGE_MM_PER_REV);
+  controlNames.add(MODE_CHANGE_STEPS_PER_REV);
+  controlNames.add(MODE_CHANGE_MACHINE_WIDTH);
+  controlNames.add(MODE_CHANGE_MACHINE_HEIGHT);
+  controlNames.add(MODE_CHANGE_PAGE_WIDTH);
+  controlNames.add(MODE_CHANGE_PAGE_HEIGHT);
+  controlNames.add(MODE_CHANGE_PAGE_OFFSET_X);
+  controlNames.add(MODE_CHANGE_PAGE_OFFSET_Y);
+  controlNames.add(MODE_CHANGE_PAGE_OFFSET_X_CENTRE);
+
+  controlNames.add(MODE_CHANGE_PEN_WIDTH);
+  controlNames.add(MODE_SEND_PEN_WIDTH);
+
+  controlNames.add(MODE_CHANGE_PEN_TEST_START_WIDTH);
+  controlNames.add(MODE_CHANGE_PEN_TEST_END_WIDTH);
+  controlNames.add(MODE_CHANGE_PEN_TEST_INCREMENT_SIZE);
+  controlNames.add(MODE_DRAW_TEST_PENWIDTH);
+
+  controlNames.add(MODE_CHANGE_MACHINE_MAX_SPEED);
+  controlNames.add(MODE_CHANGE_MACHINE_ACCELERATION);
+  controlNames.add(MODE_SEND_MACHINE_SPEED);
+
+  
   return controlNames;
 }
 
@@ -491,7 +624,7 @@ Map<String, String> buildControlLabels()
 
   result.put(MODE_CHANGE_MACHINE_SPEC, "Upload machine spec");
   result.put(MODE_REQUEST_MACHINE_SIZE, "Download size spec");
-  result.put(MODE_RESET_MACHINE, "Reset machine");
+  result.put(MODE_RESET_MACHINE, "Reset machine to factory");
   result.put(MODE_SAVE_PROPERTIES, "Save properties");
 
   result.put(MODE_INC_SAMPLE_AREA, "Inc sample size");
@@ -516,6 +649,27 @@ Map<String, String> buildControlLabels()
   result.put(MODE_SHOW_QUEUE_PREVIEW, "Show Queue preview");
   result.put(MODE_SHOW_VECTOR, "Show Vector");
   result.put(MODE_SHOW_GUIDES, "Show Guides");
+
+  result.put(MODE_CHANGE_MACHINE_WIDTH, "Machine Width");
+  result.put(MODE_CHANGE_MACHINE_HEIGHT, "Machine Height");
+  result.put(MODE_CHANGE_MM_PER_REV, "MM Per Rev");
+  result.put(MODE_CHANGE_STEPS_PER_REV, "Steps Per Rev");
+  result.put(MODE_CHANGE_PAGE_WIDTH, "Page Width");
+  result.put(MODE_CHANGE_PAGE_HEIGHT, "Page Height");
+  result.put(MODE_CHANGE_PAGE_OFFSET_X, "Page Pos X");
+  result.put(MODE_CHANGE_PAGE_OFFSET_Y, "Page Pos Y");
+  result.put(MODE_CHANGE_PAGE_OFFSET_X_CENTRE, "Centre page");
+
+  result.put(MODE_CHANGE_PEN_WIDTH, "Pen tip size");
+  result.put(MODE_SEND_PEN_WIDTH, "Send Pen tip size");
+
+  result.put(MODE_CHANGE_PEN_TEST_START_WIDTH, "Pen test start tip");
+  result.put(MODE_CHANGE_PEN_TEST_END_WIDTH, "Pen test end tip");
+  result.put(MODE_CHANGE_PEN_TEST_INCREMENT_SIZE, "Pen test inc size");
+
+  result.put(MODE_CHANGE_MACHINE_MAX_SPEED, "Motor max speed");
+  result.put(MODE_CHANGE_MACHINE_ACCELERATION, "Motor acceleration");
+  result.put(MODE_SEND_MACHINE_SPEED, "Send speed");
   
   return result;
 }
@@ -572,6 +726,29 @@ Set<String> buildControlNames()
   result.add(MODE_SHOW_VECTOR);
   result.add(MODE_SHOW_QUEUE_PREVIEW);
   result.add(MODE_SHOW_GUIDES);
+
+  result.add(MODE_CHANGE_MACHINE_WIDTH);
+  result.add(MODE_CHANGE_MACHINE_HEIGHT);
+  result.add(MODE_CHANGE_MM_PER_REV);
+  result.add(MODE_CHANGE_STEPS_PER_REV);
+  result.add(MODE_CHANGE_PAGE_WIDTH);
+  result.add(MODE_CHANGE_PAGE_HEIGHT);
+  result.add(MODE_CHANGE_PAGE_OFFSET_X);
+  result.add(MODE_CHANGE_PAGE_OFFSET_Y);
+  result.add(MODE_CHANGE_PAGE_OFFSET_X_CENTRE);
+  
+  result.add(MODE_CHANGE_PEN_WIDTH);
+
+  result.add(MODE_CHANGE_PEN_TEST_START_WIDTH);
+  result.add(MODE_CHANGE_PEN_TEST_END_WIDTH);
+  result.add(MODE_CHANGE_PEN_TEST_INCREMENT_SIZE);
+  
+  result.add(MODE_SEND_PEN_WIDTH);
+
+  result.add(MODE_CHANGE_MACHINE_MAX_SPEED);
+  result.add(MODE_CHANGE_MACHINE_ACCELERATION);
+  result.add(MODE_SEND_MACHINE_SPEED);
+
   
   return result;
 }

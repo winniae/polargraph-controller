@@ -290,7 +290,6 @@ void button_mode_importQueue()
 }
 void button_mode_fitImageToBox()
 {
-  setMode(MODE_FIT_IMAGE_TO_BOX);
   sizeImageToFitBox();
   if (isBoxSpecified())
     getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
@@ -304,6 +303,105 @@ void toggle_mode_drawDirect(boolean flag)
     setMode(MODE_DRAW_DIRECT);
   }
 }
+
+void numberbox_mode_changeMachineWidth(float value)
+{
+  clearBoxVectors();
+  float steps = getDisplayMachine().inSteps(value);
+  getDisplayMachine().getSize().x = steps;
+}
+void numberbox_mode_changeMachineHeight(float value)
+{
+  clearBoxVectors();
+  float steps = getDisplayMachine().inSteps(value);
+  getDisplayMachine().getSize().y = steps;
+}
+void numberbox_mode_changeMMPerRev(float value)
+{
+  clearBoxVectors();
+  getDisplayMachine().setMMPerRev(value);
+}
+void numberbox_mode_changeStepsPerRev(float value)
+{
+  clearBoxVectors();
+  getDisplayMachine().setStepsPerRev(value);
+}
+void numberbox_mode_changePageWidth(float value)
+{
+  float steps = getDisplayMachine().inSteps(value);
+  getDisplayMachine().getPage().setWidth(steps);
+}
+void numberbox_mode_changePageHeight(float value)
+{
+  float steps = getDisplayMachine().inSteps(value);
+  getDisplayMachine().getPage().setHeight(steps);
+}
+void numberbox_mode_changePageOffsetX(float value)
+{
+  float steps = getDisplayMachine().inSteps(value);
+  getDisplayMachine().getPage().getTopLeft().x = steps;
+}
+void numberbox_mode_changePageOffsetY(float value)
+{
+  float steps = getDisplayMachine().inSteps(value);
+  getDisplayMachine().getPage().getTopLeft().y = steps;
+}
+void button_mode_changePageOffsetXCentre()
+{
+  float pageWidth = getDisplayMachine().getPage().getWidth();
+  float machineWidth = getDisplayMachine().getSize().x;
+  float diff = (machineWidth - pageWidth) / 2.0;
+  getDisplayMachine().getPage().getTopLeft().x = diff;
+  initialiseNumberboxValues(getAllControls());
+}
+
+void numberbox_mode_changePenWidth(float value)
+{
+  currentPenWidth =  Math.round(value*100.0)/100.0;
+}
+void button_mode_sendPenWidth()
+{
+  NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+  DecimalFormat df = (DecimalFormat)nf;  
+  df.applyPattern("###.##");
+  realtimeCommandQueue.add(CMD_CHANGEPENWIDTH+df.format(currentPenWidth)+",END");
+}  
+
+void numberbox_mode_changePenTestStartWidth(float value)
+{
+  testPenWidthStartSize = Math.round(value*100.0)/100.0;
+}
+void numberbox_mode_changePenTestEndWidth(float value)
+{
+  testPenWidthEndSize = Math.round(value*100.0)/100.0;
+}
+void numberbox_mode_changePenTestIncrementSize(float value)
+{
+  testPenWidthIncrementSize = Math.round(value*100.0)/100.0;
+}
+
+void numberbox_mode_changeMachineMaxSpeed(float value)
+{
+  currentMachineMaxSpeed =  Math.round(value*100.0)/100.0;
+}
+void numberbox_mode_changeMachineAcceleration(float value)
+{
+  currentMachineAccel =  Math.round(value*100.0)/100.0;
+}
+void button_mode_sendMachineSpeed()
+{
+  NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+  DecimalFormat df = (DecimalFormat)nf;  
+
+  df.applyPattern("###.##");
+  realtimeCommandQueue.add(CMD_SETMOTORSPEED+df.format(currentMachineMaxSpeed)+",END");
+
+  df.applyPattern("###.##");
+  realtimeCommandQueue.add(CMD_SETMOTORACCEL+df.format(currentMachineAccel)+",END");
+}
+
+
+
 
 void setMode(String m)
 {

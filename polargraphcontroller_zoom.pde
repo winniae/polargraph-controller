@@ -182,6 +182,27 @@ static final String MODE_SHOW_QUEUE_PREVIEW = "minitoggle_mode_showQueuePreview"
 static final String MODE_SHOW_VECTOR = "minitoggle_mode_showVector";
 static final String MODE_SHOW_GUIDES = "minitoggle_mode_showGuides";
 
+static final String MODE_CHANGE_MACHINE_WIDTH = "numberbox_mode_changeMachineWidth";
+static final String MODE_CHANGE_MACHINE_HEIGHT = "numberbox_mode_changeMachineHeight";
+static final String MODE_CHANGE_MM_PER_REV = "numberbox_mode_changeMMPerRev";
+static final String MODE_CHANGE_STEPS_PER_REV = "numberbox_mode_changeStepsPerRev";
+static final String MODE_CHANGE_PAGE_WIDTH = "numberbox_mode_changePageWidth";
+static final String MODE_CHANGE_PAGE_HEIGHT = "numberbox_mode_changePageHeight";
+static final String MODE_CHANGE_PAGE_OFFSET_X = "numberbox_mode_changePageOffsetX";
+static final String MODE_CHANGE_PAGE_OFFSET_Y = "numberbox_mode_changePageOffsetY";
+static final String MODE_CHANGE_PAGE_OFFSET_X_CENTRE = "button_mode_changePageOffsetXCentre";
+
+static final String MODE_CHANGE_PEN_WIDTH = "numberbox_mode_changePenWidth";
+static final String MODE_SEND_PEN_WIDTH = "button_mode_sendPenWidth";
+
+static final String MODE_CHANGE_PEN_TEST_START_WIDTH = "numberbox_mode_changePenTestStartWidth";
+static final String MODE_CHANGE_PEN_TEST_END_WIDTH = "numberbox_mode_changePenTestEndWidth";
+static final String MODE_CHANGE_PEN_TEST_INCREMENT_SIZE = "numberbox_mode_changePenTestIncrementSize";
+
+static final String MODE_CHANGE_MACHINE_MAX_SPEED = "numberbox_mode_changeMachineMaxSpeed";
+static final String MODE_CHANGE_MACHINE_ACCELERATION = "numberbox_mode_changeMachineAcceleration";
+static final String MODE_SEND_MACHINE_SPEED = "button_mode_sendMachineSpeed";
+
 
 static String currentMode = MODE_BEGIN;
 static String lastMode = MODE_BEGIN;
@@ -237,7 +258,7 @@ public static final String TAB_LABEL_INPUT = "input";
 public static final String TAB_NAME_PREVIEW = "tab_preview";
 public static final String TAB_LABEL_PREVIEW = "Preview";
 public static final String TAB_NAME_DETAILS = "tab_details";
-public static final String TAB_LABEL_DETAILS = "Details";
+public static final String TAB_LABEL_DETAILS = "Setup";
 public static final String TAB_NAME_QUEUE = "tab_queue";
 public static final String TAB_LABEL_QUEUE = "Queue";
 
@@ -386,10 +407,6 @@ void draw()
   {
     drawImagePage();
   }
-//  else if (getCurrentTab() == TAB_NAME_PREVIEW)
-//  {
-//    drawImagePreviewPage();
-//  }
   else if (getCurrentTab() == TAB_NAME_QUEUE)
   {
     drawCommandQueuePage();
@@ -481,54 +498,30 @@ void drawMachineOutline()
 {
   rect(machinePosition.x,machinePosition.y, machinePosition.x+getDisplayMachine().getWidth(), machinePosition.y+getDisplayMachine().getHeight());
 }
-//void drawImagePreviewPage()
-//{
-//  cursor(ARROW);
-//  
-//  strokeWeight(1);
-//  background(100);
-//  noFill();
-////  showPictureFrame();
-//  drawMoveImageOutline();
-//  
-//  // draw machine outline
-////  getDisplayMachine().draw();
-//
-//  for (Panel panel : getPanelsForTab(TAB_NAME_PREVIEW))
-//  {
-//    panel.draw();
-//  }
-//  
-////  showCurrentMachinePosition();
-//  if (displayingInfoTextOnInputPage)
-//    showText(250,45);
-//  drawStatusText(245, 12);
-//  showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
-//
-//}
-
 void drawDetailsPage()
 {
+  strokeWeight(1);
   background(100);
-  cursor(ARROW);
+  noFill();
+  stroke(255, 150, 255, 100);
+  strokeWeight(3);
+  stroke(150);
+  noFill();
+  getDisplayMachine().drawForSetup();
+  stroke(255, 0, 0);
+ 
   for (Panel panel : getPanelsForTab(TAB_NAME_DETAILS))
   {
     panel.draw();
   }
-  drawStatusText(245, 12);
 
-  int right = 0;
-  for (Panel panel : getPanelsForTab(TAB_NAME_DETAILS))
-  {
-    panel.draw();
-    float r = panel.getOutline().getRight();
-    if (r > right)
-      right = (int) r;
-  }
-  showCommandQueue(right, (int)mainPanelPosition.y);
+//  showCurrentMachinePosition();
+  if (displayingInfoTextOnInputPage)
+    showText(250,45);
+  drawStatusText(170, 12);
 
+  showCommandQueue((int) getDisplayMachine().getOutline().getRight()+6, 20);
 }
-
 
 void drawCommandQueuePage()
 {
@@ -796,12 +789,28 @@ boolean mouseOverMachine()
   boolean result = false;
   if (isMachineClickable())
   {
-    if (getDisplayMachine().getOutline().surrounds(getMouseVector()))
+    if (getDisplayMachine().getOutline().surrounds(getMouseVector())
+      && mouseOverControls().isEmpty())
+    {
       result = true;
+    }
     else
       result = false;
   }
   return result;
+}
+
+Set<Controller> mouseOverControls()
+{
+  Set<Controller> set = new HashSet<Controller>(1);
+  for (String key : getAllControls().keySet())
+  {
+    if (getAllControls().get(key).isInside())
+    {
+      set.add(getAllControls().get(key));
+    }
+  }
+  return set;
 }
 
 
@@ -990,10 +999,10 @@ void keyPressed()
 }
 void mouseDragged()
 {
-  if (mouseOverMachine())
-  {
+//  if (mouseOverMachine())
+//  {
     machineDragged();
-  }
+//  }
 }
   
 void mouseClicked()
@@ -1080,6 +1089,18 @@ void mouseReleased()
       setBoxVector2(pos);
       if (isBoxSpecified())
       {
+        if (getBoxVector1().x > getBoxVector2().x)
+        {
+          float temp = getBoxVector1().x;
+          getBoxVector1().x = getBoxVector2().x;
+          getBoxVector2().x = temp;
+        }
+        if (getBoxVector1().y > getBoxVector2().y)
+        {
+          float temp = getBoxVector1().y;
+          getBoxVector1().y = getBoxVector2().y;
+          getBoxVector2().y = temp;
+        }
         getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
         minitoggle_mode_showImage(false);
         minitoggle_mode_showDensityPreview(true);
@@ -1251,11 +1272,12 @@ void previewQueue()
 
 void sizeImageToFitBox()
 {
-  float boxWidth = boxVector2.x - boxVector1.x;
-  float boxHeight = boxVector2.y - boxVector2.y;
-  PVector boxSize = new PVector(boxWidth, boxHeight);
+  PVector boxSize = getDisplayMachine().inSteps(getDisplayMachine().scaleToDisplayMachine(getBoxSize()));
+  PVector boxPos = getDisplayMachine().inSteps(getDisplayMachine().scaleToDisplayMachine(getBoxVector1()));
   
-  Rectangle r = new Rectangle(boxVector1, boxSize);
+  println("image: " + boxSize + ", " + boxPos);
+  
+  Rectangle r = new Rectangle(boxPos, boxSize);
   getDisplayMachine().setImageFrame(r);
 }
 
@@ -1669,6 +1691,11 @@ float getBoxHeight()
   else
     return 0;
 }
+PVector getBoxSize()
+{
+  PVector p = PVector.sub(getBoxVector2(), getBoxVector1());
+  return p;
+}
 
 PVector getBoxPosition()
 {
@@ -1676,6 +1703,13 @@ PVector getBoxPosition()
     return boxVector1;
   else
     return new PVector();
+}
+
+void clearBoxVectors()
+{
+  setBoxVector1(null);
+  setBoxVector2(null);
+  getDisplayMachine().setExtractedPixels(null);
 }
 
 public PVector getHomePoint()
@@ -1782,7 +1816,11 @@ void readMachineSize(String sync)
     Integer intWidth = Integer.parseInt(mWidth);
     Integer intHeight = Integer.parseInt(mHeight);
     
-    getDisplayMachine().setSize(intWidth, intHeight);
+    float fWidth = getDisplayMachine().inSteps(intWidth);
+    float fHeight = getDisplayMachine().inSteps(intHeight);
+    
+    getDisplayMachine().setSize(int(fWidth+0.5), int(fHeight+0.5));
+    updateNumberboxValues();
   }
 }
 

@@ -141,6 +141,83 @@ class DisplayMachine extends Machine
     String dim = inMM(p.x) + " x " + inMM(p.y) + "mm";
     return dim;
   }
+  
+  public void drawForSetup()
+  {
+    // work out the scaling factor.
+    noStroke();
+    // draw machine outline
+
+    fill(80);
+    rect(getOutline().getLeft()+DROP_SHADOW_DISTANCE, getOutline().getTop()+DROP_SHADOW_DISTANCE, getOutline().getWidth(), getOutline().getHeight());
+
+    fill(150);
+    rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
+    text("machine " + getDimensionsAsText(getSize()) + " " + getZoomText(), getOutline().getLeft(), getOutline().getTop());
+
+    if (displayingGuides)
+    {
+      // draw some guides
+      stroke(255, 255, 255, 128);
+      strokeWeight(1);
+      // centre line
+      line(getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getTop(), 
+      getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getBottom());
+  
+      // page top line
+      line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()), 
+      getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
+    }
+
+    // draw page
+    fill(220);
+    rect(getOutline().getLeft()+sc(getPage().getLeft()), 
+    getOutline().getTop()+sc(getPage().getTop()), 
+    sc(getPage().getWidth()), 
+    sc(getPage().getHeight()));
+    text("page " + getDimensionsAsText(getPage()), getOutline().getLeft()+sc(getPage().getLeft()), 
+    getOutline().getTop()+sc(getPage().getTop()));
+    fill(0);
+    text("offset " + getDimensionsAsText(getPage().getPosition()), 
+    getOutline().getLeft()+sc(getPage().getLeft()), 
+    getOutline().getTop()+sc(getPage().getTop())+10);
+    noFill();
+
+
+
+
+    if (displayingGuides 
+      && getOutline().surrounds(getMouseVector())
+      && currentMode != MODE_MOVE_IMAGE
+      && mouseOverControls().isEmpty()
+    )
+    {  
+      drawHangingStrings();
+      drawLineLengthTexts();
+      cursor(CROSS);
+    }
+    else
+    {
+      cursor(ARROW);
+    }
+  }
+  
+  public void drawLineLengthTexts()
+  {
+    PVector actual = inMM(asNativeCoords(inSteps(scaleToDisplayMachine(getMouseVector()))));
+    PVector cart = scaleToDisplayMachine(getMouseVector());
+    NumberFormat nf = NumberFormat.getNumberInstance(Locale.UK);
+    DecimalFormat df = (DecimalFormat)nf;  
+    df.applyPattern("###.#");
+
+    text("Line 1: " + df.format(actual.x) + "mm",getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+18);
+    text("Line 2: " + df.format(actual.y) + "mm",getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+28);
+
+    text("X Position: " + df.format(cart.x) + "mm",getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+42);
+    text("Y Position: " + df.format(cart.y) + "mm",getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+52);
+
+  }
+  
   public void draw()
   {
     // work out the scaling factor.
@@ -218,6 +295,7 @@ class DisplayMachine extends Machine
     if (displayingGuides 
       && getOutline().surrounds(getMouseVector())
       && currentMode != MODE_MOVE_IMAGE
+      && mouseOverControls().isEmpty()
     )
     {  
       drawHangingStrings();
