@@ -999,10 +999,22 @@ void keyPressed()
 }
 void mouseDragged()
 {
-//  if (mouseOverMachine())
-//  {
-    machineDragged();
-//  }
+  if (mouseOverControls().isEmpty())
+  {
+    if (mouseButton == CENTER)
+    {
+      machineDragged();
+    }
+    else if (mouseButton == LEFT)
+    {
+      if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT))
+      {
+        // dragging a selection area
+        PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+        setBoxVector2(pos);
+      }
+    }
+  }
 }
   
 void mouseClicked()
@@ -1032,15 +1044,6 @@ void machineDragged()
     PVector currentPosition = getDisplayMachine().getOutline().getPosition();
     getDisplayMachine().getOffset().add(change);
   }
-  else if (mouseButton == LEFT)
-  {
-    if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT))
-    {
-      // dragging a selection area
-      PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
-      setBoxVector2(pos);
-    }
-  }
 }
 
 void machineClicked()
@@ -1049,10 +1052,6 @@ void machineClicked()
   {
     leftButtonMachineClick();
   }
-//  else if (mouseButton == CENTER)
-//  {
-//    middleButtonMachineClick();
-//  }
 }
 void mousePressed()
 {
@@ -1147,10 +1146,7 @@ void leftButtonMachineClick()
 
 void mouseWheel(int delta) 
 {
-  if (getDisplayMachine().getOutline().surrounds(getMouseVector()))
-  {
-    changeMachineScaling(delta);
-  }
+  changeMachineScaling(delta);
 } 
 
 boolean isPreviewable(String command)
@@ -1272,10 +1268,13 @@ void previewQueue()
 
 void sizeImageToFitBox()
 {
-  PVector boxSize = getDisplayMachine().inSteps(getDisplayMachine().scaleToDisplayMachine(getBoxSize()));
-  PVector boxPos = getDisplayMachine().inSteps(getDisplayMachine().scaleToDisplayMachine(getBoxVector1()));
+//  PVector mmBoxSize = getDisplayMachine().inSteps(getBoxSize());
+//  PVector mmBoxPos = getDisplayMachine().inSteps(getBoxVector1());
+//  println("mm box: " + mmBoxSize);
   
-  println("image: " + boxSize + ", " + boxPos);
+  PVector boxSize = getDisplayMachine().inSteps(getBoxSize());
+  PVector boxPos = getDisplayMachine().inSteps(getBoxVector1());
+  println("image: " + boxSize);
   
   Rectangle r = new Rectangle(boxPos, boxSize);
   getDisplayMachine().setImageFrame(r);
