@@ -490,19 +490,62 @@ void sendOutlineOfBox()
   bl = getDisplayMachine().asNativeCoords(bl);
   br = getDisplayMachine().asNativeCoords(br);
   
-  String command = CMD_CHANGELENGTHDIRECT+(int)tl.x+","+(int)tl.y+",END";
+  String command = CMD_CHANGELENGTHDIRECT+(int)tl.x+","+(int)tl.y+","+getMaxSegmentLength()+",END";
   commandQueue.add(command);
 
-  command = CMD_CHANGELENGTHDIRECT+(int)tr.x+","+(int)tr.y+",END";
+  command = CMD_CHANGELENGTHDIRECT+(int)tr.x+","+(int)tr.y+","+getMaxSegmentLength()+",END";
   commandQueue.add(command);
 
-  command = CMD_CHANGELENGTHDIRECT+(int)br.x+","+(int)br.y+",END";
+  command = CMD_CHANGELENGTHDIRECT+(int)br.x+","+(int)br.y+","+getMaxSegmentLength()+",END";
   commandQueue.add(command);
 
-  command = CMD_CHANGELENGTHDIRECT+(int)bl.x+","+(int)bl.y+",END";
+  command = CMD_CHANGELENGTHDIRECT+(int)bl.x+","+(int)bl.y+","+getMaxSegmentLength()+",END";
   commandQueue.add(command);
 
-  command = CMD_CHANGELENGTHDIRECT+(int)tl.x+","+(int)tl.y+",END";
+  command = CMD_CHANGELENGTHDIRECT+(int)tl.x+","+(int)tl.y+","+getMaxSegmentLength()+",END";
   commandQueue.add(command);
 }
+
+void sendVectorShapes()
+{
+  RPoint[][] pointPaths = loadedShape.getPointsInPaths();      
+  
+  String command = "";
+  
+  for (int i = 1; i<pointPaths.length; i++)
+  {
+    // pen UP!
+    commandQueue.add(CMD_PENUP+"END");
+
+    if (pointPaths[i] != null) 
+    {
+      // get the first point
+      RPoint firstPoint = pointPaths[i][0];
+      PVector p = new PVector(firstPoint.x, firstPoint.y);
+      p = getDisplayMachine().inSteps(p);
+      p = getDisplayMachine().asNativeCoords(p);
+      
+      // move to this point and put the pen down
+      command = CMD_CHANGELENGTH+(int)p.x+","+(int)p.y+",END";
+      commandQueue.add(command);
+      commandQueue.add(CMD_PENDOWN+"END");
+      
+      // ready to draw to the second point
+      for (int j = 1; j<pointPaths[i].length; j++)
+      {
+        RPoint point = pointPaths[i][j];
+        p = new PVector(point.x, point.y);
+        p = getDisplayMachine().inSteps(p);
+        p = getDisplayMachine().asNativeCoords(p);
+        command = CMD_CHANGELENGTHDIRECT+(int)p.x+","+(int)p.y+","+getMaxSegmentLength()+",END";
+        commandQueue.add(command);
+      }
+      
+      // finished drawing that path
+      commandQueue.add(CMD_PENUP+"END");
+    }
+  }
+  
+}
+
 

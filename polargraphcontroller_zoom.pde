@@ -1,3 +1,7 @@
+import geomerative.*;
+import org.apache.batik.svggen.font.table.*;
+import org.apache.batik.svggen.font.*;
+
 /**
   Polargraph controller
   Copyright Sandy Noble 2012.
@@ -29,6 +33,7 @@ import javax.swing.*;
 import processing.serial.*;
 import controlP5.*;
 import java.awt.event.*;
+
 
 ControlP5 cp5;
 
@@ -203,6 +208,8 @@ static final String MODE_CHANGE_MACHINE_MAX_SPEED = "numberbox_mode_changeMachin
 static final String MODE_CHANGE_MACHINE_ACCELERATION = "numberbox_mode_changeMachineAcceleration";
 static final String MODE_SEND_MACHINE_SPEED = "button_mode_sendMachineSpeed";
 
+static final String MODE_RENDER_VECTORS = "button_mode_renderVectors";
+
 
 static String currentMode = MODE_BEGIN;
 static String lastMode = MODE_BEGIN;
@@ -297,6 +304,8 @@ PVector lastMachineDragPosition = new PVector (0.0, 0.0);
 public final float MIN_SCALING = 0.1;
 public final float MAX_SCALING = 4.0;
 
+RShape loadedShape;
+
 void setup()
 {
   println("Running polargraph controller");
@@ -319,6 +328,7 @@ void setup()
   println("Serial ports available on your machine:");
   println(serialPorts);
 
+//  println("getSerialPortNumber()"+getSerialPortNumber());
   if (getSerialPortNumber() >= 0)
   {
     println("About to connect to serial port in slot " + getSerialPortNumber());
@@ -359,6 +369,10 @@ void setup()
   changeTab(TAB_NAME_INPUT, TAB_NAME_INPUT);
 
   addEventListeners();
+  
+  RG.init(this);
+  RG.setPolygonizer(RG.ADAPTATIVE);
+  loadedShape = RG.loadShape("test2.svg");
 }
 void addEventListeners()
 {

@@ -1,30 +1,30 @@
 /**
-  Polargraph controller
-  Copyright Sandy Noble 2012.
-
-  This file is part of Polargraph Controller.
-
-  Polargraph Controller is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  Polargraph Controller is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
-    
-  Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
-  
-  This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
-
-  sandy.noble@gmail.com
-  http://www.polargraph.co.uk/
-  http://code.google.com/p/polargraph/
-*/
+ Polargraph controller
+ Copyright Sandy Noble 2012.
+ 
+ This file is part of Polargraph Controller.
+ 
+ Polargraph Controller is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ Polargraph Controller is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
+ 
+ Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
+ 
+ This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
+ 
+ sandy.noble@gmail.com
+ http://www.polargraph.co.uk/
+ http://code.google.com/p/polargraph/
+ */
 
 class DisplayMachine extends Machine
 {
@@ -112,7 +112,7 @@ class DisplayMachine extends Machine
     int result = (int) f;
     return result;
   }
-  
+
   public void loadNewImageFromFilename(String filename)
   {
     super.loadImageFromFilename(filename);
@@ -121,7 +121,7 @@ class DisplayMachine extends Machine
     Rectangle imageFrame = new Rectangle(super.getImageFrame());
     setImageFrame(imageFrame); // this automatically resizes the image if nec
   }
-  
+
   public final int DROP_SHADOW_DISTANCE = 4;
   public String getZoomText()
   {
@@ -131,7 +131,7 @@ class DisplayMachine extends Machine
     String zoom = df.format(scaling * 100) + "% zoom";
     return zoom;
   }
-  
+
   public String getDimensionsAsText(Rectangle r)
   {
     return getDimensionsAsText(r.getSize());
@@ -141,14 +141,14 @@ class DisplayMachine extends Machine
     String dim = inMM(p.x) + " x " + inMM(p.y) + "mm";
     return dim;
   }
-  
+
   public void drawForSetup()
   {
     // work out the scaling factor.
     noStroke();
     // draw machine outline
 
-    fill(80);
+      fill(80);
     rect(getOutline().getLeft()+DROP_SHADOW_DISTANCE, getOutline().getTop()+DROP_SHADOW_DISTANCE, getOutline().getWidth(), getOutline().getHeight());
 
     fill(150);
@@ -163,7 +163,7 @@ class DisplayMachine extends Machine
       // centre line
       line(getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getTop(), 
       getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getBottom());
-  
+
       // page top line
       line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()), 
       getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
@@ -190,7 +190,7 @@ class DisplayMachine extends Machine
       && getOutline().surrounds(getMouseVector())
       && currentMode != MODE_MOVE_IMAGE
       && mouseOverControls().isEmpty()
-    )
+      )
     {  
       drawHangingStrings();
       drawLineLengthTexts();
@@ -201,7 +201,7 @@ class DisplayMachine extends Machine
       cursor(ARROW);
     }
   }
-  
+
   public void drawLineLengthTexts()
   {
     PVector actual = inMM(asNativeCoords(inSteps(scaleToDisplayMachine(getMouseVector()))));
@@ -210,21 +210,20 @@ class DisplayMachine extends Machine
     DecimalFormat df = (DecimalFormat)nf;  
     df.applyPattern("###.#");
 
-    text("Line 1: " + df.format(actual.x) + "mm",getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+18);
-    text("Line 2: " + df.format(actual.y) + "mm",getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+28);
+    text("Line 1: " + df.format(actual.x) + "mm", getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+18);
+    text("Line 2: " + df.format(actual.y) + "mm", getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+28);
 
-    text("X Position: " + df.format(cart.x) + "mm",getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+42);
-    text("Y Position: " + df.format(cart.y) + "mm",getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+52);
-
+    text("X Position: " + df.format(cart.x) + "mm", getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+42);
+    text("Y Position: " + df.format(cart.y) + "mm", getDisplayMachine().getOutline().getLeft()+10, getDisplayMachine().getOutline().getTop()+52);
   }
-  
+
   public void draw()
   {
     // work out the scaling factor.
     noStroke();
     // draw machine outline
 
-    fill(80);
+      fill(80);
     rect(getOutline().getLeft()+DROP_SHADOW_DISTANCE, getOutline().getTop()+DROP_SHADOW_DISTANCE, getOutline().getWidth(), getOutline().getHeight());
 
     fill(150);
@@ -239,7 +238,7 @@ class DisplayMachine extends Machine
       // centre line
       line(getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getTop(), 
       getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getBottom());
-  
+
       // page top line
       line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()), 
       getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
@@ -262,8 +261,8 @@ class DisplayMachine extends Machine
     {
       float ox = getOutline().getLeft()+sc(getImageFrame().getLeft());
       float oy = getOutline().getTop()+sc(getImageFrame().getTop());
-//      float w = sc(getImageFrame().getWidth());
-//      float h = sc(getImageFrame().getHeight());
+      //      float w = sc(getImageFrame().getWidth());
+      //      float h = sc(getImageFrame().getHeight());
       float w = sc(getImage().width);
       float h = sc(getImage().height);
       tint(255, getImageTransparency());
@@ -292,11 +291,34 @@ class DisplayMachine extends Machine
       drawPictureFrame();
     }
 
+    if (displayingVector)
+    {
+      stroke(255,255,0);
+      
+      RPoint[][] pointPaths = loadedShape.getPointsInPaths();      
+      
+      for(int i = 0; i<pointPaths.length; i++)
+      {
+        if (pointPaths[i] != null) 
+        {
+          beginShape();
+          for (int j = 0; j<pointPaths[i].length; j++)
+          {
+            RPoint point = pointPaths[i][j];
+            vertex(point.x, point.y);
+            ellipse(point.x, point.y, 10, 10);
+          }
+          endShape();
+        }
+      }
+    }
+
+
     if (displayingGuides 
       && getOutline().surrounds(getMouseVector())
       && currentMode != MODE_MOVE_IMAGE
       && mouseOverControls().isEmpty()
-    )
+      )
     {  
       drawHangingStrings();
       drawRows();
@@ -306,7 +328,6 @@ class DisplayMachine extends Machine
     {
       cursor(ARROW);
     }
-
   }
 
   // this scales a value from the screen to be a position on the machine
@@ -382,16 +403,16 @@ class DisplayMachine extends Machine
     // bot right
     line(botRight.x+4, botRight.y, botRight.x+10, botRight.y);
     line(botRight.x, botRight.y+4, botRight.x, botRight.y+10);
-    
+
     // bot left
     line(topLeft.x-4, botRight.y, topLeft.x-10, botRight.y);
     line(topLeft.x, botRight.y+4, topLeft.x, botRight.y+10);
 
     stroke(255);
-    
 
-//    float width = inMM(getPictureFrame().getBotRight().x - getPictureFrame().getTopLeft().x);
-//    println("width: "+ width);
+
+    //    float width = inMM(getPictureFrame().getBotRight().x - getPictureFrame().getTopLeft().x);
+    //    println("width: "+ width);
   }
 
 
@@ -450,13 +471,13 @@ class DisplayMachine extends Machine
       line(scaledPos.x-1, scaledPos.y+1, scaledPos.x+1, scaledPos.y-1);
     }
   }
-  
+
   void drawExtractedPixelDensities()
   {
 
     float pixelSize = inMM(getGridSize()) * getScaling();
     pixelSize = (pixelSize < 1.0) ? 1.0 : pixelSize;
-    
+
     pixelSize = pixelSize * 1.1;
 
     if (getExtractedPixels() != null)
@@ -491,10 +512,10 @@ class DisplayMachine extends Machine
     return getExtractedPixels();
   }
 
-//  public void extractPixelsFromArea(PVector p, PVector s, Float rowSize)
-//  {
-//    extractPixelsFromArea(p, s, rowSize, 0.0);
-//  }
+  //  public void extractPixelsFromArea(PVector p, PVector s, Float rowSize)
+  //  {
+  //    extractPixelsFromArea(p, s, rowSize, 0.0);
+  //  }
 
   public void extractPixelsFromArea(PVector p, PVector s, float rowSize, float sampleSize)
   {
@@ -513,7 +534,7 @@ class DisplayMachine extends Machine
     }
     setExtractedPixels(cartesianPositions);
   }
-  
+
   public Set<PVector> extractNativePixelsFromArea(PVector p, PVector s, float rowSize, float sampleSize)
   {
     // get the native positions from the superclass

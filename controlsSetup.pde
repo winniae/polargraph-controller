@@ -505,6 +505,7 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SCRIBBLE_PIXELS);
+  controlNames.add(MODE_RENDER_VECTORS);
   controlNames.add(MODE_CHANGE_GRID_SIZE);
   controlNames.add(MODE_CHANGE_SAMPLE_AREA);
   controlNames.add(MODE_DRAW_GRID);
@@ -670,6 +671,8 @@ Map<String, String> buildControlLabels()
   result.put(MODE_CHANGE_MACHINE_MAX_SPEED, "Motor max speed");
   result.put(MODE_CHANGE_MACHINE_ACCELERATION, "Motor acceleration");
   result.put(MODE_SEND_MACHINE_SPEED, "Send speed");
+  result.put(MODE_RENDER_VECTORS, "Draw vectors");
+
   
   return result;
 }
@@ -748,6 +751,8 @@ Set<String> buildControlNames()
   result.add(MODE_CHANGE_MACHINE_MAX_SPEED);
   result.add(MODE_CHANGE_MACHINE_ACCELERATION);
   result.add(MODE_SEND_MACHINE_SPEED);
+
+  result.add(MODE_RENDER_VECTORS);
 
   
   return result;

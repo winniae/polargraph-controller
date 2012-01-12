@@ -155,6 +155,11 @@ void button_mode_renderCirclePixel()
 //  if (pixelCentresForMachine != null && !pixelCentresForMachine.isEmpty())
 //    sendCircularPixels();
 }
+void button_mode_renderVectors()
+{
+  sendVectorShapes();
+}
+
 void toggle_mode_setPosition(boolean flag)
 {
   if (flag)
