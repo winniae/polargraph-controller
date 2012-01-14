@@ -313,6 +313,9 @@ void setup()
   println("Running polargraph controller");
   frame.setResizable(true);
 
+  RG.init(this);
+  RG.setPolygonizer(RG.ADAPTATIVE);
+
   try 
   { 
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); 
@@ -372,10 +375,6 @@ void setup()
 
   addEventListeners();
   
-  RG.init(this);
-  RG.setPolygonizer(RG.ADAPTATIVE);
-  if (getVectorFilename() != null && !"".equals(getVectorFilename()))
-    setVectorShape(RG.loadShape(getVectorFilename()));
 }
 void addEventListeners()
 {
@@ -2079,9 +2078,24 @@ void loadFromPropertiesFile()
   {
     homePointX = getDisplayMachine().inMM(defaultX);
     homePointY = getDisplayMachine().inMM(defaultY);
+    println("Loading default homepoint.");
   }
   this.homePointCartesian = new PVector(homePointX, homePointY);
   println("home point loaded: " + homePointCartesian + ", " + getHomePoint());
+  
+  setVectorFilename(getStringProperty("controller.vector.filename", null));
+  if (getVectorFilename() != null)
+  {
+    RShape shape = RG.loadShape(getVectorFilename());
+    if (shape != null) 
+    {
+      setVectorShape(shape);
+    }
+    else 
+    {
+      println("File not found (" + getVectorFilename() + ")");
+    }
+  }
   
   println("Finished loading configuration from properties file.");
 }
@@ -2123,6 +2137,9 @@ void savePropertiesFile()
   
   props.setProperty("controller.homepoint.x", new Float(hp.x).toString());
   props.setProperty("controller.homepoint.y", new Float(hp.y).toString());
+  
+  if (getVectorFilename() != null)
+    props.setProperty("controller.vector.filename", getVectorFilename());
  
   FileOutputStream propertiesOutput = null;
 
