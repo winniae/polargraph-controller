@@ -508,7 +508,7 @@ void sendOutlineOfBox()
 
 void sendVectorShapes()
 {
-  RPoint[][] pointPaths = loadedShape.getPointsInPaths();      
+  RPoint[][] pointPaths = getVectorShape().getPointsInPaths();      
   
   String command = "";
   
@@ -531,7 +531,7 @@ void sendVectorShapes()
       commandQueue.add(CMD_PENDOWN+"END");
       
       // ready to draw to the second point
-      for (int j = 1; j<pointPaths[i].length; j++)
+      for (int j = 0; j<pointPaths[i].length; j++)
       {
         RPoint point = pointPaths[i][j];
         p = new PVector(point.x, point.y);

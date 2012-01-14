@@ -304,7 +304,8 @@ PVector lastMachineDragPosition = new PVector (0.0, 0.0);
 public final float MIN_SCALING = 0.1;
 public final float MAX_SCALING = 4.0;
 
-RShape loadedShape;
+RShape vectorShape = null;
+String vectorFilename = null;
 
 void setup()
 {
@@ -372,7 +373,8 @@ void setup()
   
   RG.init(this);
   RG.setPolygonizer(RG.ADAPTATIVE);
-  loadedShape = RG.loadShape("test2.svg");
+  if (getVectorFilename() != null && !"".equals(getVectorFilename()))
+    setVectorShape(RG.loadShape(getVectorFilename()));
 }
 void addEventListeners()
 {
@@ -471,7 +473,22 @@ void drawDialogBox()
 {
   
 }
-
+String getVectorFilename()
+{
+  return this.vectorFilename;
+}
+void setVectorFilename(String filename)
+{
+  this.vectorFilename = filename;
+}
+RShape getVectorShape()
+{
+  return this.vectorShape;
+}
+void setVectorShape(RShape shape)
+{
+  this.vectorShape = shape;
+}
 
 
 Panel getPanel(String panelName)
@@ -707,6 +724,47 @@ boolean isAcceptableImageFormat(File file)
   String filename = file.getName();
   if (filename.endsWith ("jpg") || filename.endsWith ("jpeg") || filename.endsWith ("png")
   || filename.endsWith ("JPG") || filename.endsWith ("JPEG") || filename.endsWith ("PNG"))
+    return true;
+  else
+    return false;
+}
+
+void loadVectorWithFileChooser()
+{
+  SwingUtilities.invokeLater(new Runnable() 
+  {
+    public void run() {
+      JFileChooser fc = new JFileChooser();
+      
+      fc.setDialogTitle("Choose a vector file...");
+
+      int returned = fc.showOpenDialog(frame);
+      if (returned == JFileChooser.APPROVE_OPTION) 
+      {
+        File file = fc.getSelectedFile();
+        // see if it's an image
+        if (isAcceptableVectorFormat(file))
+        {
+          RShape shape = RG.loadShape(file.getPath());
+          if (shape != null) 
+          {
+            setVectorFilename(file.getPath());
+            setVectorShape(shape);
+          }
+        }
+        else 
+        {
+          println("Not acceptable vector file format (" + file.getPath() + ")");
+        }
+      }
+    }
+  });
+}
+
+boolean isAcceptableVectorFormat(File file)
+{
+  String filename = file.getName();
+  if (filename.endsWith ("svg") || filename.endsWith ("SVG"))
     return true;
   else
     return false;

@@ -291,12 +291,10 @@ class DisplayMachine extends Machine
       drawPictureFrame();
     }
 
-    if (displayingVector)
+    if (displayingVector && getVectorShape() != null)
     {
-      stroke(255,255,0);
-      
-      RPoint[][] pointPaths = loadedShape.getPointsInPaths();      
-      
+      RPoint[][] pointPaths = getVectorShape().getPointsInPaths();      
+      RG.ignoreStyles();
       for(int i = 0; i<pointPaths.length; i++)
       {
         if (pointPaths[i] != null) 
@@ -304,9 +302,11 @@ class DisplayMachine extends Machine
           beginShape();
           for (int j = 0; j<pointPaths[i].length; j++)
           {
-            RPoint point = pointPaths[i][j];
-            vertex(point.x, point.y);
-            ellipse(point.x, point.y, 10, 10);
+            PVector p = new PVector(pointPaths[i][j].x, pointPaths[i][j].y);
+            p = scaleToScreen(p);
+            stroke(0);
+            vertex(p.x, p.y);
+            ellipse(p.x, p.y, 10, 10);
           }
           endShape();
         }
