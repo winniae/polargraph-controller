@@ -18,6 +18,7 @@
  along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
  
  Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
+ Requires the excellent Geomerative library available from http://www.ricardmarxer.com/geomerative/.
  
  This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
  
