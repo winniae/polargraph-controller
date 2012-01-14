@@ -178,7 +178,7 @@ Set<String> buildControlsToEnableWhenBoxSpecified()
   result.add(MODE_RENDER_SCRIBBLE_PIXELS);
   result.add(MODE_CONVERT_BOX_TO_PICTUREFRAME);
   result.add(MODE_FIT_IMAGE_TO_BOX);
-  
+ 
   return result; 
 }
 
@@ -351,6 +351,22 @@ Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
         n.setMin(1);
         n.setMultiplier(1);
       }
+      else if (MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD.equals(key))
+      {
+        n.setDecimalPrecision(0);
+        n.setValue(pixelExtractBrightThreshold);
+        n.setMin(1);
+        n.setMax(255);
+        n.setMultiplier(0.5);
+      }
+      else if (MODE_IMAGE_PIXEL_DARK_THRESHOLD.equals(key))
+      {
+        n.setDecimalPrecision(0);
+        n.setValue(pixelExtractDarkThreshold);
+        n.setMin(1);
+        n.setMax(255);
+        n.setMultiplier(0.5);
+      }
 
 
     }
@@ -501,6 +517,8 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_LOAD_IMAGE);
   controlNames.add(MODE_MOVE_IMAGE);
   controlNames.add(MODE_FIT_IMAGE_TO_BOX);
+  controlNames.add(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD);
+  controlNames.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
   controlNames.add(MODE_RENDER_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
@@ -674,6 +692,9 @@ Map<String, String> buildControlLabels()
   result.put(MODE_SEND_MACHINE_SPEED, "Send speed");
   result.put(MODE_RENDER_VECTORS, "Draw vectors");
   result.put(MODE_LOAD_VECTOR_FILE, "Load vector");
+  
+  result.put(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD, "Bright pixel");
+  result.put(MODE_IMAGE_PIXEL_DARK_THRESHOLD, "Dark pixel");
 
   
   return result;
@@ -756,8 +777,12 @@ Set<String> buildControlNames()
 
   result.add(MODE_RENDER_VECTORS);
   result.add(MODE_LOAD_VECTOR_FILE);
+  result.add(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD);
+  result.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
 
   
   return result;
 }
+
+
 

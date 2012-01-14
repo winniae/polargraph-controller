@@ -163,6 +163,9 @@ static final String MODE_SAVE_PROPERTIES = "button_mode_saveProperties";
 static final String MODE_INC_SAMPLE_AREA = "button_mode_incSampleArea";
 static final String MODE_DEC_SAMPLE_AREA = "button_mode_decSampleArea";
 static final String MODE_INPUT_IMAGE = "button_mode_inputImage";
+static final String MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD = "numberbox_mode_pixelBrightThreshold";
+static final String MODE_IMAGE_PIXEL_DARK_THRESHOLD = "numberbox_mode_pixelDarkThreshold";
+
 static final String MODE_CONVERT_BOX_TO_PICTUREFRAME = "button_mode_convertBoxToPictureframe";
 static final String MODE_SELECT_PICTUREFRAME = "button_mode_selectPictureframe";
 static final String MODE_EXPORT_QUEUE = "button_mode_exportQueue";
@@ -211,6 +214,8 @@ static final String MODE_SEND_MACHINE_SPEED = "button_mode_sendMachineSpeed";
 static final String MODE_RENDER_VECTORS = "button_mode_renderVectors";
 static final String MODE_LOAD_VECTOR_FILE = "button_mode_loadVectorFile";
 
+static final String MODE_PAGE_COLOUR = "colorpicker_mode_pageColour";
+
 
 static String currentMode = MODE_BEGIN;
 static String lastMode = MODE_BEGIN;
@@ -221,6 +226,9 @@ static PVector boxVector2 = null;
 static PVector rowsVector1 = null;
 static PVector rowsVector2 = null;
 
+
+static int pixelExtractBrightThreshold = 255;
+static int pixelExtractDarkThreshold = 0;
 int numberOfPixelsTotal = 0;
 int numberOfPixelsCompleted = 0;
 
@@ -247,7 +255,11 @@ PVector homePointCartesian = null;
 
 
 // used in the preview page
-static Integer pageColour = 100;
+public color pageColour = color(220);
+public color frameColour = color(200,0,0);
+public color machineColour = color(150);
+public color guideColour = color(255);
+public color backgroundColour = color(100);
 
 public boolean showingSummaryOverlay = true;
 public boolean showingDialogBox = false;
@@ -490,6 +502,27 @@ void setVectorShape(RShape shape)
   this.vectorShape = shape;
 }
 
+color getPageColour()
+{
+  return this.pageColour;
+}
+color getMachineColour()
+{
+  return this.machineColour;
+}
+color getBackgroundColour()
+{
+  return this.backgroundColour;
+}
+color getGuideColour()
+{
+  return this.guideColour;
+}
+color getFrameColour()
+{
+  return this.frameColour;
+}
+
 
 Panel getPanel(String panelName)
 {
@@ -499,7 +532,7 @@ Panel getPanel(String panelName)
 void drawImagePage()
 {
   strokeWeight(1);
-  background(100);
+  background(getBackgroundColour());
   noFill();
   stroke(255, 150, 255, 100);
   strokeWeight(3);
@@ -615,22 +648,22 @@ void drawMoveImageOutline()
   }
 }
 
-void showPictureFrame()
-{
-  stroke (255, 255, 0);
-  ellipse(getDisplayMachine().getPictureFrame().getLeft(), getDisplayMachine().getPictureFrame().getTop(), 10, 10);
-
-  stroke (255, 128, 0);
-  ellipse(getDisplayMachine().getPictureFrame().getRight(), getDisplayMachine().getPictureFrame().getTop(), 10, 10);
-
-  stroke (255, 0, 255);
-  ellipse(getDisplayMachine().getPictureFrame().getRight(), getDisplayMachine().getPictureFrame().getBottom(), 10, 10);
-
-  stroke (255, 0, 128);
-  ellipse(getDisplayMachine().getPictureFrame().getLeft(), getDisplayMachine().getPictureFrame().getBottom(), 10, 10);
-  
-  stroke(255);
-}
+//void showPictureFrame()
+//{
+//  stroke (255, 255, 0);
+//  ellipse(getDisplayMachine().getPictureFrame().getLeft(), getDisplayMachine().getPictureFrame().getTop(), 10, 10);
+//
+//  stroke (255, 128, 0);
+//  ellipse(getDisplayMachine().getPictureFrame().getRight(), getDisplayMachine().getPictureFrame().getTop(), 10, 10);
+//
+//  stroke (255, 0, 255);
+//  ellipse(getDisplayMachine().getPictureFrame().getRight(), getDisplayMachine().getPictureFrame().getBottom(), 10, 10);
+//
+//  stroke (255, 0, 128);
+//  ellipse(getDisplayMachine().getPictureFrame().getLeft(), getDisplayMachine().getPictureFrame().getBottom(), 10, 10);
+//  
+//  stroke(255);
+//}
 
 void showCurrentMachinePosition()
 {
@@ -653,7 +686,7 @@ void showGroupBox()
     if (isBoxSpecified())
     {
       noFill();
-      stroke(255,0,0);
+      stroke(getFrameColour());
       strokeWeight(1);
       PVector topLeft = getDisplayMachine().scaleToScreen(boxVector1);
       PVector botRight = getDisplayMachine().scaleToScreen(boxVector2);
@@ -662,7 +695,7 @@ void showGroupBox()
     else 
     {
       noFill();
-      stroke(255,0,0);
+      stroke(getFrameColour());
       strokeWeight(1);
   
       if (getBoxVector1() != null)
@@ -1312,34 +1345,15 @@ void previewQueue()
   
 }
 
-//  boolean isPixelChromaKey(PVector o)
-//  {
-//    
-//    PVector v = PVector.sub(o, getImageFrame().getTopLeft());
-//    
-//    if (v.x < getImage().width && v.y < getImage().height)
-//    {
-//      // get pixels from the vector coords
-//      color centrePixel = getImage().get((int)v.x, (int)v.y);
-//      float r = red(centrePixel);
-//      float g = green(centrePixel);
-//      float b = blue(centrePixel);
-//      
-//      if (g > 253.0 
-//      && r != g 
-//      && b != g)
-//      {
-//  //      println("is chroma key " + red(centrePixel) + ", "+green(centrePixel)+","+blue(centrePixel));
-//        return true;
-//      }
-//      else
-//      {
-//  //      println("isn't chroma key " + red(centrePixel) + ", "+green(centrePixel)+","+blue(centrePixel));
-//        return false;
-//      }
-//    }
-//    else return false;
-//  }
+
+
+boolean isHiddenPixel(PVector p)
+{
+  if ((p.z > pixelExtractBrightThreshold) || (p.z < pixelExtractDarkThreshold))
+    return true;
+  else
+    return false;
+}
   
 
 

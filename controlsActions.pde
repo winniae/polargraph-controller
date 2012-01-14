@@ -205,6 +205,14 @@ void button_mode_loadVectorFile()
 {
   loadVectorWithFileChooser();
 }
+void numberbox_mode_pixelBrightThreshold(float value)
+{
+  pixelExtractBrightThreshold = int(value+0.5);
+}
+void numberbox_mode_pixelDarkThreshold(float value)
+{
+  pixelExtractDarkThreshold = int(value+0.5);
+}
 
 void button_mode_pauseQueue()
 {

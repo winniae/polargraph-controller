@@ -37,6 +37,8 @@ class DisplayMachine extends Machine
   private Set<PVector> extractedPixels = new HashSet<PVector>(0);
 
   PImage scaledImage = null;
+  
+  private PVector currentPixel = null;
 
   public DisplayMachine(Machine m, PVector offset, float scaling)
   {
@@ -112,6 +114,15 @@ class DisplayMachine extends Machine
     int result = (int) f;
     return result;
   }
+  
+  public PVector getCurrentPixel()
+  {
+    return this.currentPixel;
+  }
+  public void setCurrentPixel(PVector p)
+  {
+    this.currentPixel = p;
+  }
 
   public void loadNewImageFromFilename(String filename)
   {
@@ -148,17 +159,18 @@ class DisplayMachine extends Machine
     noStroke();
     // draw machine outline
 
-      fill(80);
+    // drop shadow
+    fill(80);
     rect(getOutline().getLeft()+DROP_SHADOW_DISTANCE, getOutline().getTop()+DROP_SHADOW_DISTANCE, getOutline().getWidth(), getOutline().getHeight());
 
-    fill(150);
+    fill(getMachineColour());
     rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
     text("machine " + getDimensionsAsText(getSize()) + " " + getZoomText(), getOutline().getLeft(), getOutline().getTop());
 
     if (displayingGuides)
     {
       // draw some guides
-      stroke(255, 255, 255, 128);
+      stroke(getGuideColour());
       strokeWeight(1);
       // centre line
       line(getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getTop(), 
@@ -170,7 +182,7 @@ class DisplayMachine extends Machine
     }
 
     // draw page
-    fill(220);
+    fill(getPageColour());
     rect(getOutline().getLeft()+sc(getPage().getLeft()), 
     getOutline().getTop()+sc(getPage().getTop()), 
     sc(getPage().getWidth()), 
@@ -226,14 +238,14 @@ class DisplayMachine extends Machine
       fill(80);
     rect(getOutline().getLeft()+DROP_SHADOW_DISTANCE, getOutline().getTop()+DROP_SHADOW_DISTANCE, getOutline().getWidth(), getOutline().getHeight());
 
-    fill(150);
+    fill(getMachineColour());
     rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
     text("machine " + getDimensionsAsText(getSize()) + " " + getZoomText(), getOutline().getLeft(), getOutline().getTop());
 
     if (displayingGuides)
     {
       // draw some guides
-      stroke(255, 255, 255, 128);
+      stroke(getGuideColour());
       strokeWeight(1);
       // centre line
       line(getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getTop(), 
@@ -245,7 +257,7 @@ class DisplayMachine extends Machine
     }
 
     // draw page
-    fill(220);
+    fill(getPageColour());
     rect(getOutline().getLeft()+sc(getPage().getLeft()), 
     getOutline().getTop()+sc(getPage().getTop()), 
     sc(getPage().getWidth()), 
@@ -306,7 +318,7 @@ class DisplayMachine extends Machine
             p = scaleToScreen(p);
             stroke(0);
             vertex(p.x, p.y);
-            ellipse(p.x, p.y, 10, 10);
+            ellipse(p.x, p.y, 3, 3);
           }
           endShape();
         }
@@ -319,7 +331,7 @@ class DisplayMachine extends Machine
       && currentMode != MODE_MOVE_IMAGE
       && mouseOverControls().isEmpty()
       )
-    {  
+    {
       drawHangingStrings();
       drawRows();
       cursor(CROSS);
@@ -390,7 +402,7 @@ class DisplayMachine extends Machine
     PVector topLeft = scaleToScreen(inMM(getPictureFrame().getTopLeft()));
     PVector botRight = scaleToScreen(inMM(getPictureFrame().getBotRight()));
 
-    stroke (255, 0, 0);
+    stroke (getFrameColour());
 
     // top left    
     line(topLeft.x-4, topLeft.y, topLeft.x-10, topLeft.y);
@@ -444,7 +456,6 @@ class DisplayMachine extends Machine
     // and finally, because scaleToScreen also allows for the machine position (offset), subtract it.
     mVect.sub(getOffset());
 
-
     float rowThickness = inMM(getGridSize()) * getScaling();
     rowThickness = (rowThickness < 1.0) ? 1.0 : rowThickness;
     strokeWeight(rowThickness);
@@ -456,6 +467,7 @@ class DisplayMachine extends Machine
 
     dia = mVect.y*2;
     arc(getOutline().getRight(), getOutline().getTop(), dia, dia, 1.57079633, 3.14159266);
+    
   }
 
   void drawExtractedPixelCentres()
@@ -484,11 +496,14 @@ class DisplayMachine extends Machine
     {
       for (PVector cartesianPos : getExtractedPixels())
       {
-        // scale em, danno.
-        PVector scaledPos = scaleToScreen(cartesianPos);
-        noStroke();
-        fill(cartesianPos.z);
-        ellipse(scaledPos.x, scaledPos.y, pixelSize, pixelSize);
+        if ((cartesianPos.z <= pixelExtractBrightThreshold) && (cartesianPos.z >= pixelExtractDarkThreshold))
+        {
+          // scale em, danno.
+          PVector scaledPos = scaleToScreen(cartesianPos);
+          noStroke();
+          fill(cartesianPos.z);
+          ellipse(scaledPos.x, scaledPos.y, pixelSize, pixelSize);
+        }
       }
     }
     noFill();
@@ -512,11 +527,6 @@ class DisplayMachine extends Machine
     return getExtractedPixels();
   }
 
-  //  public void extractPixelsFromArea(PVector p, PVector s, Float rowSize)
-  //  {
-  //    extractPixelsFromArea(p, s, rowSize, 0.0);
-  //  }
-
   public void extractPixelsFromArea(PVector p, PVector s, float rowSize, float sampleSize)
   {
     // get the native positions from the superclass
@@ -534,6 +544,7 @@ class DisplayMachine extends Machine
     }
     setExtractedPixels(cartesianPositions);
   }
+  
 
   public Set<PVector> extractNativePixelsFromArea(PVector p, PVector s, float rowSize, float sampleSize)
   {

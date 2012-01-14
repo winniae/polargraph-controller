@@ -215,7 +215,7 @@ class Machine
 
       extractedPixels = getImage().get(originX, originY, 1, 1);
       extractedPixels.loadPixels();
-
+      
       if (dim >= 2)
       {
         int halfDim = (int)dim / (int)2.0;
@@ -266,6 +266,41 @@ class Machine
     }
     
     return averageBrightness;
+  }
+
+  boolean isChromaKey(PVector o)
+  {
+    if (getImageFrame().surrounds(o))
+    {
+      // offset it by image position to get position over image
+      PVector offsetPos = PVector.sub(o, getImageFrame().getPosition());
+      int originX = (int) offsetPos.x;
+      int originY = (int) offsetPos.y;
+      
+      PImage centrePixel = null;
+
+      centrePixel = getImage().get(originX, originY, 1, 1);
+      centrePixel.loadPixels();
+
+      // get pixels from the vector coords
+      float r = red(centrePixel.pixels[0]);
+      float g = green(centrePixel.pixels[0]);
+      float b = blue(centrePixel.pixels[0]);
+      
+      if (g > 253.0 
+      && r != g 
+      && b != g)
+      {
+        println("is chroma key " + r + ", "+g+","+b);
+        return true;
+      }
+      else
+      {
+        println("isn't chroma key " + r + ", "+g+","+b);
+        return false;
+      }
+    }
+    else return false;
   }
     
   public PVector asNativeCoords(PVector cartCoords)
@@ -545,12 +580,15 @@ class Machine
         PVector cartesianCoord = asCartesianCoords(nativeCoord);
         if (selectedArea.surrounds(cartesianCoord))
         {
-          if (sampleSize >= 1.0)
+          if (!isChromaKey(cartesianCoord))
           {
-            float brightness = getPixelBrightness(cartesianCoord, sampleSize);
-            nativeCoord.z = brightness;
+            if (sampleSize >= 1.0)
+            {
+              float brightness = getPixelBrightness(cartesianCoord, sampleSize);
+              nativeCoord.z = brightness;
+            }
+            nativeCoords.add(nativeCoord);
           }
-          nativeCoords.add(nativeCoord);
         }
       }
     }

@@ -125,7 +125,7 @@ void sendMoveToPosition(boolean direct)
   p = getDisplayMachine().asNativeCoords(p);
   if (direct)
   {
-    command = CMD_CHANGELENGTHDIRECT+p.x+","+p.y+","+getMaxSegmentLength()+",END";
+    command = CMD_CHANGELENGTHDIRECT+int(p.x+0.5)+","+int(p.y+0.5)+","+getMaxSegmentLength()+",END";
   }
   else
     command = CMD_CHANGELENGTH+(int)p.x+","+(int)p.y+",END";
@@ -301,8 +301,25 @@ void sortPixelsInRows(SortedMap<Float, List<PVector>> inRows, int initialDirecti
 }
 
 
+
 void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, float maxPixelSize, boolean scaleSizeToDensity)
 {
+  // remove pixels outside of thresholds
+  Set<PVector> pixelsToSkip = new HashSet<PVector>();
+  for (PVector p : pixels)
+  {
+    if (isHiddenPixel(p))
+    {
+      pixelsToSkip.add(p);
+    }
+  }
+  
+  for (PVector p : pixelsToSkip)
+  {
+    if (pixels.contains(p))
+      pixels.remove(p);
+  }
+  
   // sort it into a map of rows, keyed by y coordinate value
   SortedMap<Float, List<PVector>> inRows = divideIntoRows(pixels, initialDirection);
   
