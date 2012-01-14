@@ -209,6 +209,7 @@ static final String MODE_CHANGE_MACHINE_ACCELERATION = "numberbox_mode_changeMac
 static final String MODE_SEND_MACHINE_SPEED = "button_mode_sendMachineSpeed";
 
 static final String MODE_RENDER_VECTORS = "button_mode_renderVectors";
+static final String MODE_LOAD_VECTOR_FILE = "button_mode_loadVectorFile";
 
 
 static String currentMode = MODE_BEGIN;
@@ -689,44 +690,43 @@ void loadImageWithFileChooser()
   {
     public void run() {
       JFileChooser fc = new JFileChooser();
+      fc.setFileFilter(new ImageFileFilter());
       
-      fc.setDialogTitle("Choose a file...");
+      fc.setDialogTitle("Choose an image file...");
 
       int returned = fc.showOpenDialog(frame);
       if (returned == JFileChooser.APPROVE_OPTION) 
       {
         File file = fc.getSelectedFile();
         // see if it's an image
-        if (isAcceptableImageFormat(file))
+        PImage img = loadImage(file.getPath());
+        if (img != null) 
         {
-          PImage img = loadImage(file.getPath());
-          if (img != null) 
+          img = null;
+          getDisplayMachine().loadNewImageFromFilename(file.getPath());
+          if (isBoxSpecified())
           {
-            img = null;
-            getDisplayMachine().loadNewImageFromFilename(file.getPath());
-            if (isBoxSpecified())
-            {
-              //getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
-            }
+            getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
           }
-        }
-        else 
-        {
-          println("Not acceptable file format (" + file.getPath() + ")");
         }
       }
     }
   });
 }
 
-boolean isAcceptableImageFormat(File file)
+class ImageFileFilter extends javax.swing.filechooser.FileFilter 
 {
-  String filename = file.getName();
-  if (filename.endsWith ("jpg") || filename.endsWith ("jpeg") || filename.endsWith ("png")
-  || filename.endsWith ("JPG") || filename.endsWith ("JPEG") || filename.endsWith ("PNG"))
-    return true;
-  else
-    return false;
+  public boolean accept(File file) {
+      String filename = file.getName();
+      filename.toLowerCase();
+      if (file.isDirectory() || filename.endsWith(".png") || filename.endsWith(".jpg") || filename.endsWith(".jpeg")) 
+        return true;
+      else
+        return false;
+  }
+  public String getDescription() {
+      return "Image files (PNG or JPG)";
+  }
 }
 
 void loadVectorWithFileChooser()
@@ -735,6 +735,7 @@ void loadVectorWithFileChooser()
   {
     public void run() {
       JFileChooser fc = new JFileChooser();
+      fc.setFileFilter(new VectorFileFilter());
       
       fc.setDialogTitle("Choose a vector file...");
 
@@ -742,8 +743,7 @@ void loadVectorWithFileChooser()
       if (returned == JFileChooser.APPROVE_OPTION) 
       {
         File file = fc.getSelectedFile();
-        // see if it's an image
-        if (isAcceptableVectorFormat(file))
+        if (file.exists())
         {
           RShape shape = RG.loadShape(file.getPath());
           if (shape != null) 
@@ -751,24 +751,30 @@ void loadVectorWithFileChooser()
             setVectorFilename(file.getPath());
             setVectorShape(shape);
           }
-        }
-        else 
-        {
-          println("Not acceptable vector file format (" + file.getPath() + ")");
+          else 
+          {
+            println("File not found (" + file.getPath() + ")");
+          }
         }
       }
     }
   });
 }
-
-boolean isAcceptableVectorFormat(File file)
+class VectorFileFilter extends javax.swing.filechooser.FileFilter 
 {
-  String filename = file.getName();
-  if (filename.endsWith ("svg") || filename.endsWith ("SVG"))
-    return true;
-  else
-    return false;
+  public boolean accept(File file) {
+      String filename = file.getName();
+      filename.toLowerCase();
+      if (file.isDirectory() || filename.endsWith(".svg")) 
+        return true;
+      else
+        return false;
+  }
+  public String getDescription() {
+      return "Vector graphic files (SVG)";
+  }
 }
+
 
 void setPictureFrameDimensionsToBox()
 {

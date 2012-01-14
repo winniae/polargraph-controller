@@ -146,6 +146,11 @@ class Panel
           locked = true;        
         }
       }
+      
+      if (c.name().equals(MODE_RENDER_VECTORS) && getVectorShape() == null)
+      {
+        locked = true;
+      }
 
       int col = c.getColor().getBackground();      
       setLock(c, locked);

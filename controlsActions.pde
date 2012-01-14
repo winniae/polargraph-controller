@@ -201,6 +201,11 @@ void button_mode_loadImage()
 {
   loadImageWithFileChooser();
 }
+void button_mode_loadVectorFile()
+{
+  loadVectorWithFileChooser();
+}
+
 void button_mode_pauseQueue()
 {
 }

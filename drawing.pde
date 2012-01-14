@@ -512,7 +512,7 @@ void sendVectorShapes()
   
   String command = "";
   
-  for (int i = 1; i<pointPaths.length; i++)
+  for (int i = 0; i<pointPaths.length; i++)
   {
     // pen UP!
     commandQueue.add(CMD_PENUP+"END");
