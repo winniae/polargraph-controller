@@ -89,7 +89,7 @@ String commandStatus = "Waiting for a click.";
 
 float sampleArea = 10;
 float gridSize = 75.0;
-float currentPenWidth = 1.2;
+float currentPenWidth = 0.8;
 float penIncrement = 0.05;
 
 float currentMachineMaxSpeed = 600.0;
@@ -265,8 +265,8 @@ public color backgroundColour = color(100);
 public boolean showingSummaryOverlay = true;
 public boolean showingDialogBox = false;
 
-public Integer windowWidth = 900;
-public Integer windowHeight = 550;
+public Integer windowWidth = 650;
+public Integer windowHeight = 400;
 
 public static Integer serialPortNumber = -1;
 
@@ -2063,7 +2063,7 @@ void loadFromPropertiesFile()
   getDisplayMachine().loadDefinitionFromProperties(getProperties());
   
   // pen size
-  this.currentPenWidth = getFloatProperty("machine.pen.size", 1.0);
+  this.currentPenWidth = getFloatProperty("machine.pen.size", 0.8);
 
   this.currentMachineMaxSpeed = getFloatProperty("machine.motors.maxSpeed", 600.0);
   this.currentMachineAccel = getFloatProperty("machine.motors.accel", 400.0);
@@ -2075,14 +2075,14 @@ void loadFromPropertiesFile()
   this.gridSize = getFloatProperty("controller.grid.size", 100.0);
   this.sampleArea = getIntProperty("controller.pixel.samplearea", 2);
   // initial screen size
-  this.windowWidth = getIntProperty("controller.window.width", 800);
-  this.windowHeight = getIntProperty("controller.window.height", 550);
+  this.windowWidth = getIntProperty("controller.window.width", 650);
+  this.windowHeight = getIntProperty("controller.window.height", 400);
 
   this.testPenWidthStartSize = getFloatProperty("controller.testPenWidth.startSize", 0.5);
   this.testPenWidthEndSize = getFloatProperty("controller.testPenWidth.endSize", 2.0);
   this.testPenWidthIncrementSize = getFloatProperty("controller.testPenWidth.incrementSize", 0.5);
   
-  this.maxSegmentLength = getIntProperty("controller.maxSegmentLength", 20);
+  this.maxSegmentLength = getIntProperty("controller.maxSegmentLength", 1);
   
   float defaultX = getDisplayMachine().getWidth() / 2.0;
   float defaultY = getDisplayMachine().getPage().getTop();

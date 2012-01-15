@@ -99,7 +99,7 @@ void sendMachineSpec()
   // ask for input to get the new machine size
   String command = CMD_CHANGEMACHINENAME+newMachineName+",END";
   commandQueue.add(command);
-  command = CMD_CHANGEMACHINESIZE+getDisplayMachine().getWidth()+","+getDisplayMachine().getHeight()+",END";
+  command = CMD_CHANGEMACHINESIZE+getDisplayMachine().inMM(getDisplayMachine().getWidth())+","+getDisplayMachine().inMM(getDisplayMachine().getHeight())+",END";
   commandQueue.add(command);
   command = CMD_CHANGEMACHINEMMPERREV+getDisplayMachine().getMMPerRev()+",END";
   commandQueue.add(command);
