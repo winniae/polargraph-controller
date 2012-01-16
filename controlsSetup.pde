@@ -356,7 +356,7 @@ Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
       {
         n.setDecimalPrecision(0);
         n.setValue(pixelExtractBrightThreshold);
-        n.setMin(1);
+        n.setMin(0);
         n.setMax(255);
         n.setMultiplier(0.5);
       }
@@ -364,7 +364,7 @@ Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
       {
         n.setDecimalPrecision(0);
         n.setValue(pixelExtractDarkThreshold);
-        n.setMin(1);
+        n.setMin(0);
         n.setMax(255);
         n.setMultiplier(0.5);
       }
