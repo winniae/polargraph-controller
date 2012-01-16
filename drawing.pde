@@ -175,8 +175,7 @@ void sendSetPosition()
 
 void sendSetHomePosition()
 {
-  PVector homePoint = getDisplayMachine().inSteps(getHomePoint());
-  PVector pgCoords = getDisplayMachine().asNativeCoords(homePoint);
+  PVector pgCoords = getDisplayMachine().asNativeCoords(getHomePoint());
   
   String command = CMD_SETPOSITION+int(pgCoords.x+0.5)+","+int(pgCoords.y+0.5)+",END";
   commandQueue.add(command);

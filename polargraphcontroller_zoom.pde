@@ -35,6 +35,9 @@ import processing.serial.*;
 import controlP5.*;
 import java.awt.event.*;
 
+int majorVersionNo = 2;
+int minorVersionNo = 0;
+int buildNo = 1;
 
 ControlP5 cp5;
 
@@ -201,6 +204,10 @@ static final String MODE_CHANGE_PAGE_OFFSET_X = "numberbox_mode_changePageOffset
 static final String MODE_CHANGE_PAGE_OFFSET_Y = "numberbox_mode_changePageOffsetY";
 static final String MODE_CHANGE_PAGE_OFFSET_X_CENTRE = "button_mode_changePageOffsetXCentre";
 
+static final String MODE_CHANGE_HOMEPOINT_X = "numberbox_mode_changeHomePointX";
+static final String MODE_CHANGE_HOMEPOINT_Y = "numberbox_mode_changeHomePointY";
+static final String MODE_CHANGE_HOMEPOINT_X_CENTRE = "button_mode_changeHomePointXCentre";
+
 static final String MODE_CHANGE_PEN_WIDTH = "numberbox_mode_changePenWidth";
 static final String MODE_SEND_PEN_WIDTH = "button_mode_sendPenWidth";
 
@@ -215,7 +222,6 @@ static final String MODE_SEND_MACHINE_SPEED = "button_mode_sendMachineSpeed";
 static final String MODE_RENDER_VECTORS = "button_mode_renderVectors";
 static final String MODE_LOAD_VECTOR_FILE = "button_mode_loadVectorFile";
 
-static final String MODE_PAGE_COLOUR = "colorpicker_mode_pageColour";
 
 
 static String currentMode = MODE_BEGIN;
@@ -261,6 +267,8 @@ public color frameColour = color(200,0,0);
 public color machineColour = color(150);
 public color guideColour = color(255);
 public color backgroundColour = color(100);
+public color densityPreviewColour = color(0);
+
 
 public boolean showingSummaryOverlay = true;
 public boolean showingDialogBox = false;
@@ -2061,7 +2069,13 @@ Properties getProperties()
 void loadFromPropertiesFile()
 {
   getDisplayMachine().loadDefinitionFromProperties(getProperties());
-  
+  this.pageColour = getColourProperty("controller.page.colour", color(220));
+  this.frameColour = getColourProperty("controller.frame.colour", color(200,0,0));
+  this.machineColour = getColourProperty("controller.machine.colour", color(150));
+  this.guideColour = getColourProperty("controller.guide.colour", color(255));
+  this.backgroundColour = getColourProperty("controller.background.colour", color(100));
+  this.densityPreviewColour = getColourProperty("controller.densitypreview.colour", color(0));
+
   // pen size
   this.currentPenWidth = getFloatProperty("machine.pen.size", 0.8);
 
@@ -2084,18 +2098,18 @@ void loadFromPropertiesFile()
   
   this.maxSegmentLength = getIntProperty("controller.maxSegmentLength", 1);
   
-  float defaultX = getDisplayMachine().getWidth() / 2.0;
-  float defaultY = getDisplayMachine().getPage().getTop();
-  float homePointX = getFloatProperty("controller.homepoint.x", getDisplayMachine().inMM(defaultX));
-  float homePointY = getFloatProperty("controller.homepoint.y", getDisplayMachine().inMM(defaultY));
+  float homePointX = getFloatProperty("controller.homepoint.x", 0.0);
+  float homePointY = getFloatProperty("controller.homepoint.y", 0.0);
   
   if (homePointX == 0.0)
   {
-    homePointX = getDisplayMachine().inMM(defaultX);
-    homePointY = getDisplayMachine().inMM(defaultY);
+    float defaultX = getDisplayMachine().getWidth() / 2.0;    // in steps
+    float defaultY = getDisplayMachine().getPage().getTop();  // in steps
+//    homePointX = getDisplayMachine().inMM(defaultX);
+//    homePointY = getDisplayMachine().inMM(defaultY);
     println("Loading default homepoint.");
   }
-  this.homePointCartesian = new PVector(homePointX, homePointY);
+  this.homePointCartesian = new PVector(getDisplayMachine().inSteps(homePointX), getDisplayMachine().inSteps(homePointY));
   println("home point loaded: " + homePointCartesian + ", " + getHomePoint());
   
   setVectorFilename(getStringProperty("controller.vector.filename", null));
@@ -2120,6 +2134,14 @@ void savePropertiesFile()
   Properties props = new Properties();
   
   props = getDisplayMachine().loadDefinitionIntoProperties(props);
+
+  props.setProperty("controller.page.colour", hex(this.pageColour, 6));
+  props.setProperty("controller.frame.colour", hex(this.frameColour,6));
+  props.setProperty("controller.machine.colour", hex(this.machineColour,6));
+  props.setProperty("controller.guide.colour", hex(this.guideColour,6));
+  props.setProperty("controller.background.colour", hex(this.backgroundColour,6));
+  props.setProperty("controller.densitypreview.colour", hex(this.densityPreviewColour,6));
+
   
   // pen size
   props.setProperty("machine.pen.size", new Float(currentPenWidth).toString());
@@ -2149,6 +2171,8 @@ void savePropertiesFile()
   }
   else
     hp = new PVector(0.0, 0.0);
+    
+  hp = getDisplayMachine().inMM(hp);
   
   props.setProperty("controller.homepoint.x", new Float(hp.x).toString());
   props.setProperty("controller.homepoint.y", new Float(hp.y).toString());
@@ -2214,6 +2238,45 @@ float getFloatProperty(String id, float defVal)
 String getStringProperty(String id, String defVal)
 {
   return getProperties().getProperty(id, defVal);
+}
+color getColourProperty(String id, color defVal)
+{
+  color col = color(180);
+  String colStr = getProperties().getProperty(id, "");
+  if ("".equals(colStr))
+  {
+    col = defVal;
+  }
+  
+  if (colStr.length() == 1)
+  {
+    // single value grey
+    colStr = colStr+colStr;
+    col = color(unhex(colStr));
+  }
+  else if (colStr.length() == 3)
+  {
+    // 3 digit rgb
+    String d1 = colStr.substring(0,1);
+    String d2 = colStr.substring(1,2);
+    String d3 = colStr.substring(2,3);
+    d1 = d1+d1;
+    d2 = d2+d2;
+    d3 = d3+d3;
+    
+    col = color(unhex(d1), unhex(d2), unhex(d3));
+  }
+  else if  (colStr.length() == 6)
+  {
+    // 6 digit rgb
+    String d1 = colStr.substring(0,2);
+    String d2 = colStr.substring(2,4);
+    String d3 = colStr.substring(4,6);
+    
+    col = color(unhex(d1), unhex(d2), unhex(d3));
+  }
+  
+  return col;
 }
 
 Integer getSerialPortNumber()

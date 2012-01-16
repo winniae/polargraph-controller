@@ -374,6 +374,25 @@ void button_mode_changePageOffsetXCentre()
   initialiseNumberboxValues(getAllControls());
 }
 
+void numberbox_mode_changeHomePointX(float value)
+{
+  float steps = getDisplayMachine().inSteps(value);
+  getHomePoint().x = steps;
+}
+void numberbox_mode_changeHomePointY(float value)
+{
+  float steps = getDisplayMachine().inSteps(value);
+  getHomePoint().y = steps;
+}
+void button_mode_changeHomePointXCentre()
+{
+  float halfWay = getDisplayMachine().getSize().x / 2.0;
+  getHomePoint().x = halfWay;
+  getHomePoint().y = getDisplayMachine().getPage().getTop();
+  initialiseNumberboxValues(getAllControls());
+}
+
+
 void numberbox_mode_changePenWidth(float value)
 {
   currentPenWidth =  Math.round(value*100.0)/100.0;

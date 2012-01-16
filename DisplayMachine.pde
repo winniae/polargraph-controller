@@ -178,8 +178,8 @@ class DisplayMachine extends Machine
       getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getBottom());
 
       // page top line
-      line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()), 
-      getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
+      line(getOutline().getLeft(), getOutline().getTop()+sc(getHomePoint().y), 
+      getOutline().getRight(), getOutline().getTop()+sc(getHomePoint().y));
     }
 
     // draw page
@@ -196,7 +196,18 @@ class DisplayMachine extends Machine
     getOutline().getTop()+sc(getPage().getTop())+10);
     noFill();
 
-
+    // draw home point
+    noFill();
+    strokeWeight(5);
+    stroke(0, 128);
+    PVector onScreen = scaleToScreen(inMM(getHomePoint()));
+    ellipse(onScreen.x, onScreen.y, 15, 15);
+    strokeWeight(2);
+    stroke(255);
+    ellipse(onScreen.x, onScreen.y, 15, 15);
+    
+    text("Home point", onScreen.x+ 15, onScreen.y-5);
+    text(int(inMM(getHomePoint().x)+0.5) + ", " + int(inMM(getHomePoint().y)+0.5), onScreen.x+ 15, onScreen.y+15);
 
 
     if (displayingGuides 
@@ -253,8 +264,8 @@ class DisplayMachine extends Machine
       getOutline().getLeft()+(getOutline().getWidth()/2), getOutline().getBottom());
 
       // page top line
-      line(getOutline().getLeft(), getOutline().getTop()+sc(getPage().getTop()), 
-      getOutline().getRight(), getOutline().getTop()+sc(getPage().getTop()));
+      line(getOutline().getLeft(), getOutline().getTop()+sc(getHomePoint().y), 
+      getOutline().getRight(), getOutline().getTop()+sc(getHomePoint().y));
     }
 
     // draw page

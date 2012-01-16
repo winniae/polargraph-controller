@@ -1,31 +1,31 @@
 /**
-  Polargraph controller
-  Copyright Sandy Noble 2012.
-
-  This file is part of Polargraph Controller.
-
-  Polargraph Controller is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  Polargraph Controller is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
-    
-  Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
-  Requires the excellent Geomerative library available from http://www.ricardmarxer.com/geomerative/.
-  
-  This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
-
-  sandy.noble@gmail.com
-  http://www.polargraph.co.uk/
-  http://code.google.com/p/polargraph/
-*/
+ Polargraph controller
+ Copyright Sandy Noble 2012.
+ 
+ This file is part of Polargraph Controller.
+ 
+ Polargraph Controller is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ Polargraph Controller is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with Polargraph Controller.  If not, see <http://www.gnu.org/licenses/>.
+ 
+ Requires the excellent ControlP5 GUI library available from http://www.sojamo.de/libraries/controlP5/.
+ Requires the excellent Geomerative library available from http://www.ricardmarxer.com/geomerative/.
+ 
+ This is an application for controlling a polargraph machine, communicating using ASCII command language over a serial link.
+ 
+ sandy.noble@gmail.com
+ http://www.polargraph.co.uk/
+ http://code.google.com/p/polargraph/
+ */
 Set<String> getPanelNames()
 {
   if (this.panelNames == null)
@@ -101,7 +101,7 @@ Map<String, Panel> buildPanels()
   Rectangle panelOutline = new Rectangle(getMainPanelPosition(), new PVector((DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x)*2, 300.0));
   Panel inputPanel = new Panel(PANEL_NAME_INPUT, panelOutline);
   inputPanel.setResizable(true);
-  inputPanel.setOutlineColour(color(200,200,200));
+  inputPanel.setOutlineColour(color(200, 200, 200));
   // get controls
   inputPanel.setControls(getControlsForPanels().get(PANEL_NAME_INPUT));
   // get control positions
@@ -109,18 +109,18 @@ Map<String, Panel> buildPanels()
   inputPanel.setControlSizes(buildControlSizesForPanel(inputPanel));
   panels.put(PANEL_NAME_INPUT, inputPanel);
 
-//  Panel previewPanel = new Panel(PANEL_NAME_PREVIEW, panelOutline);
-//  previewPanel.setOutlineColour(color(200,200,200));
-//  // get controls
-//  previewPanel.setResizable(true);
-//  previewPanel.setControls(getControlsForPanels().get(PANEL_NAME_PREVIEW));
-//  // get control positions
-//  previewPanel.setControlPositions(buildControlPositionsForPanel(previewPanel));
-//  previewPanel.setControlSizes(buildControlSizesForPanel(previewPanel));
-//  panels.put(PANEL_NAME_PREVIEW, previewPanel);
-  
+  //  Panel previewPanel = new Panel(PANEL_NAME_PREVIEW, panelOutline);
+  //  previewPanel.setOutlineColour(color(200,200,200));
+  //  // get controls
+  //  previewPanel.setResizable(true);
+  //  previewPanel.setControls(getControlsForPanels().get(PANEL_NAME_PREVIEW));
+  //  // get control positions
+  //  previewPanel.setControlPositions(buildControlPositionsForPanel(previewPanel));
+  //  previewPanel.setControlSizes(buildControlSizesForPanel(previewPanel));
+  //  panels.put(PANEL_NAME_PREVIEW, previewPanel);
+
   Panel detailsPanel = new Panel(PANEL_NAME_DETAILS, panelOutline);
-  detailsPanel.setOutlineColour(color(200,200,200));
+  detailsPanel.setOutlineColour(color(200, 200, 200));
   // get controls
   detailsPanel.setResizable(true);
   detailsPanel.setControls(getControlsForPanels().get(PANEL_NAME_DETAILS));
@@ -130,7 +130,7 @@ Map<String, Panel> buildPanels()
   panels.put(PANEL_NAME_DETAILS, detailsPanel);
 
   Panel queuePanel = new Panel(PANEL_NAME_QUEUE, panelOutline);
-  queuePanel.setOutlineColour(color(200,200,200));
+  queuePanel.setOutlineColour(color(200, 200, 200));
   // get controls
   queuePanel.setResizable(true);
   queuePanel.setControls(getControlsForPanels().get(PANEL_NAME_QUEUE));
@@ -142,14 +142,14 @@ Map<String, Panel> buildPanels()
   panelOutline = new Rectangle(new PVector(getMainPanelPosition().x, getMainPanelPosition().y-(DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y)), new PVector(DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x, DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y));
   Panel generalPanel = new Panel(PANEL_NAME_GENERAL, panelOutline);
   generalPanel.setResizable(false);
-  generalPanel.setOutlineColour(color(200,200,200));
+  generalPanel.setOutlineColour(color(200, 200, 200));
   // get controls
   generalPanel.setControls(getControlsForPanels().get(PANEL_NAME_GENERAL));
   // get control positions
   generalPanel.setControlPositions(buildControlPositionsForPanel(generalPanel));
   generalPanel.setControlSizes(buildControlSizesForPanel(generalPanel));
   panels.put(PANEL_NAME_GENERAL, generalPanel);
-  
+
   return panels;
 }
 
@@ -179,15 +179,15 @@ Set<String> buildControlsToEnableWhenBoxSpecified()
   result.add(MODE_RENDER_SCRIBBLE_PIXELS);
   result.add(MODE_CONVERT_BOX_TO_PICTUREFRAME);
   result.add(MODE_FIT_IMAGE_TO_BOX);
- 
-  return result; 
+
+  return result;
 }
 
 Map<String, Controller> buildAllControls()
 {
-  
+
   Map<String, Controller> map = new HashMap<String, Controller>();
-  
+
   for (String controlName : getControlNames())
   {
     if (controlName.startsWith("button_"))
@@ -196,7 +196,7 @@ Map<String, Controller> buildAllControls()
       b.setLabel(getControlLabels().get(controlName));
       b.hide();
       map.put(controlName, b);
-//      println("Added button " + controlName);
+      //      println("Added button " + controlName);
     }
     else if (controlName.startsWith("toggle_"))
     {
@@ -207,7 +207,7 @@ Map<String, Controller> buildAllControls()
       l.style().marginTop = -17; //move upwards (relative to button size)
       l.style().marginLeft = 4; //move to the right
       map.put(controlName, t);
-//      println("Added toggle " + controlName);
+      //      println("Added toggle " + controlName);
     }
     else if (controlName.startsWith("minitoggle_"))
     {
@@ -218,7 +218,7 @@ Map<String, Controller> buildAllControls()
       l.style().marginTop = -17; //move upwards (relative to button size)
       l.style().marginLeft = 4; //move to the right
       map.put(controlName, t);
-//      println("Added minitoggle " + controlName);
+      //      println("Added minitoggle " + controlName);
     }
     else if (controlName.startsWith("numberbox_"))
     {
@@ -232,10 +232,10 @@ Map<String, Controller> buildAllControls()
       // change the control direction to left/right
       n.setDirection(Controller.VERTICAL);
       map.put(controlName, n);
-//      println("Added numberbox " + controlName);
+      //      println("Added numberbox " + controlName);
     }
   }
-  
+
   initialiseMiniToggleValues(map);
   initialiseNumberboxValues(map);
   return map;
@@ -248,7 +248,7 @@ Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
     if (key.startsWith("numberbox_"))
     {
       Numberbox n = (Numberbox) map.get(key);
-      
+
       if (MODE_CHANGE_SAMPLE_AREA.equals(key))
       {
         n.setValue(getSampleArea());
@@ -309,7 +309,18 @@ Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
         n.setMin(0);
         n.setMultiplier(1);
       }
-
+      else if (MODE_CHANGE_HOMEPOINT_X.equals(key))
+      {
+        n.setValue(getDisplayMachine().inMM(getHomePoint().x));
+        n.setMin(0);
+        n.setMultiplier(1);
+      }
+      else if (MODE_CHANGE_HOMEPOINT_Y.equals(key))
+      {
+        n.setValue(getDisplayMachine().inMM(getHomePoint().y));
+        n.setMin(0);
+        n.setMultiplier(1);
+      }
       else if (MODE_CHANGE_PEN_WIDTH.equals(key))
       {
         n.setDecimalPrecision(2);
@@ -368,8 +379,6 @@ Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
         n.setMax(255);
         n.setMultiplier(0.5);
       }
-
-
     }
   }
   return map;
@@ -483,7 +492,7 @@ Map<String, List<Controller>> buildControlsForPanels()
   println("build controls for panels.");
   Map<String, List<Controller>> map = new HashMap<String, List<Controller>>();
   map.put(PANEL_NAME_INPUT, getControllersForControllerNames(getControlNamesForInputPanel()));
-//  map.put(PANEL_NAME_PREVIEW, getControllersForControllerNames(getControlNamesForPreviewPanel()));
+  //  map.put(PANEL_NAME_PREVIEW, getControllersForControllerNames(getControlNamesForPreviewPanel()));
   map.put(PANEL_NAME_DETAILS, getControllersForControllerNames(getControlNamesForDetailPanel()));
   map.put(PANEL_NAME_QUEUE, getControllersForControllerNames(getControlNamesForQueuePanel()));
   map.put(PANEL_NAME_GENERAL, getControllersForControllerNames(getControlNamesForGeneralPanel()));
@@ -512,7 +521,7 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_DRAW_TO_POSITION);
   controlNames.add(MODE_DRAW_DIRECT);
   controlNames.add(MODE_INPUT_BOX_TOP_LEFT);
-//  controlNames.add(MODE_INPUT_BOX_BOT_RIGHT);
+  //  controlNames.add(MODE_INPUT_BOX_BOT_RIGHT);
   controlNames.add(MODE_CONVERT_BOX_TO_PICTUREFRAME);
   controlNames.add(MODE_SELECT_PICTUREFRAME);
   controlNames.add(MODE_LOAD_IMAGE);
@@ -548,7 +557,7 @@ List<String> getControlNamesForPreviewPanel()
   controlNames.add(MODE_SET_POSITION);
   controlNames.add(MODE_DRAW_TO_POSITION);
   controlNames.add(MODE_INPUT_BOX_TOP_LEFT);
-//  controlNames.add(MODE_INPUT_BOX_BOT_RIGHT);
+  //  controlNames.add(MODE_INPUT_BOX_BOT_RIGHT);
   controlNames.add(MODE_DRAW_OUTLINE_BOX);
   controlNames.add(MODE_MOVE_IMAGE);
   controlNames.add(MODE_RENDER_SQUARE_PIXELS);
@@ -578,6 +587,10 @@ List<String> getControlNamesForDetailPanel()
   controlNames.add(MODE_CHANGE_PAGE_OFFSET_Y);
   controlNames.add(MODE_CHANGE_PAGE_OFFSET_X_CENTRE);
 
+  controlNames.add(MODE_CHANGE_HOMEPOINT_X);
+  controlNames.add(MODE_CHANGE_HOMEPOINT_Y);
+  controlNames.add(MODE_CHANGE_HOMEPOINT_X_CENTRE);
+
   controlNames.add(MODE_CHANGE_PEN_WIDTH);
   controlNames.add(MODE_SEND_PEN_WIDTH);
 
@@ -590,7 +603,7 @@ List<String> getControlNamesForDetailPanel()
   controlNames.add(MODE_CHANGE_MACHINE_ACCELERATION);
   controlNames.add(MODE_SEND_MACHINE_SPEED);
 
-  
+
   return controlNames;
 }
 
@@ -664,7 +677,7 @@ Map<String, String> buildControlLabels()
 
   result.put(MODE_CHANGE_GRID_SIZE, "Grid size");
   result.put(MODE_CHANGE_SAMPLE_AREA, "Sample area");
-  
+
   result.put(MODE_SHOW_IMAGE, "Show image");
   result.put(MODE_SHOW_DENSITY_PREVIEW, "Show density preview");
   result.put(MODE_SHOW_QUEUE_PREVIEW, "Show Queue preview");
@@ -681,6 +694,10 @@ Map<String, String> buildControlLabels()
   result.put(MODE_CHANGE_PAGE_OFFSET_Y, "Page Pos Y");
   result.put(MODE_CHANGE_PAGE_OFFSET_X_CENTRE, "Centre page");
 
+  result.put(MODE_CHANGE_HOMEPOINT_X, "Homepoint Pos X");
+  result.put(MODE_CHANGE_HOMEPOINT_Y, "Homepoint Pos Y");
+  result.put(MODE_CHANGE_HOMEPOINT_X_CENTRE, "Centre Homepoint");
+
   result.put(MODE_CHANGE_PEN_WIDTH, "Pen tip size");
   result.put(MODE_SEND_PEN_WIDTH, "Send Pen tip size");
 
@@ -693,11 +710,10 @@ Map<String, String> buildControlLabels()
   result.put(MODE_SEND_MACHINE_SPEED, "Send speed");
   result.put(MODE_RENDER_VECTORS, "Draw vectors");
   result.put(MODE_LOAD_VECTOR_FILE, "Load vector");
-  
+
   result.put(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD, "Bright pixel");
   result.put(MODE_IMAGE_PIXEL_DARK_THRESHOLD, "Dark pixel");
 
-  
   return result;
 }
 
@@ -744,10 +760,10 @@ Set<String> buildControlNames()
   result.add(MODE_IMPORT_QUEUE);
   result.add(MODE_FIT_IMAGE_TO_BOX);
   result.add(MODE_RENDER_COMMAND_QUEUE);
-  
+
   result.add(MODE_CHANGE_GRID_SIZE);
   result.add(MODE_CHANGE_SAMPLE_AREA);
-  
+
   result.add(MODE_SHOW_IMAGE);
   result.add(MODE_SHOW_DENSITY_PREVIEW);
   result.add(MODE_SHOW_VECTOR);
@@ -763,13 +779,17 @@ Set<String> buildControlNames()
   result.add(MODE_CHANGE_PAGE_OFFSET_X);
   result.add(MODE_CHANGE_PAGE_OFFSET_Y);
   result.add(MODE_CHANGE_PAGE_OFFSET_X_CENTRE);
-  
+
+  result.add(MODE_CHANGE_HOMEPOINT_X);
+  result.add(MODE_CHANGE_HOMEPOINT_Y);
+  result.add(MODE_CHANGE_HOMEPOINT_X_CENTRE);
+
   result.add(MODE_CHANGE_PEN_WIDTH);
 
   result.add(MODE_CHANGE_PEN_TEST_START_WIDTH);
   result.add(MODE_CHANGE_PEN_TEST_END_WIDTH);
   result.add(MODE_CHANGE_PEN_TEST_INCREMENT_SIZE);
-  
+
   result.add(MODE_SEND_PEN_WIDTH);
 
   result.add(MODE_CHANGE_MACHINE_MAX_SPEED);
@@ -780,10 +800,8 @@ Set<String> buildControlNames()
   result.add(MODE_LOAD_VECTOR_FILE);
   result.add(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD);
   result.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
-
   
   return result;
 }
-
 
 
