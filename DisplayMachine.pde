@@ -128,10 +128,8 @@ class DisplayMachine extends Machine
   public void loadNewImageFromFilename(String filename)
   {
     super.loadImageFromFilename(filename);
+    super.sizeImageFrameToImageAspectRatio();
     this.setExtractedPixels(new HashSet<PVector>(0));
-
-    Rectangle imageFrame = new Rectangle(super.getImageFrame());
-    setImageFrame(imageFrame); // this automatically resizes the image if nec
   }
 
   public final int DROP_SHADOW_DISTANCE = 4;
@@ -252,7 +250,6 @@ class DisplayMachine extends Machine
 
     fill(getMachineColour());
     rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
-    text("machine " + getDimensionsAsText(getSize()) + " " + getZoomText(), getOutline().getLeft(), getOutline().getTop());
 
     if (displayingGuides)
     {
@@ -285,10 +282,8 @@ class DisplayMachine extends Machine
     {
       float ox = getOutline().getLeft()+sc(getImageFrame().getLeft());
       float oy = getOutline().getTop()+sc(getImageFrame().getTop());
-      //      float w = sc(getImageFrame().getWidth());
-      //      float h = sc(getImageFrame().getHeight());
-      float w = sc(getImage().width);
-      float h = sc(getImage().height);
+      float w = sc(getImageFrame().getWidth());
+      float h = sc(getImageFrame().getHeight());
       tint(255, getImageTransparency());
       image(getImage(), ox, oy, w, h);
       noTint();

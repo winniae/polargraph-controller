@@ -35,10 +35,11 @@ import processing.serial.*;
 import controlP5.*;
 import java.awt.event.*;
 
-int majorVersionNo = 2;
+int majorVersionNo = 1;
 int minorVersionNo = 0;
-int buildNo = 1;
+int buildNo = 3;
 
+String programTitle = "Polargraph Controller v" + majorVersionNo + "." + minorVersionNo + " build " + buildNo;
 ControlP5 cp5;
 
 boolean drawbotReady = false;
@@ -176,6 +177,7 @@ static final String MODE_EXPORT_QUEUE = "button_mode_exportQueue";
 static final String MODE_IMPORT_QUEUE = "button_mode_importQueue";
 static final String MODE_CLEAR_QUEUE = "button_mode_clearQueue";
 static final String MODE_FIT_IMAGE_TO_BOX = "button_mode_fitImageToBox";
+static final String MODE_RESIZE_IMAGE = "numberbox_mode_resizeImage";
 static final String MODE_RENDER_COMMAND_QUEUE = "button_mode_renderCommandQueue";
 
 static final String MODE_MOVE_IMAGE = "toggle_mode_moveImage";
@@ -606,7 +608,6 @@ void drawCommandQueuePage()
   drawMachineOutline();
   showingSummaryOverlay = false;
   
-  previewQueue();
 
   
   int right = 0;
@@ -656,23 +657,6 @@ void drawMoveImageOutline()
     noFill();
   }
 }
-
-//void showPictureFrame()
-//{
-//  stroke (255, 255, 0);
-//  ellipse(getDisplayMachine().getPictureFrame().getLeft(), getDisplayMachine().getPictureFrame().getTop(), 10, 10);
-//
-//  stroke (255, 128, 0);
-//  ellipse(getDisplayMachine().getPictureFrame().getRight(), getDisplayMachine().getPictureFrame().getTop(), 10, 10);
-//
-//  stroke (255, 0, 255);
-//  ellipse(getDisplayMachine().getPictureFrame().getRight(), getDisplayMachine().getPictureFrame().getBottom(), 10, 10);
-//
-//  stroke (255, 0, 128);
-//  ellipse(getDisplayMachine().getPictureFrame().getLeft(), getDisplayMachine().getPictureFrame().getBottom(), 10, 10);
-//  
-//  stroke(255);
-//}
 
 void showCurrentMachinePosition()
 {
@@ -888,6 +872,7 @@ void controlEvent(ControlEvent controlEvent)
 
 void changeTab(String from, String to)
 {
+  
   // hide old panels
   currentTab = to;
   for (Panel panel : getPanelsForTab(currentTab))
@@ -1142,14 +1127,32 @@ void mouseClicked()
   { // changing mode
 //    panelClicked();
   }
-  else if (mouseOverQueue())
-  {// stopping or starting 
-    println("queue clicked.");
-    queueClicked();
-  }
-  else if (mouseOverMachine())
-  { // picking coords
-    machineClicked();
+  else
+  {
+    if (currentMode.equals(MODE_MOVE_IMAGE))
+    {
+      PVector imageSize = getDisplayMachine().inMM(getDisplayMachine().getImageFrame().getSize());
+      PVector mVect = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+      PVector offset = new PVector(imageSize.x/2.0, imageSize.y/2.0);
+      PVector imagePos = new PVector(mVect.x-offset.x, mVect.y-offset.y);
+  
+      imagePos = getDisplayMachine().inSteps(imagePos);
+      getDisplayMachine().getImageFrame().setPosition(imagePos.x, imagePos.y);
+  
+      if (isBoxSpecified())
+        getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+    }
+    else if (mouseOverQueue())
+    {
+      // stopping or starting 
+      println("queue clicked.");
+      queueClicked();
+    }
+    else if (mouseOverMachine())
+    { 
+      // picking coords
+      machineClicked();
+    }
   }
 }
 
@@ -1247,19 +1250,6 @@ void leftButtonMachineClick()
     sendMoveToPosition(true);
   else if (currentMode.equals(MODE_DRAW_TO_POSITION))
     sendMoveToPosition(false);
-  else if (currentMode.equals(MODE_MOVE_IMAGE))
-  {
-    PVector imageSize = getDisplayMachine().inMM(getDisplayMachine().getImageFrame().getSize());
-    PVector mVect = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
-    PVector offset = new PVector(imageSize.x/2.0, imageSize.y/2.0);
-    PVector imagePos = new PVector(mVect.x-offset.x, mVect.y-offset.y);
-
-    imagePos = getDisplayMachine().inSteps(imagePos);
-    getDisplayMachine().getImageFrame().setPosition(imagePos.x, imagePos.y);
-
-    if (isBoxSpecified())
-      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
-  }
   
 }
 
@@ -1518,7 +1508,7 @@ void showText(int xPosOrigin, int yPosOrigin)
 {
   noStroke();
   fill(0, 0, 0, 80);
-  rect(xPosOrigin, yPosOrigin, 200, 430);
+  rect(xPosOrigin, yPosOrigin, 220, 450);
   
   
   textSize(12);
@@ -1530,6 +1520,8 @@ void showText(int xPosOrigin, int yPosOrigin)
   int tRowNo = 1;
   PVector screenCoordsCart = getMouseVector();
  
+  text(programTitle, textPositionX, textPositionY+(tRow*tRowNo++));
+  tRowNo++;
   text("Cursor position: " + mouseX + ", " + mouseY, textPositionX, textPositionY+(tRow*tRowNo++));
   
   text("MM Per Step: " + getDisplayMachine().getMMPerStep(), textPositionX, textPositionY+(tRow*tRowNo++));

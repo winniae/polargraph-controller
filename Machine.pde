@@ -50,7 +50,6 @@ class Machine
   
   protected PImage imageBitmap = null;
   protected String imageFilename = null;
-  protected boolean imageIsReady = false;
   
   
   public Machine(Integer width, Integer height, Float stepsPerRev, Float mmPerRev)
@@ -94,16 +93,9 @@ class Machine
 
   public void setImageFrame(Rectangle r)
   {
-    setImageFrame(r, true);
-  }
-  public void setImageFrame(Rectangle r, boolean resizeImage)
-  {
     this.imageFrame = r;
-    if (resizeImage)
-    {
-      resizeImage(this.imageFrame);
-    }
   }
+
   public Rectangle getImageFrame()
   {
     return this.imageFrame;
@@ -201,7 +193,7 @@ class Machine
   }
   
   
-  float getPixelBrightness(PVector pos, float dim)
+  float getPixelBrightness(PVector pos, float dim, float scalingFactor)
   {
     float averageBrightness = 255.0;
     
@@ -214,7 +206,7 @@ class Machine
       
       PImage extractedPixels = null;
 
-      extractedPixels = getImage().get(originX, originY, 1, 1);
+      extractedPixels = getImage().get(int(originX*scalingFactor), int(originY*scalingFactor), 1, 1);
       extractedPixels.loadPixels();
       
       if (dim >= 2)
@@ -222,8 +214,8 @@ class Machine
         int halfDim = (int)dim / (int)2.0;
         
         // restrict the sample area from going off the top/left edge of the image
-        int startX = originX - halfDim;
-        int startY = originY - halfDim;
+        float startX = originX - halfDim;
+        float startY = originY - halfDim;
         
         if (startX < 0)
           startX = 0;
@@ -232,25 +224,28 @@ class Machine
           startY = 0;
   
         // and do the same for the bottom / right edges
-        int endX = originX+halfDim;
-        int endY = originY+halfDim;
+        float endX = originX+halfDim;
+        float endY = originY+halfDim;
         
-        if (endX > getImage().width)
-          endX = getImage().width;
+        if (endX > getImageFrame().getWidth())
+          endX = getImageFrame().getWidth();
           
-        if (endY > getImage().height)
-          endY = getImage().height;
+        if (endY > getImageFrame().getHeight())
+          endY = getImageFrame().getHeight();
   
         // now convert end coordinates to width/height
+        float dimWidth = (endX - startX)*scalingFactor;
+        float dimHeight = (endY - startY)*scalingFactor;
         
-        int dimWidth = endX - startX;
-        int dimHeight = endY - startY;
+        dimWidth = (dimWidth < 1.0) ? 1.0 : dimWidth;
+        dimHeight = (dimHeight < 1.0) ? 1.0 : dimHeight;
+        startX = int(startX*scalingFactor);
+        startY = int(startY*scalingFactor);
         
         // get the block of pixels
-        extractedPixels = getImage().get(startX, startY, dimWidth, dimHeight);
+        extractedPixels = getImage().get(int(startX), int(startY), int(dimWidth+0.5), int(dimHeight+0.5));
         extractedPixels.loadPixels();
       }
-      
 
       // going to go through them and total the brightnesses
       int numberOfPixels = extractedPixels.pixels.length;
@@ -258,7 +253,7 @@ class Machine
       for (int i = 0; i < numberOfPixels; i++)
       {
         color p = extractedPixels.pixels[i];
-        float r = red(p);
+        float r = brightness(p);
         totalPixelBrightness += r;
       }
       
@@ -394,17 +389,28 @@ class Machine
     setPage(page);
 
     // bitmap
-    setImageFilename(getStringProperty("controller.image.filename", "portrait_330.jpg"));
+    setImageFilename(getStringProperty("controller.image.filename", ""));
     loadImageFromFilename(imageFilename);
   
     // image position
     Float offsetX = getFloatProperty("controller.image.position.x", 0.0);
     Float offsetY = getFloatProperty("controller.image.position.y", 0.0);
     PVector imagePos = new PVector(offsetX, offsetY);
-    Float imageWidth = getFloatProperty("controller.image.width", 300);
-    PVector imageSize = new PVector(imageWidth, imageWidth);
+    println("image pos: " + imagePos);
+    
+    // image size
+    Float imageWidth = getFloatProperty("controller.image.width", 500);
+    Float imageHeight = getFloatProperty("controller.image.height", 0);
+    if (imageHeight == 0) //  default was set
+    {
+      println("Image height not supplied - creating default.");
+      float scaling = imageWidth / getImage().width;
+      imageHeight = getImage().height * scaling;
+    }
+    PVector imageSize = new PVector(imageWidth, imageHeight);
+    
     Rectangle imageFrame = new Rectangle(inSteps(imagePos), inSteps(imageSize));
-    setImageFrame(imageFrame); // this automatically resizes the image if nec
+    setImageFrame(imageFrame);
 
     // picture frame size
     PVector frameSize = new PVector(getIntProperty("controller.pictureframe.width", 200), getIntProperty("controller.pictureframe.height", 200));
@@ -431,18 +437,21 @@ class Machine
     // image position
     float imagePosX = 0.0;
     float imagePosY = 0.0;
-    float imageWidthX = 0.0;
+    float imageWidth = 0.0;
+    float imageHeight = 0.0;
     if (getImageFrame() != null)
     {
       imagePosX = getImageFrame().getLeft();
       imagePosY = getImageFrame().getTop();
-      imageWidthX = getImageFrame().getWidth();
+      imageWidth = getImageFrame().getWidth();
+      imageHeight = getImageFrame().getHeight();
     }
     props.setProperty("controller.image.position.x", Integer.toString((int) inMM(imagePosX)));
     props.setProperty("controller.image.position.y", Integer.toString((int) inMM(imagePosY)));
 
     // image size
-    props.setProperty("controller.image.width", Integer.toString((int) inMM(imageWidthX)));
+    props.setProperty("controller.image.width", Integer.toString((int) inMM(imageWidth)));
+    props.setProperty("controller.image.height", Integer.toString((int) inMM(imageHeight)));
 
     // page size
     // page position
@@ -486,13 +495,27 @@ class Machine
     return props;
   }
 
-  void loadImageFromFilename(String filename)
+  protected void loadImageFromFilename(String filename)
   {
-    // check for format etc here
-    imageIsReady = false;
-    println("loading from filename: " + filename);
-    this.imageBitmap = loadImage(filename);
-    this.imageFilename = filename;
+    if (filename != null && !"".equals(filename))
+    {
+      // check for format etc here
+      println("loading from filename: " + filename);
+      this.imageBitmap = loadImage(filename);
+      this.imageFilename = filename;
+    }
+    else
+    {
+      this.imageBitmap = null;
+      this.imageFilename = null;
+    }
+  }
+
+  public void sizeImageFrameToImageAspectRatio()
+  {
+    float scaling = getImageFrame().getWidth() / getImage().width;
+    float frameHeight = getImage().height * scaling;
+    getImageFrame().getSize().y = frameHeight;
   }
   
   public void setImage(PImage b)
@@ -514,7 +537,7 @@ class Machine
   
   public boolean imageIsReady()
   {
-    if (imageBitmapIsLoaded() && this.imageIsReady)
+    if (imageBitmapIsLoaded())
       return true;
     else
       return false;
@@ -528,25 +551,6 @@ class Machine
       return false;
   }    
 
-
-  private void resizeImage(Rectangle r)
-  {
-    if (imageBitmapIsLoaded())
-    {
-      getImage().resize((int)r.getWidth(), 0);
-      setImageFrameToImageHeight();
-    }
-    else
-    {
-      println("No image file loaded to resize.");
-    }    
-    imageIsReady = true;
-  }
-  
-  protected void setImageFrameToImageHeight()
-  {
-    getImageFrame().setHeight(getImage().height);
-  }
   
   protected void setGridSize(float gridSize)
   {
@@ -562,14 +566,19 @@ class Machine
     based on the gridsize parameter. d*/
   Set<PVector> getPixelsPositionsFromArea(PVector p, PVector s, float gridSize, float sampleSize)
   {
+    
     // work out the grid
     setGridSize(gridSize);
     float maxLength = getMaxLength();
     float numberOfGridlines = maxLength / gridSize;
-    float gridIncrement = getMaxLength() / numberOfGridlines;
-    
+    float gridIncrement = maxLength / numberOfGridlines;
     List<Float> gridLinePositions = getGridLinePositions(gridSize);
+
     Rectangle selectedArea = new Rectangle (p.x,p.y, s.x,s.y);
+
+    // now work out the scaling factor that'll be needed to work out
+    // the positions of the pixels on the bitmap.    
+    float scalingFactor = getImage().width / getImageFrame().getWidth();
     
     // now go through all the combinations of the two values.
     Set<PVector> nativeCoords = new HashSet<PVector>();
@@ -581,15 +590,13 @@ class Machine
         PVector cartesianCoord = asCartesianCoords(nativeCoord);
         if (selectedArea.surrounds(cartesianCoord))
         {
-          if (!isChromaKey(cartesianCoord))
+          if (sampleSize >= 1.0)
           {
-            if (sampleSize >= 1.0)
-            {
-              float brightness = getPixelBrightness(cartesianCoord, sampleSize);
-              nativeCoord.z = brightness;
-            }
-            nativeCoords.add(nativeCoord);
+            
+            float brightness = getPixelBrightness(cartesianCoord, sampleSize, scalingFactor);
+            nativeCoord.z = brightness;
           }
+          nativeCoords.add(nativeCoord);
         }
       }
     }

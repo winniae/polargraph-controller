@@ -259,11 +259,17 @@ Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
       {
         n.setValue(getGridSize());
         n.setMin(20);
-        n.setMultiplier(5);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_MACHINE_WIDTH.equals(key))
       {
         n.setValue(getDisplayMachine().inMM(getDisplayMachine().getWidth()));
+        n.setMin(20);
+        n.setMultiplier(0.5);
+      }
+      else if (MODE_RESIZE_IMAGE.equals(key))
+      {
+        n.setValue(getDisplayMachine().inMM(getDisplayMachine().getImageFrame().getWidth()));
         n.setMin(20);
         n.setMultiplier(1);
       }
@@ -271,55 +277,55 @@ Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
       {
         n.setValue(getDisplayMachine().inMM(getDisplayMachine().getHeight()));
         n.setMin(20);
-        n.setMultiplier(5);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_MM_PER_REV.equals(key))
       {
         n.setValue(getDisplayMachine().getMMPerRev());
         n.setMin(20);
-        n.setMultiplier(5);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_STEPS_PER_REV.equals(key))
       {
         n.setValue(getDisplayMachine().getStepsPerRev());
         n.setMin(20);
-        n.setMultiplier(1);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_PAGE_WIDTH.equals(key))
       {
         n.setValue(getDisplayMachine().inMM(getDisplayMachine().getPage().getWidth()));
         n.setMin(10);
-        n.setMultiplier(1);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_PAGE_HEIGHT.equals(key))
       {
         n.setValue(getDisplayMachine().inMM(getDisplayMachine().getPage().getHeight()));
         n.setMin(10);
-        n.setMultiplier(1);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_PAGE_OFFSET_X.equals(key))
       {
         n.setValue(getDisplayMachine().inMM(getDisplayMachine().getPage().getLeft()));
         n.setMin(0);
-        n.setMultiplier(1);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_PAGE_OFFSET_Y.equals(key))
       {
         n.setValue(getDisplayMachine().inMM(getDisplayMachine().getPage().getTop()));
         n.setMin(0);
-        n.setMultiplier(1);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_HOMEPOINT_X.equals(key))
       {
         n.setValue(getDisplayMachine().inMM(getHomePoint().x));
         n.setMin(0);
-        n.setMultiplier(1);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_HOMEPOINT_Y.equals(key))
       {
         n.setValue(getDisplayMachine().inMM(getHomePoint().y));
         n.setMin(0);
-        n.setMultiplier(1);
+        n.setMultiplier(0.5);
       }
       else if (MODE_CHANGE_PEN_WIDTH.equals(key))
       {
@@ -526,7 +532,7 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_SELECT_PICTUREFRAME);
   controlNames.add(MODE_LOAD_IMAGE);
   controlNames.add(MODE_MOVE_IMAGE);
-  controlNames.add(MODE_FIT_IMAGE_TO_BOX);
+  controlNames.add(MODE_RESIZE_IMAGE);
   controlNames.add(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD);
   controlNames.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
   controlNames.add(MODE_RENDER_SQUARE_PIXELS);
@@ -546,6 +552,7 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_SHOW_QUEUE_PREVIEW);
   controlNames.add(MODE_SHOW_DENSITY_PREVIEW);
   controlNames.add(MODE_SHOW_GUIDES);
+  
   return controlNames;
 }
 
@@ -671,7 +678,7 @@ Map<String, String> buildControlLabels()
   result.put(MODE_CLEAR_QUEUE, "Clear queue");
   result.put(MODE_EXPORT_QUEUE, "Export queue");
   result.put(MODE_IMPORT_QUEUE, "Import queue");
-  result.put(MODE_FIT_IMAGE_TO_BOX, "Resize image");
+  result.put(MODE_RESIZE_IMAGE, "Resize image");
 
   result.put(MODE_RENDER_COMMAND_QUEUE, "Preview queue");
 
@@ -759,6 +766,7 @@ Set<String> buildControlNames()
   result.add(MODE_EXPORT_QUEUE);
   result.add(MODE_IMPORT_QUEUE);
   result.add(MODE_FIT_IMAGE_TO_BOX);
+  result.add(MODE_RESIZE_IMAGE);
   result.add(MODE_RENDER_COMMAND_QUEUE);
 
   result.add(MODE_CHANGE_GRID_SIZE);

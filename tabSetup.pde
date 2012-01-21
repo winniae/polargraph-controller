@@ -30,7 +30,9 @@
 Set<Panel> getPanelsForTab(String tabName)
 {
   if (getPanelsForTabs().containsKey(tabName))
+  {
     return getPanelsForTabs().get(tabName);
+  }
   else
     return new HashSet<Panel>(0);
 }

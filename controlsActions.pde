@@ -173,22 +173,6 @@ void button_mode_drawTestPattern()
 {
   sendTestPattern();
 }
-void button_mode_incRowSize()
-{
-  gridSize+=5.0;
-  getDisplayMachine().setGridSize(gridSize);
-  if (isBoxSpecified())
-    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
-}
-void button_mode_decRowSize()
-{
-  gridSize-=5;
-  getDisplayMachine().setGridSize(gridSize);
-  if (isBoxSpecified())
-  {
-    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
-  }
-}
 
 void button_mode_drawGrid()
 {
@@ -307,13 +291,6 @@ void button_mode_importQueue()
 {
   importQueueFromFile();
 }
-void button_mode_fitImageToBox()
-{
-  sizeImageToFitBox();
-  if (isBoxSpecified())
-    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
-  println("fitted image to box.");
-}
 void toggle_mode_drawDirect(boolean flag)
 {
   if (flag)
@@ -321,6 +298,25 @@ void toggle_mode_drawDirect(boolean flag)
     unsetOtherToggles(MODE_DRAW_DIRECT);
     setMode(MODE_DRAW_DIRECT);
   }
+}
+
+void numberbox_mode_resizeImage(float value)
+{
+  float steps = getDisplayMachine().inSteps(value);
+  Rectangle r = getDisplayMachine().getImageFrame();
+  float ratio = r.getHeight() / r.getWidth();
+
+  float oldSize = r.getSize().x;
+  
+  r.getSize().x = steps;
+  r.getSize().y = steps * ratio;
+
+  float difference = (r.getSize().x / 2.0)-(oldSize/2.0);
+  r.getPosition().x -= difference;
+  r.getPosition().y -= difference * ratio;
+  
+  if (isBoxSpecified())
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
 }
 
 void numberbox_mode_changeMachineWidth(float value)
