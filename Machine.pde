@@ -404,8 +404,13 @@ class Machine
     if (imageHeight == 0) //  default was set
     {
       println("Image height not supplied - creating default.");
-      float scaling = imageWidth / getImage().width;
-      imageHeight = getImage().height * scaling;
+      if (getImage() != null)
+      {
+        float scaling = imageWidth / getImage().width;
+        imageHeight = getImage().height * scaling;
+      }
+      else
+        imageHeight = 500.0;
     }
     PVector imageSize = new PVector(imageWidth, imageHeight);
     
