@@ -33,7 +33,7 @@ void button_mode_begin()
 void numberbox_mode_changeGridSize(float value)
 {
   setGridSize(value);
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
   }
@@ -41,7 +41,7 @@ void numberbox_mode_changeGridSize(float value)
 void numberbox_mode_changeSampleArea(float value)
 {
   setSampleArea(value);
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
   }
@@ -106,13 +106,12 @@ void toggle_mode_inputBoxBotRight(boolean flag)
 }
 void button_mode_drawOutlineBox()
 {
-  setMode(MODE_DRAW_OUTLINE_BOX);
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
     sendOutlineOfBox();
 }
 void button_mode_drawOutlineBoxRows()
 {
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     // get the pixels
     Set<PVector> pixels = getDisplayMachine().extractNativePixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
@@ -121,7 +120,7 @@ void button_mode_drawOutlineBoxRows()
 }
 void button_mode_drawShadeBoxRowsPixels()
 {
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     // get the pixels
     Set<PVector> pixels = getDisplayMachine().extractNativePixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
@@ -139,7 +138,7 @@ void toggle_mode_drawToPosition(boolean flag)
 }
 void button_mode_renderSquarePixel()
 {
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     // get the pixels
     Set<PVector> pixels = getDisplayMachine().extractNativePixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
@@ -176,7 +175,7 @@ void button_mode_drawTestPattern()
 
 void button_mode_drawGrid()
 {
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     Set<PVector> pixels = getDisplayMachine().extractNativePixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
     sendGridOfBox(pixels);
@@ -184,11 +183,29 @@ void button_mode_drawGrid()
 }
 void button_mode_loadImage()
 {
-  loadImageWithFileChooser();
+  if (getDisplayMachine().getImage() == null)
+  {
+    loadImageWithFileChooser();
+    if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
+    {
+      getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+    }
+  }
+  else
+  {
+    getDisplayMachine().setImage(null);
+    getDisplayMachine().setImageFilename(null);
+  }
 }
 void button_mode_loadVectorFile()
 {
-  loadVectorWithFileChooser();
+  if (getVectorShape() == null)
+    loadVectorWithFileChooser();
+  else
+  {
+    vectorShape = null;
+    vectorFilename = null;
+  }
 }
 void numberbox_mode_pixelBrightThreshold(float value)
 {
@@ -219,7 +236,7 @@ void button_mode_drawTestPenWidth()
 }
 void button_mode_renderScaledSquarePixels()
 {
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     // get the pixels
     Set<PVector> pixels = getDisplayMachine().extractNativePixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
@@ -228,7 +245,7 @@ void button_mode_renderScaledSquarePixels()
 }
 void button_mode_renderSolidSquarePixels()
 {
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     // get the pixels
     Set<PVector> pixels = getDisplayMachine().extractNativePixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
@@ -237,7 +254,7 @@ void button_mode_renderSolidSquarePixels()
 }
 void button_mode_renderScribblePixels()
 {
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     // get the pixels
     Set<PVector> pixels = getDisplayMachine().extractNativePixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
@@ -315,7 +332,7 @@ void numberbox_mode_resizeImage(float value)
   r.getPosition().x -= difference;
   r.getPosition().y -= difference * ratio;
   
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
     getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
 }
 
@@ -433,7 +450,98 @@ void button_mode_sendMachineSpeed()
   df.applyPattern("###.##");
   realtimeCommandQueue.add(CMD_SETMOTORACCEL+df.format(currentMachineAccel)+",END");
 }
+void button_mode_serialPortDialog()
+{
+  ControlWindow serialPortWindow = cp5.addControlWindow("changeSerialPortWindow",100,100,150,150);
+  serialPortWindow.hideCoordinates();
+  
+  serialPortWindow.setBackground(getBackgroundColour());
+  Radio r = cp5.addRadio("radio_serialPort",10,10);
 
+  if (getSerialPortNumber() >= 0)
+    r.setValue(getSerialPortNumber());
+    
+  r.add("setup", -2);
+  r.add("No serial connection", -1);
+  
+  String[] ports = Serial.list();
+  for (int i = 0; i < ports.length; i++)
+  {
+    r.add(ports[i], i);
+  }
+  
+  int portNo = getSerialPortNumber();
+  if (portNo > -1)
+    r.activate(ports[portNo]);
+  else
+    r.activate("No serial connection");
+    
+  r.removeItem("setup");
+  r.setWindow(serialPortWindow);
+}
+
+void radio_serialPort(int newSerialPort) 
+{
+  if (newSerialPort == -2)
+  {
+  }
+  else if (newSerialPort == -1)
+  {
+    println("Disconnecting serial port.");
+    useSerialPortConnection = false;
+    if (myPort != null)
+    {
+      myPort.stop();
+      myPort = null;
+    }
+    drawbotReady = false;
+    drawbotConnected = false;
+    serialPortNumber = newSerialPort;
+  }
+  else if (newSerialPort != getSerialPortNumber())
+  {
+    println("About to connect to serial port in slot " + newSerialPort);
+    // Print a list of the serial ports, for debugging purposes:
+    if (newSerialPort < Serial.list().length)
+    {
+      try 
+      {
+        drawbotReady = false;
+        drawbotConnected = false;
+        if (myPort != null)
+        {
+          myPort.stop();
+          myPort = null;
+        }
+        if (getSerialPortNumber() >= 0)
+          println("closing " + Serial.list()[getSerialPortNumber()]);
+        
+        serialPortNumber = newSerialPort;
+        String portName = Serial.list()[serialPortNumber];
+  
+        myPort = new Serial(this, portName, 57600);
+        //read bytes into a buffer until you get a linefeed (ASCII 10):
+        myPort.bufferUntil('\n');
+        useSerialPortConnection = true;
+        println("Successfully connected to port " + portName);
+      }
+      catch (Exception e)
+      {
+        println("Attempting to connect to serial port in slot " + getSerialPortNumber() 
+        + " caused an exception: " + e.getMessage());
+      }
+    }
+    else
+    {
+      println("No serial ports found.");
+      useSerialPortConnection = false;
+    }
+  }
+  else
+  {
+    println("no serial port change.");
+  }
+}
 
 
 

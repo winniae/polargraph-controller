@@ -610,6 +610,7 @@ List<String> getControlNamesForDetailPanel()
   controlNames.add(MODE_CHANGE_MACHINE_ACCELERATION);
   controlNames.add(MODE_SEND_MACHINE_SPEED);
 
+  controlNames.add(MODE_CHANGE_SERIAL_PORT);
 
   return controlNames;
 }
@@ -701,8 +702,8 @@ Map<String, String> buildControlLabels()
   result.put(MODE_CHANGE_PAGE_OFFSET_Y, "Page Pos Y");
   result.put(MODE_CHANGE_PAGE_OFFSET_X_CENTRE, "Centre page");
 
-  result.put(MODE_CHANGE_HOMEPOINT_X, "Homepoint Pos X");
-  result.put(MODE_CHANGE_HOMEPOINT_Y, "Homepoint Pos Y");
+  result.put(MODE_CHANGE_HOMEPOINT_X, "Home Pos X");
+  result.put(MODE_CHANGE_HOMEPOINT_Y, "Home Pos Y");
   result.put(MODE_CHANGE_HOMEPOINT_X_CENTRE, "Centre Homepoint");
 
   result.put(MODE_CHANGE_PEN_WIDTH, "Pen tip size");
@@ -720,6 +721,8 @@ Map<String, String> buildControlLabels()
 
   result.put(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD, "Bright pixel");
   result.put(MODE_IMAGE_PIXEL_DARK_THRESHOLD, "Dark pixel");
+  
+  result.put(MODE_CHANGE_SERIAL_PORT, "Serial port");
 
   return result;
 }
@@ -808,6 +811,7 @@ Set<String> buildControlNames()
   result.add(MODE_LOAD_VECTOR_FILE);
   result.add(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD);
   result.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
+  result.add(MODE_CHANGE_SERIAL_PORT);
   
   return result;
 }

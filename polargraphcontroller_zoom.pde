@@ -37,7 +37,7 @@ import java.awt.event.*;
 
 int majorVersionNo = 1;
 int minorVersionNo = 0;
-int buildNo = 3;
+int buildNo = 4;
 
 String programTitle = "Polargraph Controller v" + majorVersionNo + "." + minorVersionNo + " build " + buildNo;
 ControlP5 cp5;
@@ -224,7 +224,7 @@ static final String MODE_SEND_MACHINE_SPEED = "button_mode_sendMachineSpeed";
 static final String MODE_RENDER_VECTORS = "button_mode_renderVectors";
 static final String MODE_LOAD_VECTOR_FILE = "button_mode_loadVectorFile";
 
-
+static final String MODE_CHANGE_SERIAL_PORT = "button_mode_serialPortDialog";
 
 static String currentMode = MODE_BEGIN;
 static String lastMode = MODE_BEGIN;
@@ -366,6 +366,7 @@ void setup()
       String portName = null;
       try 
       {
+        println("Get serial port no: "+getSerialPortNumber());
         portName = serialPorts[getSerialPortNumber()];
         myPort = new Serial(this, portName, 57600);
         //read bytes into a buffer until you get a linefeed (ASCII 10):
@@ -729,7 +730,7 @@ void loadImageWithFileChooser()
         {
           img = null;
           getDisplayMachine().loadNewImageFromFilename(file.getPath());
-          if (isBoxSpecified())
+          if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
           {
             getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
           }
@@ -803,7 +804,7 @@ class VectorFileFilter extends javax.swing.filechooser.FileFilter
 
 void setPictureFrameDimensionsToBox()
 {
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     Rectangle r = new Rectangle(getDisplayMachine().inSteps(getBoxVector1()), getDisplayMachine().inSteps(getBoxVectorSize()));
     getDisplayMachine().setPictureFrame(r);
@@ -813,7 +814,7 @@ void setBoxToPictureframeDimensions()
 {
   setBoxVector1(getDisplayMachine().inMM(getDisplayMachine().getPictureFrame().getTopLeft()));
   setBoxVector2(getDisplayMachine().inMM(getDisplayMachine().getPictureFrame().getBotRight()));
-  if (isBoxSpecified())
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
   {
     getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
     Toggle t = (Toggle) getAllControls().get(MODE_SHOW_IMAGE);
@@ -1139,7 +1140,7 @@ void mouseClicked()
       imagePos = getDisplayMachine().inSteps(imagePos);
       getDisplayMachine().getImageFrame().setPosition(imagePos.x, imagePos.y);
   
-      if (isBoxSpecified())
+      if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
         getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
     }
     else if (mouseOverQueue())
@@ -1190,7 +1191,7 @@ void mousePressed()
       minitoggle_mode_showDensityPreview(false);
       PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
       setBoxVector1(pos);
-      if (isBoxSpecified())
+      if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
       {
         getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
 //        minitoggle_mode_showImage(false);
@@ -1222,11 +1223,14 @@ void mouseReleased()
           getBoxVector1().y = getBoxVector2().y;
           getBoxVector2().y = temp;
         }
-        getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
-        minitoggle_mode_showImage(false);
-        minitoggle_mode_showDensityPreview(true);
-        getAllControls().get(MODE_SHOW_IMAGE).setValue(0);
-        getAllControls().get(MODE_SHOW_DENSITY_PREVIEW).setValue(1);
+        if (getDisplayMachine().pixelsCanBeExtracted())
+        {
+          getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+          minitoggle_mode_showImage(false);
+          minitoggle_mode_showDensityPreview(true);
+          getAllControls().get(MODE_SHOW_IMAGE).setValue(0);
+          getAllControls().get(MODE_SHOW_DENSITY_PREVIEW).setValue(1);
+        }
       }
     }
   }
@@ -1465,7 +1469,9 @@ boolean isRowsSpecified()
 boolean isBoxSpecified()
 {
   if (boxVector1 != null && boxVector2 != null)
+  {
     return true;
+  }
   else
     return false;
 }

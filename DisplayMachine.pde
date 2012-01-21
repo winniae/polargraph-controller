@@ -245,11 +245,13 @@ class DisplayMachine extends Machine
     noStroke();
     // draw machine outline
 
-      fill(80);
-    rect(getOutline().getLeft()+DROP_SHADOW_DISTANCE, getOutline().getTop()+DROP_SHADOW_DISTANCE, getOutline().getWidth(), getOutline().getHeight());
+//    fill(80);
+//    rect(getOutline().getLeft()+DROP_SHADOW_DISTANCE, getOutline().getTop()+DROP_SHADOW_DISTANCE, getOutline().getWidth(), getOutline().getHeight());
 
     fill(getMachineColour());
     rect(getOutline().getLeft(), getOutline().getTop(), getOutline().getWidth(), getOutline().getHeight());
+
+
 
     if (displayingGuides)
     {
@@ -272,7 +274,7 @@ class DisplayMachine extends Machine
     sc(getPage().getWidth()), 
     sc(getPage().getHeight()));
     text("page " + getDimensionsAsText(getPage()), getOutline().getLeft()+sc(getPage().getLeft()), 
-    getOutline().getTop()+sc(getPage().getTop()));
+    getOutline().getTop()+sc(getPage().getTop())-3);
     noFill();
 
 
@@ -291,9 +293,22 @@ class DisplayMachine extends Machine
       stroke(150, 150, 150, 40);
       rect(ox, oy, w-1, h-1);
       fill(150, 150, 150, 40);
-      text("image", ox, oy);
+      text("image", ox, oy-3);
       noFill();
     }
+    
+    stroke(getBackgroundColour(),150);
+    strokeWeight(3);
+    noFill();
+    rect(getOutline().getLeft()-2, getOutline().getTop()-2, getOutline().getWidth()+3, getOutline().getHeight()+3);
+
+    stroke(getMachineColour(),150);
+    strokeWeight(3);
+    noFill();
+    rect(getOutline().getLeft()+sc(getPage().getLeft())-2, 
+    getOutline().getTop()+sc(getPage().getTop())-2, 
+    sc(getPage().getWidth())+4, 
+    sc(getPage().getHeight())+4);
 
 
 
@@ -566,6 +581,14 @@ class DisplayMachine extends Machine
     snapped = super.snapToGrid(snapped, rowSize);
     snapped = inMM(snapped);
     return snapped;
+  }
+  
+  public boolean pixelsCanBeExtracted()
+  {
+    if (super.getImage() == null)
+      return false;
+    else
+      return true;
   }
 }
 

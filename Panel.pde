@@ -152,6 +152,22 @@ class Panel
       {
         locked = true;
       }
+      
+      if (c.name().equals(MODE_LOAD_VECTOR_FILE))
+      {
+        if (getVectorShape() != null)
+          c.setLabel("Clear vector");
+        else
+          c.setLabel("Load vector");
+      }
+      else if (c.name().equals(MODE_LOAD_IMAGE))
+      {
+        if (getDisplayMachine().getImage() != null)
+          c.setLabel("Clear image");
+        else
+          c.setLabel("Load image file");
+      }
+      
 
       int col = c.getColor().getBackground();      
       setLock(c, locked);
