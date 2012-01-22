@@ -543,6 +543,15 @@ void radio_serialPort(int newSerialPort)
   }
 }
 
+void button_mode_sendMachineStoreMode()
+{
+  sendMachineStoreMode();
+}
+void button_mode_sendMachineExecMode()
+{
+  sendMachineExecMode();
+}
+
 
 
 void setMode(String m)

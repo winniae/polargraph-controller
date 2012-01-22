@@ -225,6 +225,8 @@ static final String MODE_RENDER_VECTORS = "button_mode_renderVectors";
 static final String MODE_LOAD_VECTOR_FILE = "button_mode_loadVectorFile";
 
 static final String MODE_CHANGE_SERIAL_PORT = "button_mode_serialPortDialog";
+static final String MODE_SEND_MACHINE_STORE_MODE = "button_mode_sendMachineStoreMode";
+static final String MODE_SEND_MACHINE_EXEC_MODE = "button_mode_sendMachineExecMode";
 
 static String currentMode = MODE_BEGIN;
 static String lastMode = MODE_BEGIN;
@@ -331,6 +333,8 @@ public final float MAX_SCALING = 4.0;
 
 RShape vectorShape = null;
 String vectorFilename = null;
+
+String storeFilename = "comm.txt";
 
 void setup()
 {
@@ -2278,6 +2282,10 @@ color getColourProperty(String id, color defVal)
 Integer getSerialPortNumber()
 {
   return this.serialPortNumber;
+}
+String getStoreFilename()
+{
+  return this.storeFilename;
 }
   
 void initProperties()

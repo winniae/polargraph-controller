@@ -566,7 +566,7 @@ class DisplayMachine extends Machine
     }
     setExtractedPixels(cartesianPositions);
   }
-  
+
 
   public Set<PVector> extractNativePixelsFromArea(PVector p, PVector s, float rowSize, float sampleSize)
   {

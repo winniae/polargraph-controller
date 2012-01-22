@@ -57,6 +57,8 @@ static final String CMD_CHANGEMACHINEMMPERREV = "C29,";
 static final String CMD_CHANGEMACHINESTEPSPERREV = "C30,";
 static final String CMD_SETMOTORSPEED = "C31,";
 static final String CMD_SETMOTORACCEL = "C32,";
+static final String CMD_MACHINE_MODE_STORE_COMMANDS = "C33,";
+static final String CMD_MACHINE_MODE_EXEC_FROM_STORE = "C34,";
 
 private PVector mouseVector = new PVector(0,0);
 
@@ -562,7 +564,18 @@ void sendVectorShapes()
       commandQueue.add(CMD_PENUP+"END");
     }
   }
-  
 }
 
+void sendMachineStoreMode()
+{
+  commandQueue.add(CMD_MACHINE_MODE_STORE_COMMANDS + getStoreFilename()+",END");
+}
+void sendMachineExecMode()
+{
+  if (storeFilename == null || "".equals(storeFilename))
+    commandQueue.add(CMD_MACHINE_MODE_EXEC_FROM_STORE + "END");
+  else
+    commandQueue.add(CMD_MACHINE_MODE_EXEC_FROM_STORE + getStoreFilename() + ",END");
+}
+  
 

@@ -647,6 +647,9 @@ List<String> getControlNamesForQueuePanel()
   controlNames.add(MODE_CLEAR_QUEUE);
   controlNames.add(MODE_EXPORT_QUEUE);
   controlNames.add(MODE_IMPORT_QUEUE);
+  controlNames.add(MODE_SEND_MACHINE_STORE_MODE);
+  controlNames.add(MODE_SEND_MACHINE_EXEC_MODE);
+
   return controlNames;
 }
 
@@ -750,6 +753,9 @@ Map<String, String> buildControlLabels()
   
   result.put(MODE_CHANGE_SERIAL_PORT, "Serial port");
 
+  result.put(MODE_SEND_MACHINE_STORE_MODE, "Store commands");
+  result.put(MODE_SEND_MACHINE_EXEC_MODE, "Exec from store");
+
   return result;
 }
 
@@ -838,6 +844,9 @@ Set<String> buildControlNames()
   result.add(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD);
   result.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
   result.add(MODE_CHANGE_SERIAL_PORT);
+  
+  result.add(MODE_SEND_MACHINE_STORE_MODE);
+  result.add(MODE_SEND_MACHINE_EXEC_MODE);
   
   return result;
 }
