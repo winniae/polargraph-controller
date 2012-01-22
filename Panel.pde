@@ -140,17 +140,27 @@ class Panel
       c.setSize((int)cSize.x, (int)cSize.y);
 
       boolean locked = false;
-      if (!isBoxSpecified())
-      { 
-        if (getControlsToEnableWhenBoxSpecified().contains(c.name()))
-        {
-          locked = true;        
-        }
+      
+      // theres a few cases here where the controls are locked (disabled)
+      
+      // any drawing / extracting controls are disabled if there is no selec
+      // box specified.
+      if (getControlsToLockIfBoxNotSpecified().contains(c.name()) && !isBoxSpecified())
+      {
+        locked = true;        
       }
       
+      // if there is no vector shape loaded then lock the "draw vector"
+      // control.
       if (c.name().equals(MODE_RENDER_VECTORS) && getVectorShape() == null)
       {
         locked = true;
+      }
+  
+      // if there's no image loaded, then hide resizing/moving
+      if (getControlsToLockIfImageNotLoaded().contains(c.name()) && getDisplayMachine().getImage() == null)
+      {
+        locked = true;        
       }
       
       if (c.name().equals(MODE_LOAD_VECTOR_FILE))

@@ -33,11 +33,11 @@
 */
 class Machine
 {
-  protected PVector machineSize = null;
+  protected PVector machineSize = new PVector(4000,6000);
 
-  protected Rectangle page = null;
-  protected Rectangle imageFrame = null;
-  protected Rectangle pictureFrame = null;
+  protected Rectangle page = new Rectangle(1000,1000,2000,3000);
+  protected Rectangle imageFrame = new Rectangle(1500,1500,1000,1000);
+  protected Rectangle pictureFrame = new Rectangle(1600,1600,800,800);
 
   protected Float stepsPerRev = 800.0;
   protected Float mmPerRev = 95.0;
@@ -45,7 +45,7 @@ class Machine
   protected Float mmPerStep = null;
   protected Float stepsPerMM = null;
   protected Float maxLength = null;
-  protected Float gridSize = null;
+  protected Float gridSize = 100.0;
   protected List<Float> gridLinePositions = null;
   
   protected PImage imageBitmap = null;

@@ -317,7 +317,8 @@ public Map<String, List<Controller>> controlsForPanels = null;
 
 public Map<String, Controller> allControls = null;
 public Map<String, String> controlLabels = null;
-public Set<String> controlsToEnableWhenBoxSpecified = null;
+public Set<String> controlsToLockIfBoxNotSpecified = null;
+public Set<String> controlsToLockIfImageNotLoaded = null;
 
 public Map<String, Set<Panel>> panelsForTabs = null;
 public Map<String, Panel> panels = null;
@@ -633,7 +634,7 @@ void drawImageLoadPage()
 
 void drawMoveImageOutline()
 {
-  if (MODE_MOVE_IMAGE == currentMode)
+  if (MODE_MOVE_IMAGE == currentMode && getDisplayMachine().getImage() != null)
   {
     // get scaled size of the  image
     PVector imageSize = getDisplayMachine().inMM(getDisplayMachine().getImageFrame().getSize());
@@ -652,9 +653,6 @@ void drawMoveImageOutline()
     image(getDisplayMachine().getImage(), imagePos.x, imagePos.y, imageSizeOnScreen.x, imageSizeOnScreen.y);
     noTint();
     // decorate image
-    
-    
-    
     noFill();
   }
 }
@@ -2150,8 +2148,8 @@ void savePropertiesFile()
   props.setProperty("controller.grid.size", new Float(gridSize).toString());
   props.setProperty("controller.pixel.samplearea", new Float(sampleArea).toString());
   // initial screen size
-  props.setProperty("controller.window.width", new Integer(width).toString());
-  props.setProperty("controller.window.height", new Integer(height).toString());
+  props.setProperty("controller.window.width", new Integer(windowWidth).toString());
+  props.setProperty("controller.window.height", new Integer(windowHeight).toString());
 
   props.setProperty("controller.testPenWidth.startSize", new Float(testPenWidthStartSize).toString());
   props.setProperty("controller.testPenWidth.endSize", new Float(testPenWidthEndSize).toString());
@@ -2168,7 +2166,7 @@ void savePropertiesFile()
     hp = getHomePoint();
   }
   else
-    hp = new PVector(0.0, 0.0);
+    hp = new PVector(2000.0, 1000.0);
     
   hp = getDisplayMachine().inMM(hp);
   

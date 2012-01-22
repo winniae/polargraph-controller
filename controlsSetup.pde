@@ -75,13 +75,22 @@ Map<String, Panel> getPanels()
   return this.panels;
 }
 
-Set<String> getControlsToEnableWhenBoxSpecified()
+Set<String> getControlsToLockIfBoxNotSpecified()
 {
-  if (this.controlsToEnableWhenBoxSpecified == null)
+  if (this.controlsToLockIfBoxNotSpecified == null)
   {
-    this.controlsToEnableWhenBoxSpecified = buildControlsToEnableWhenBoxSpecified();
+    this.controlsToLockIfBoxNotSpecified = buildControlsToLockIfBoxNotSpecified();
   }
-  return this.controlsToEnableWhenBoxSpecified;
+  return this.controlsToLockIfBoxNotSpecified;
+}
+
+Set<String> getControlsToLockIfImageNotLoaded()
+{
+  if (this.controlsToLockIfImageNotLoaded == null)
+  {
+    this.controlsToLockIfImageNotLoaded = buildControlsToLockIfImageNotLoaded();
+  }
+  return this.controlsToLockIfImageNotLoaded;
 }
 
 
@@ -163,7 +172,7 @@ void updateNumberboxValues()
   initialiseNumberboxValues(getAllControls());
 }
 
-Set<String> buildControlsToEnableWhenBoxSpecified()
+Set<String> buildControlsToLockIfBoxNotSpecified()
 {
   Set<String> result = new HashSet<String>();
   result.add(MODE_DRAW_OUTLINE_BOX);
@@ -178,7 +187,21 @@ Set<String> buildControlsToEnableWhenBoxSpecified()
   result.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
   result.add(MODE_RENDER_SCRIBBLE_PIXELS);
   result.add(MODE_CONVERT_BOX_TO_PICTUREFRAME);
-  result.add(MODE_FIT_IMAGE_TO_BOX);
+  result.add(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD);
+  result.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
+
+  return result;
+}
+
+Set<String> buildControlsToLockIfImageNotLoaded()
+{
+  Set<String> result = new HashSet<String>();
+  result.add(MODE_MOVE_IMAGE);
+  result.add(MODE_RESIZE_IMAGE);
+  result.add(MODE_INPUT_BOX_TOP_LEFT);
+  result.add(MODE_CHANGE_GRID_SIZE);
+  result.add(MODE_CHANGE_SAMPLE_AREA);
+  result.add(MODE_SELECT_PICTUREFRAME);
 
   return result;
 }
@@ -535,23 +558,26 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_RESIZE_IMAGE);
   controlNames.add(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD);
   controlNames.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
+  controlNames.add(MODE_CHANGE_GRID_SIZE);
+  controlNames.add(MODE_CHANGE_SAMPLE_AREA);
   controlNames.add(MODE_RENDER_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
   controlNames.add(MODE_RENDER_SCRIBBLE_PIXELS);
-  controlNames.add(MODE_LOAD_VECTOR_FILE);
-  controlNames.add(MODE_RENDER_VECTORS);
-  controlNames.add(MODE_CHANGE_GRID_SIZE);
-  controlNames.add(MODE_CHANGE_SAMPLE_AREA);
   controlNames.add(MODE_DRAW_GRID);
   controlNames.add(MODE_DRAW_OUTLINE_BOX);
   controlNames.add(MODE_DRAW_OUTLINE_BOX_ROWS);
   controlNames.add(MODE_DRAW_SHADE_BOX_ROWS_PIXELS);
+
+  controlNames.add(MODE_LOAD_VECTOR_FILE);
+  controlNames.add(MODE_RENDER_VECTORS);
+
   controlNames.add(MODE_SHOW_IMAGE);
   controlNames.add(MODE_SHOW_VECTOR);
   controlNames.add(MODE_SHOW_QUEUE_PREVIEW);
   controlNames.add(MODE_SHOW_DENSITY_PREVIEW);
   controlNames.add(MODE_SHOW_GUIDES);
+
   
   return controlNames;
 }
