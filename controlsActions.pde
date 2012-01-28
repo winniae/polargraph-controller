@@ -543,13 +543,91 @@ void radio_serialPort(int newSerialPort)
   }
 }
 
-void button_mode_sendMachineStoreMode()
+ControlWindow dialogWindow = null;
+
+void button_mode_machineStoreDialog()
 {
-  sendMachineStoreMode();
+  this.dialogWindow = cp5.addControlWindow("chooseStoreFilenameWindow",100,100,450,150);
+  dialogWindow.hideCoordinates();
+  
+  dialogWindow.setBackground(getBackgroundColour());
+
+  Textfield filenameField = cp5.addTextfield("storeFilename",20,20,150,20);
+  filenameField.setText(getStoreFilename());
+  filenameField.setLabel("Filename to store to");
+  filenameField.setWindow(dialogWindow);
+
+  Button submitButton = cp5.addButton("submitStoreFilenameWindow",0,180,20,60,20);
+  submitButton.setLabel("Submit");
+  submitButton.setWindow(dialogWindow);
+
+  Toggle overwriteToggle = cp5.addToggle("toggleAppendToFile",true,180,50,20,20);
+  overwriteToggle.setCaptionLabel("Overwrite existing file");
+  overwriteToggle.setWindow(dialogWindow);
+
+  filenameField.setFocus(true);
+
 }
-void button_mode_sendMachineExecMode()
+
+void storeFilename(String filename)
 {
-  sendMachineExecMode();
+  println("Filename event: "+ filename);
+  if (filename != null && filename.length() <= 12)
+  {
+    setStoreFilename(filename);
+    sendMachineStoreMode();
+  }
+}
+
+void toggleAppendToFile(boolean theFlag) 
+{
+  setOverwriteExistingStoreFile(theFlag);
+}
+
+void submitStoreFilenameWindow(int theValue) 
+{
+  Textfield tf = (Textfield) cp5.controller("storeFilename");
+  tf.submit();
+}
+
+void button_mode_machineExecDialog()
+{
+  this.dialogWindow = cp5.addControlWindow("chooseExecFilenameWindow",100,100,450,150);
+  dialogWindow.hideCoordinates();
+  
+  dialogWindow.setBackground(getBackgroundColour());
+
+  Textfield filenameField = cp5.addTextfield("execFilename",20,20,150,20);
+  filenameField.setText(getStoreFilename());
+  filenameField.setLabel("Filename to execute from");
+  filenameField.setWindow(dialogWindow);
+
+  Button submitButton = cp5.addButton("submitExecFilenameWindow",0,180,20,60,20);
+  submitButton.setLabel("Submit");
+  submitButton.setWindow(dialogWindow);
+
+  filenameField.setFocus(true);
+
+}
+
+void execFilename(String filename)
+{
+  println("Filename event: "+ filename);
+  if (filename != null && filename.length() <= 12)
+  {
+    setStoreFilename(filename);
+    sendMachineExecMode();
+  }
+}
+void submitExecFilenameWindow(int theValue) 
+{
+  Textfield tf = (Textfield) cp5.controller("execFilename");
+  tf.submit();
+}
+
+void button_mode_sendMachineLiveMode()
+{
+  sendMachineLiveMode();
 }
 
 

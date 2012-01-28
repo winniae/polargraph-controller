@@ -59,6 +59,7 @@ static final String CMD_SETMOTORSPEED = "C31,";
 static final String CMD_SETMOTORACCEL = "C32,";
 static final String CMD_MACHINE_MODE_STORE_COMMANDS = "C33,";
 static final String CMD_MACHINE_MODE_EXEC_FROM_STORE = "C34,";
+static final String CMD_MACHINE_MODE_LIVE = "C35,";
 
 private PVector mouseVector = new PVector(0,0);
 
@@ -568,13 +569,20 @@ void sendVectorShapes()
 
 void sendMachineStoreMode()
 {
-  commandQueue.add(CMD_MACHINE_MODE_STORE_COMMANDS + getStoreFilename()+",END");
+  String overwrite = ",R";
+  if (!getOverwriteExistingStoreFile())
+    overwrite = ",A";
+    
+  commandQueue.add(CMD_MACHINE_MODE_STORE_COMMANDS + getStoreFilename()+overwrite+",END");
+}
+void sendMachineLiveMode()
+{
+  commandQueue.add(CMD_MACHINE_MODE_LIVE+"END");
 }
 void sendMachineExecMode()
 {
-  if (storeFilename == null || "".equals(storeFilename))
-    commandQueue.add(CMD_MACHINE_MODE_EXEC_FROM_STORE + "END");
-  else
+  sendMachineLiveMode();
+  if (storeFilename != null && !"".equals(storeFilename))
     commandQueue.add(CMD_MACHINE_MODE_EXEC_FROM_STORE + getStoreFilename() + ",END");
 }
   

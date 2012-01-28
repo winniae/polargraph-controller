@@ -45,7 +45,13 @@ ControlP5 cp5;
 boolean drawbotReady = false;
 boolean drawbotConnected = false;
 
-final int MACHINE_SRAM = 2048;
+static final int HARDWARE_VER_ATMEGA328_1 = 1;
+static final int HARDWARE_VER_ATMEGA1280_1 = 100;
+int currentHardware = HARDWARE_VER_ATMEGA328_1;
+
+final int HARDWARE_ATMEGA328_SRAM = 2048;
+final int HARDWARE_ATMEGA1280_SRAM = 8096;
+int currentSram = HARDWARE_ATMEGA328_SRAM;
 
 //Machine machine = new Machine(5000, 5000, 800.0, 95.0);
 String newMachineName = "PGXXABCD";
@@ -225,8 +231,13 @@ static final String MODE_RENDER_VECTORS = "button_mode_renderVectors";
 static final String MODE_LOAD_VECTOR_FILE = "button_mode_loadVectorFile";
 
 static final String MODE_CHANGE_SERIAL_PORT = "button_mode_serialPortDialog";
-static final String MODE_SEND_MACHINE_STORE_MODE = "button_mode_sendMachineStoreMode";
-static final String MODE_SEND_MACHINE_EXEC_MODE = "button_mode_sendMachineExecMode";
+static final String MODE_SEND_MACHINE_STORE_MODE = "button_mode_machineStoreDialog";
+static final String MODE_SEND_MACHINE_LIVE_MODE = "button_mode_sendMachineLiveMode";
+static final String MODE_SEND_MACHINE_EXEC_MODE = "button_mode_machineExecDialog";
+
+static final String MODE_RESIZE_VECTOR = "numberbox_mode_resizeVector";
+static final String MODE_MOVE_VECTOR = "numberbox_mode_moveVector";
+
 
 static String currentMode = MODE_BEGIN;
 static String lastMode = MODE_BEGIN;
@@ -335,6 +346,7 @@ RShape vectorShape = null;
 String vectorFilename = null;
 
 String storeFilename = "comm.txt";
+boolean overwriteExistingStoreFile = true;
 
 void setup()
 {
@@ -1603,7 +1615,10 @@ void drawStatusText(int x, int y)
       if (drawbotReady)
       {
         fill(0, 200, 0);
-        drawbotStatus = "Polargraph READY!";
+        if (currentHardware >= HARDWARE_VER_ATMEGA1280_1)
+          drawbotStatus = "Polargraph READY! (Mega)";
+        else
+          drawbotStatus = "Polargraph READY! (Uno)";
       }
       else
       {
@@ -1832,6 +1847,62 @@ public DisplayMachine getDisplayMachine()
   return displayMachine;
 }
 
+void changeHardwareVersionTo(int newVer)
+{
+  this.currentHardware = newVer;
+
+  this.panelNames = null;
+  this.tabNames = null;
+  this.controlNames = null;
+  this.controlsForPanels = null;
+
+  this.panelsForTabs = null;
+  this.panels = null;
+
+  switch (newVer)
+  {
+    case HARDWARE_VER_ATMEGA1280_1 :
+      currentSram = HARDWARE_ATMEGA1280_SRAM;
+    default   :  
+      currentSram = HARDWARE_ATMEGA328_SRAM;
+  }
+}
+
+void setHardwareVersionFromIncoming(String readyString)
+{
+  int newHardwareVersion = HARDWARE_VER_ATMEGA328_1;
+  if ("READY".equals(readyString))
+  {
+    newHardwareVersion = HARDWARE_VER_ATMEGA328_1;
+  }
+  else
+  {
+    String ver = readyString.substring(6);
+    int verInt = HARDWARE_VER_ATMEGA328_1;
+    try
+    {
+      verInt = Integer.parseInt(ver);
+    }
+    catch (NumberFormatException nfe)
+    {
+      println("Bad format for hardware version - defaulting to ATMEGA328 (Uno)");
+      verInt = HARDWARE_VER_ATMEGA328_1;
+    }
+    
+    if (HARDWARE_VER_ATMEGA1280_1 == verInt)
+      newHardwareVersion = verInt;
+    else
+      newHardwareVersion = HARDWARE_VER_ATMEGA328_1;
+  }
+  
+  // now see if it's different to last time.
+  if (newHardwareVersion != currentHardware)
+  {
+    // and make the controller reflect the new hardware.
+    changeHardwareVersionTo(newHardwareVersion);
+  }
+}
+
 void serialEvent(Serial myPort) 
 { 
   // read the serial buffer:
@@ -1841,8 +1912,11 @@ void serialEvent(Serial myPort)
   incoming = trim(incoming);
   println("incoming: " + incoming);
   
-  if ("READY".equals(incoming))
+  if (incoming.startsWith("READY"))
+  {
     drawbotReady = true;
+    setHardwareVersionFromIncoming(incoming);
+  }
   else if (incoming.startsWith("SYNC"))
     readMachinePosition(incoming);
   else if (incoming.startsWith("CARTESIAN"))
@@ -1870,7 +1944,7 @@ void extractMemoryUsage(String mem)
   if (splitted.length == 3)
   {
     machineAvailMem = Integer.parseInt(splitted[1]);
-    machineUsedMem = MACHINE_SRAM - machineAvailMem;
+    machineUsedMem = currentSram - machineAvailMem;
     if (machineAvailMem < machineMinAvailMem)
       machineMinAvailMem = machineAvailMem;
   }
@@ -2286,6 +2360,19 @@ Integer getSerialPortNumber()
 String getStoreFilename()
 {
   return this.storeFilename;
+}
+void setStoreFilename(String filename)
+{
+  this.storeFilename = filename;
+}
+
+boolean getOverwriteExistingStoreFile()
+{
+  return this.overwriteExistingStoreFile;
+}
+void setOverwriteExistingStoreFile(boolean over)
+{
+  this.overwriteExistingStoreFile = over;
 }
   
 void initProperties()

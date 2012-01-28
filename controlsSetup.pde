@@ -571,6 +571,8 @@ List<String> getControlNamesForInputPanel()
 
   controlNames.add(MODE_LOAD_VECTOR_FILE);
   controlNames.add(MODE_RENDER_VECTORS);
+  controlNames.add(MODE_RESIZE_VECTOR);
+  controlNames.add(MODE_MOVE_VECTOR);
 
   controlNames.add(MODE_SHOW_IMAGE);
   controlNames.add(MODE_SHOW_VECTOR);
@@ -648,6 +650,7 @@ List<String> getControlNamesForQueuePanel()
   controlNames.add(MODE_EXPORT_QUEUE);
   controlNames.add(MODE_IMPORT_QUEUE);
   controlNames.add(MODE_SEND_MACHINE_STORE_MODE);
+  controlNames.add(MODE_SEND_MACHINE_LIVE_MODE);
   controlNames.add(MODE_SEND_MACHINE_EXEC_MODE);
 
   return controlNames;
@@ -751,10 +754,14 @@ Map<String, String> buildControlLabels()
   result.put(MODE_IMAGE_PIXEL_BRIGHT_THRESHOLD, "Bright pixel");
   result.put(MODE_IMAGE_PIXEL_DARK_THRESHOLD, "Dark pixel");
   
-  result.put(MODE_CHANGE_SERIAL_PORT, "Serial port");
+  result.put(MODE_CHANGE_SERIAL_PORT, "Serial port...");
 
-  result.put(MODE_SEND_MACHINE_STORE_MODE, "Store commands");
-  result.put(MODE_SEND_MACHINE_EXEC_MODE, "Exec from store");
+  result.put(MODE_SEND_MACHINE_STORE_MODE, "Signal store...");
+  result.put(MODE_SEND_MACHINE_LIVE_MODE, "Signal play");
+  result.put(MODE_SEND_MACHINE_EXEC_MODE, "Exec from store...");
+
+  result.put(MODE_RESIZE_VECTOR, "Resize vector");
+  result.put(MODE_MOVE_VECTOR, "Move vector");
 
   return result;
 }
@@ -846,7 +853,11 @@ Set<String> buildControlNames()
   result.add(MODE_CHANGE_SERIAL_PORT);
   
   result.add(MODE_SEND_MACHINE_STORE_MODE);
+  result.add(MODE_SEND_MACHINE_LIVE_MODE);
   result.add(MODE_SEND_MACHINE_EXEC_MODE);
+  
+  result.add(MODE_RESIZE_VECTOR);
+  result.add(MODE_MOVE_IMAGE);
   
   return result;
 }
