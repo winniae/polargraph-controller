@@ -182,6 +182,7 @@ Set<String> buildControlsToLockIfBoxNotSpecified()
   result.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
   result.add(MODE_RENDER_SAW_PIXELS);
   result.add(MODE_RENDER_CIRCLE_PIXELS);
+  result.add(MODE_RENDER_PIXEL_DIALOG);
   result.add(MODE_DRAW_GRID);
   result.add(MODE_DRAW_TESTPATTERN);
   result.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
@@ -560,10 +561,11 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
   controlNames.add(MODE_CHANGE_GRID_SIZE);
   controlNames.add(MODE_CHANGE_SAMPLE_AREA);
-  controlNames.add(MODE_RENDER_SQUARE_PIXELS);
-  controlNames.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
-  controlNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
-  controlNames.add(MODE_RENDER_SCRIBBLE_PIXELS);
+//  controlNames.add(MODE_RENDER_SQUARE_PIXELS);
+//  controlNames.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
+//  controlNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
+//  controlNames.add(MODE_RENDER_SCRIBBLE_PIXELS);
+  controlNames.add(MODE_RENDER_PIXEL_DIALOG);
   controlNames.add(MODE_DRAW_GRID);
   controlNames.add(MODE_DRAW_OUTLINE_BOX);
   controlNames.add(MODE_DRAW_OUTLINE_BOX_ROWS);
@@ -649,9 +651,13 @@ List<String> getControlNamesForQueuePanel()
   controlNames.add(MODE_CLEAR_QUEUE);
   controlNames.add(MODE_EXPORT_QUEUE);
   controlNames.add(MODE_IMPORT_QUEUE);
-  controlNames.add(MODE_SEND_MACHINE_STORE_MODE);
-  controlNames.add(MODE_SEND_MACHINE_LIVE_MODE);
-  controlNames.add(MODE_SEND_MACHINE_EXEC_MODE);
+
+  if (getHardwareVersion() >= HARDWARE_VER_MEGA)
+  {
+    controlNames.add(MODE_SEND_MACHINE_STORE_MODE);
+    controlNames.add(MODE_SEND_MACHINE_LIVE_MODE);
+    controlNames.add(MODE_SEND_MACHINE_EXEC_MODE);
+  }
 
   return controlNames;
 }
@@ -762,6 +768,7 @@ Map<String, String> buildControlLabels()
 
   result.put(MODE_RESIZE_VECTOR, "Resize vector");
   result.put(MODE_MOVE_VECTOR, "Move vector");
+  result.put(MODE_RENDER_PIXEL_DIALOG, "Render pixels...");
 
   return result;
 }
@@ -781,6 +788,9 @@ Set<String> buildControlNames()
   result.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
   result.add(MODE_RENDER_SAW_PIXELS);
   result.add(MODE_RENDER_CIRCLE_PIXELS);
+  
+  result.add(MODE_RENDER_PIXEL_DIALOG);
+  
   result.add(MODE_INPUT_ROW_START);
   result.add(MODE_INPUT_ROW_END);
   result.add(MODE_SET_POSITION);

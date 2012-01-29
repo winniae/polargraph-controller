@@ -642,3 +642,82 @@ void revertToLastMode()
   currentMode = lastMode;
 }
 
+/*------------------------------------------------------------------------
+    Details about the "drawing" subwindow
+------------------------------------------------------------------------*/
+void button_mode_drawPixelsDialog()
+{
+  this.dialogWindow = cp5.addControlWindow("drawPixelsWindow",100,100,450,150);
+  dialogWindow.hideCoordinates();
+  
+  dialogWindow.setBackground(getBackgroundColour());
+
+  Radio rPos = cp5.addRadio("radio_startPosition",10,10);
+  rPos.add("Top-right", DRAW_DIR_NE);
+  rPos.add("Bottom-right", DRAW_DIR_SE);
+  rPos.add("Bottom-left", DRAW_DIR_SW);
+  rPos.add("Top-left", DRAW_DIR_NW);
+  rPos.setWindow(dialogWindow);
+
+//  Radio rDir = cp5.addRadio("radio_rowStartDirection",100,10);
+//  rDir.add("Upwards", 0);
+//  rDir.add("Downwards", 1);
+//  rDir.setWindow(dialogWindow);
+
+  Radio rStyle = cp5.addRadio("radio_pixelStyle",100,10);
+  rStyle.add("Variable frequency square wave", PIXEL_STYLE_SQ_FREQ);
+  rStyle.add("Variable size square wave", PIXEL_STYLE_SQ_SIZE);
+  rStyle.add("Solid square wave", PIXEL_STYLE_SQ_SOLID);
+  rStyle.add("Scribble", PIXEL_STYLE_SCRIBBLE);
+  rStyle.add("Circles", PIXEL_STYLE_CIRCLE);
+  rStyle.add("Sawtooth", PIXEL_STYLE_SAW);
+  rStyle.setWindow(dialogWindow);
+
+  Button submitButton = cp5.addButton("submitDrawWindow",0,280,10,60,20);
+  submitButton.setLabel("Draw");
+  submitButton.setWindow(dialogWindow);
+
+}
+
+public Integer renderStartPosition = DRAW_DIR_NE; // default top right hand corner for start
+public Integer renderStartDirection = DRAW_DIR_SE; // default start drawing in SE direction (DOWN)
+public Integer renderStyle = PIXEL_STYLE_SQ_FREQ; // default pixel style square wave
+void radio_startPosition(int pos)
+{
+  this.renderStartPosition = pos;
+  radio_rowStartDirection(1);
+}
+void radio_rowStartDirection(int dir)
+{
+  if (renderStartPosition == DRAW_DIR_NE || renderStartPosition == DRAW_DIR_SW)
+    renderStartDirection = (dir == 0) ? DRAW_DIR_NW : DRAW_DIR_SE;
+  else if (renderStartPosition == DRAW_DIR_SE || renderStartPosition == DRAW_DIR_NW)
+    renderStartDirection = (dir == 0) ? DRAW_DIR_NE : DRAW_DIR_SW;
+}
+void radio_pixelStyle(int style)
+{
+  renderStyle = style;
+}
+void submitDrawWindow(int theValue) 
+{
+  println("draw.");
+  println("Style: " + renderStyle);
+  println("Start pos: " + renderStartPosition);
+  println("Start dir: " + renderStartDirection);
+ 
+  switch (renderStyle)
+  {
+    case PIXEL_STYLE_SQ_FREQ: button_mode_renderSquarePixel(); break;
+    case PIXEL_STYLE_SQ_SIZE: button_mode_renderScaledSquarePixels(); break;
+    case PIXEL_STYLE_SQ_SOLID: button_mode_renderSolidSquarePixels(); break;
+    case PIXEL_STYLE_SCRIBBLE: button_mode_renderScribblePixels(); break;
+    case PIXEL_STYLE_CIRCLE: button_mode_renderCirclePixel(); break;
+    case PIXEL_STYLE_SAW: button_mode_renderSawPixel(); break;
+  }
+  
+   
+}
+
+
+
+

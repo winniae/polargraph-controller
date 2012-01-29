@@ -37,7 +37,7 @@ import java.awt.event.*;
 
 int majorVersionNo = 1;
 int minorVersionNo = 1;
-int buildNo = 0;
+int buildNo = 1;
 
 String programTitle = "Polargraph Controller v" + majorVersionNo + "." + minorVersionNo + " build " + buildNo;
 ControlP5 cp5;
@@ -45,9 +45,9 @@ ControlP5 cp5;
 boolean drawbotReady = false;
 boolean drawbotConnected = false;
 
-static final int HARDWARE_VER_ATMEGA328_1 = 1;
-static final int HARDWARE_VER_ATMEGA1280_1 = 100;
-int currentHardware = HARDWARE_VER_ATMEGA328_1;
+static final int HARDWARE_VER_UNO = 1;
+static final int HARDWARE_VER_MEGA = 100;
+int currentHardware = HARDWARE_VER_UNO;
 
 final int HARDWARE_ATMEGA328_SRAM = 2048;
 final int HARDWARE_ATMEGA1280_SRAM = 8096;
@@ -128,6 +128,13 @@ static final int DRAW_DIR_MODE_PRESET = 2;
 static final int DRAW_DIR_MODE_RANDOM = 3;
 static int pixelDirectionMode = DRAW_DIR_MODE_PRESET;
 
+static final int PIXEL_STYLE_SQ_FREQ = 0;
+static final int PIXEL_STYLE_SQ_SIZE = 1;
+static final int PIXEL_STYLE_SQ_SOLID = 2;
+static final int PIXEL_STYLE_SCRIBBLE = 3;
+static final int PIXEL_STYLE_CIRCLE = 4;
+static final int PIXEL_STYLE_SAW = 5;
+
 
 PVector currentMachinePos = new PVector();
 PVector currentCartesianMachinePos = new PVector();
@@ -151,6 +158,8 @@ static final String MODE_DRAW_SHADE_BOX_ROWS_PIXELS = "button_mode_drawShadeBoxR
 static final String MODE_RENDER_SQUARE_PIXELS = "button_mode_renderSquarePixel";
 static final String MODE_RENDER_SAW_PIXELS = "button_mode_renderSawPixel";
 static final String MODE_RENDER_CIRCLE_PIXELS = "button_mode_renderCirclePixel";
+static final String MODE_RENDER_PIXEL_DIALOG = "button_mode_drawPixelsDialog";
+
 static final String MODE_INPUT_ROW_START = "button_mode_inputRowStart";
 static final String MODE_INPUT_ROW_END = "button_mode_inputRowEnd";
 static final String MODE_DRAW_TESTPATTERN = "button_mode_drawTestPattern";
@@ -1615,7 +1624,7 @@ void drawStatusText(int x, int y)
       if (drawbotReady)
       {
         fill(0, 200, 0);
-        if (currentHardware >= HARDWARE_VER_ATMEGA1280_1)
+        if (currentHardware >= HARDWARE_VER_MEGA)
           drawbotStatus = "Polargraph READY! (Mega)";
         else
           drawbotStatus = "Polargraph READY! (Uno)";
@@ -1847,6 +1856,11 @@ public DisplayMachine getDisplayMachine()
   return displayMachine;
 }
 
+Integer getHardwareVersion()
+{
+  return this.currentHardware;
+}
+
 void changeHardwareVersionTo(int newVer)
 {
   this.currentHardware = newVer;
@@ -1861,7 +1875,7 @@ void changeHardwareVersionTo(int newVer)
 
   switch (newVer)
   {
-    case HARDWARE_VER_ATMEGA1280_1 :
+    case HARDWARE_VER_MEGA :
       currentSram = HARDWARE_ATMEGA1280_SRAM;
     default   :  
       currentSram = HARDWARE_ATMEGA328_SRAM;
@@ -1870,15 +1884,15 @@ void changeHardwareVersionTo(int newVer)
 
 void setHardwareVersionFromIncoming(String readyString)
 {
-  int newHardwareVersion = HARDWARE_VER_ATMEGA328_1;
+  int newHardwareVersion = HARDWARE_VER_UNO;
   if ("READY".equals(readyString))
   {
-    newHardwareVersion = HARDWARE_VER_ATMEGA328_1;
+    newHardwareVersion = HARDWARE_VER_UNO;
   }
   else
   {
     String ver = readyString.substring(6);
-    int verInt = HARDWARE_VER_ATMEGA328_1;
+    int verInt = HARDWARE_VER_UNO;
     try
     {
       verInt = Integer.parseInt(ver);
@@ -1886,13 +1900,13 @@ void setHardwareVersionFromIncoming(String readyString)
     catch (NumberFormatException nfe)
     {
       println("Bad format for hardware version - defaulting to ATMEGA328 (Uno)");
-      verInt = HARDWARE_VER_ATMEGA328_1;
+      verInt = HARDWARE_VER_UNO;
     }
     
-    if (HARDWARE_VER_ATMEGA1280_1 == verInt)
+    if (HARDWARE_VER_MEGA == verInt)
       newHardwareVersion = verInt;
     else
-      newHardwareVersion = HARDWARE_VER_ATMEGA328_1;
+      newHardwareVersion = HARDWARE_VER_UNO;
   }
   
   // now see if it's different to last time.

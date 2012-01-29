@@ -247,26 +247,26 @@ PVector sortPixelsInRowsAlternating(SortedMap<Float, List<PVector>> inRows, int 
       // reverse it (descending)
       Collections.sort(row, comp);
       Collections.reverse(row);
-      if (startPoint == null)
-      {
-        if (rowIsAlongXAxis)
-          startPoint = new PVector(row.get(0).x+(maxPixelSize/2.0), row.get(0).y);
-        else
-          startPoint = new PVector(row.get(0).x, row.get(0).y-(maxPixelSize/2.0));
-      }
+//      if (startPoint == null)
+//      {
+//        if (rowIsAlongXAxis)
+//          startPoint = new PVector(row.get(0).x+(maxPixelSize/2.0), row.get(0).y);
+//        else
+//          startPoint = new PVector(row.get(0).x, row.get(0).y-(maxPixelSize/2.0));
+//      }
       reverse = false;
     }
     else
     {
       // sort row ascending
       Collections.sort(row, comp);
-      if (startPoint == null)
-      {
-        if (rowIsAlongXAxis)
-          startPoint = new PVector(row.get(0).x-(maxPixelSize/2.0), row.get(0).y);
-        else
-          startPoint = new PVector(row.get(0).x, row.get(0).y+(maxPixelSize/2.0));
-      }
+//      if (startPoint == null)
+//      {
+//        if (rowIsAlongXAxis)
+//          startPoint = new PVector(row.get(0).x-(maxPixelSize/2.0), row.get(0).y);
+//        else
+//          startPoint = new PVector(row.get(0).x, row.get(0).y+(maxPixelSize/2.0));
+//      }
       reverse = true;
     }
   }
@@ -305,7 +305,7 @@ void sortPixelsInRows(SortedMap<Float, List<PVector>> inRows, int initialDirecti
 
 
 
-void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, float maxPixelSize, boolean scaleSizeToDensity)
+void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, int startCorner, float maxPixelSize, boolean scaleSizeToDensity)
 {
   // remove pixels outside of thresholds
   Set<PVector> pixelsToSkip = new HashSet<PVector>();
@@ -326,7 +326,7 @@ void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, 
   // sort it into a map of rows, keyed by y coordinate value
   SortedMap<Float, List<PVector>> inRows = divideIntoRows(pixels, initialDirection);
   
-  PVector startPoint = sortPixelsInRowsAlternating(inRows, initialDirection, maxPixelSize);
+  sortPixelsInRowsAlternating(inRows, initialDirection, maxPixelSize);
   
   // that was easy.
   // load the queue
@@ -337,18 +337,37 @@ void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, 
   String changeDir = CMD_CHANGEDRAWINGDIRECTION+getPixelDirectionMode()+"," + drawDirection +",END";
   commandQueue.add(changeDir);
   
+  // reverse the row sequence if the draw is starting from the bottom
+  // and reverse the pixel sequence if it needs to be done (odd number of rows)
+  boolean reversePixelSequence = false;
+  List<Float> rowKeys = new ArrayList<Float>();
+  rowKeys.addAll(inRows.keySet());
+  Collections.sort(rowKeys);
+  if (startCorner == DRAW_DIR_SE || startCorner == DRAW_DIR_SW)
+  {
+    Collections.reverse(rowKeys);
+    if (rowKeys.size() % 2 == 0)
+      reversePixelSequence = true;
+  }
+
   // and move the pen to just next to the first pixel
+  List<PVector> firstRow = inRows.get(rowKeys.get(0));
+//  if (initialDirection == DRAW_DIR_SE)
+  PVector startPoint = firstRow.get(0);
   if (startPoint != null)
   {
-    String touchdown = CMD_CHANGELENGTH+int(startPoint.x+0.5)+","+int(startPoint.y+0.5)+",END";
+    String touchdown = CMD_CHANGELENGTH+int(startPoint.x)+","+int(startPoint.y)+",END";
     commandQueue.add(touchdown);
     commandQueue.add(CMD_PENDOWN+"END");
   }
-    
   
-  for (Float key : inRows.keySet())
+  // so for each row
+  for (Float key : rowKeys)
   {
     List<PVector> row = inRows.get(key);
+    if (reversePixelSequence)
+      Collections.reverse(row);
+      
     for (PVector v : row)
     {
       // now convert to ints 
@@ -398,16 +417,16 @@ int getPixelDirectionMode()
 
 void sendSawtoothPixels(Set<PVector> pixels)
 {
-  sendPixels(pixels, CMD_DRAWSAWPIXEL, DRAW_DIR_SE, getGridSize(), false);
+  sendPixels(pixels, CMD_DRAWSAWPIXEL, renderStartDirection, renderStartPosition, getGridSize(), false);
 }
 void sendCircularPixels(Set<PVector> pixels)
 {
-  sendPixels(pixels, CMD_DRAWROUNDPIXEL, DRAW_DIR_SE, getGridSize(), false);
+  sendPixels(pixels, CMD_DRAWROUNDPIXEL, renderStartDirection, renderStartPosition, getGridSize(), false);
 }
 
 void sendScaledSquarePixels(Set<PVector> pixels)
 {
-  sendPixels(pixels, CMD_DRAWPIXEL, DRAW_DIR_SE, getGridSize(), true);
+  sendPixels(pixels, CMD_DRAWPIXEL, renderStartDirection, renderStartPosition, getGridSize(), true);
 }
 
 void sendSolidSquarePixels(Set<PVector> pixels)
@@ -416,17 +435,17 @@ void sendSolidSquarePixels(Set<PVector> pixels)
   {
     p.z = 0.0;
   }
-  sendPixels(pixels, CMD_DRAWPIXEL, DRAW_DIR_SE, getGridSize(), false);
+  sendPixels(pixels, CMD_DRAWPIXEL, renderStartDirection, renderStartPosition, getGridSize(), false);
 }
 
 void sendSquarePixels(Set<PVector> pixels)
 {
-  sendPixels(pixels, CMD_DRAWPIXEL, DRAW_DIR_SE, getGridSize(), false);
+  sendPixels(pixels, CMD_DRAWPIXEL, renderStartDirection, renderStartPosition, getGridSize(), false);
 }
 
 void sendScribblePixels(Set<PVector> pixels)
 {
-  sendPixels(pixels, CMD_DRAWSCRIBBLEPIXEL, DRAW_DIR_SE, getGridSize(), false);
+  sendPixels(pixels, CMD_DRAWSCRIBBLEPIXEL, renderStartDirection, renderStartPosition, getGridSize(), false);
 }
 
 
