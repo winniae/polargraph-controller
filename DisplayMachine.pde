@@ -327,8 +327,31 @@ class DisplayMachine extends Machine
 
     if (displayingVector && getVectorShape() != null)
     {
-      RPoint[][] pointPaths = getVectorShape().getPointsInPaths();      
-      RG.ignoreStyles();
+      displayVectorImage();
+    }
+
+    if (displayingGuides 
+      && getOutline().surrounds(getMouseVector())
+      && currentMode != MODE_MOVE_IMAGE
+      && mouseOverControls().isEmpty()
+      )
+    {
+      drawHangingStrings();
+      drawRows();
+      cursor(CROSS);
+    }
+    else
+    {
+      cursor(ARROW);
+    }
+  }
+  
+  public void displayVectorImage()
+  {
+    RPoint[][] pointPaths = getVectorShape().getPointsInPaths();      
+    RG.ignoreStyles();
+    if (pointPaths != null)
+    {
       for(int i = 0; i<pointPaths.length; i++)
       {
         if (pointPaths[i] != null) 
@@ -346,23 +369,8 @@ class DisplayMachine extends Machine
         }
       }
     }
-
-
-    if (displayingGuides 
-      && getOutline().surrounds(getMouseVector())
-      && currentMode != MODE_MOVE_IMAGE
-      && mouseOverControls().isEmpty()
-      )
-    {
-      drawHangingStrings();
-      drawRows();
-      cursor(CROSS);
-    }
-    else
-    {
-      cursor(ARROW);
-    }
   }
+
 
   // this scales a value from the screen to be a position on the machine
   /**  Given a point on-screen, this works out where on the 
