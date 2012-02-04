@@ -157,6 +157,9 @@ void button_mode_renderCirclePixel()
 }
 void button_mode_renderVectors()
 {
+  // turn off vector view and turn queue preview on
+  minitoggle_mode_showVector(false);
+  minitoggle_mode_showQueuePreview(true);
   sendVectorShapes();
 }
 

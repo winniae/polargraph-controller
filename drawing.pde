@@ -352,11 +352,37 @@ void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, 
 
   // and move the pen to just next to the first pixel
   List<PVector> firstRow = inRows.get(rowKeys.get(0));
-//  if (initialDirection == DRAW_DIR_SE)
+
   PVector startPoint = firstRow.get(0);
+  int startPointX = int(startPoint.x);
+  int startPointY = int(startPoint.y);
+  int halfSize = int(maxPixelSize/2.0);
+
+  print("Dir:");
+  if (initialDirection == DRAW_DIR_SE)
+  {
+    startPointX-=halfSize;
+    println("SE");
+  }
+  else if (initialDirection == DRAW_DIR_SW)
+  {
+    startPointY-=halfSize;
+    println("SW");
+  }
+  else if (initialDirection == DRAW_DIR_NW)
+  {
+    startPointX-=halfSize;
+    println("NW");
+  }
+  else if (initialDirection == DRAW_DIR_NE)
+  {
+    startPointY-=halfSize;
+    println("NE");
+  }
+  
   if (startPoint != null)
   {
-    String touchdown = CMD_CHANGELENGTH+int(startPoint.x)+","+int(startPoint.y)+",END";
+    String touchdown = CMD_CHANGELENGTH+int(startPointX)+","+int(startPointY)+",END";
     commandQueue.add(touchdown);
     commandQueue.add(CMD_PENDOWN+"END");
   }
@@ -551,37 +577,53 @@ void sendVectorShapes()
   
   String command = "";
   
+  // go through and get each path
   for (int i = 0; i<pointPaths.length; i++)
   {
-    // pen UP!
-    commandQueue.add(CMD_PENUP+"END");
-
     if (pointPaths[i] != null) 
     {
-      // get the first point
-      RPoint firstPoint = pointPaths[i][0];
-      PVector p = new PVector(firstPoint.x, firstPoint.y);
-      p = getDisplayMachine().inSteps(p);
-      p = getDisplayMachine().asNativeCoords(p);
-      
-      // move to this point and put the pen down
-      command = CMD_CHANGELENGTH+(int)p.x+","+(int)p.y+",END";
-      commandQueue.add(command);
-      commandQueue.add(CMD_PENDOWN+"END");
-      
-      // ready to draw to the second point
+      boolean firstPointFound = false;
       for (int j = 0; j<pointPaths[i].length; j++)
       {
-        RPoint point = pointPaths[i][j];
-        p = new PVector(point.x, point.y);
-        p = getDisplayMachine().inSteps(p);
-        p = getDisplayMachine().asNativeCoords(p);
-        command = CMD_CHANGELENGTHDIRECT+(int)p.x+","+(int)p.y+","+getMaxSegmentLength()+",END";
-        commandQueue.add(command);
+        PVector p = null;
+        // look for the first point that's actually on the page
+        if (!firstPointFound)
+        {
+          // get the first point
+          RPoint firstPoint = pointPaths[i][j];
+          p = new PVector(firstPoint.x, firstPoint.y);
+          p = getDisplayMachine().inSteps(p);
+          if (getDisplayMachine().getPage().surrounds(p))
+          {
+            p = getDisplayMachine().asNativeCoords(p);
+            
+            // pen UP!
+            commandQueue.add(CMD_PENUP+"END");
+            // move to this point and put the pen down
+            command = CMD_CHANGELENGTH+(int)p.x+","+(int)p.y+",END";
+            commandQueue.add(command);
+            commandQueue.add(CMD_PENDOWN+"END");
+            firstPointFound = true;
+          }
+        }
+        else
+        {
+          RPoint point = pointPaths[i][j];
+          p = new PVector(point.x, point.y);
+          p = getDisplayMachine().inSteps(p);
+          if (getDisplayMachine().getPage().surrounds(p))
+          {
+            p = getDisplayMachine().asNativeCoords(p);
+            command = CMD_CHANGELENGTHDIRECT+(int)p.x+","+(int)p.y+","+getMaxSegmentLength()+",END";
+            commandQueue.add(command);
+          }
+        }
       }
-      
-      // finished drawing that path
-      commandQueue.add(CMD_PENUP+"END");
+      if (firstPointFound)
+      {
+        // finished drawing that path
+        commandQueue.add(CMD_PENUP+"END");
+      }
     }
   }
 }

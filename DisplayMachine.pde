@@ -360,10 +360,13 @@ class DisplayMachine extends Machine
           for (int j = 0; j<pointPaths[i].length; j++)
           {
             PVector p = new PVector(pointPaths[i][j].x, pointPaths[i][j].y);
-            p = scaleToScreen(p);
-            stroke(0);
-            vertex(p.x, p.y);
-            ellipse(p.x, p.y, 3, 3);
+            if (getPage().surrounds(inSteps(p)))
+            {
+              p = scaleToScreen(p);
+              stroke(0);
+              vertex(p.x, p.y);
+              ellipse(p.x, p.y, 3, 3);
+            }
           }
           endShape();
         }
