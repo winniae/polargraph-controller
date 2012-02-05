@@ -60,6 +60,7 @@ static final String CMD_SETMOTORACCEL = "C32,";
 static final String CMD_MACHINE_MODE_STORE_COMMANDS = "C33,";
 static final String CMD_MACHINE_MODE_EXEC_FROM_STORE = "C34,";
 static final String CMD_MACHINE_MODE_LIVE = "C35,";
+static final String CMD_RANDOM_DRAW = "C36,";
 
 private PVector mouseVector = new PVector(0,0);
 
@@ -104,9 +105,9 @@ void sendMachineSpec()
   commandQueue.add(command);
   command = CMD_CHANGEMACHINESIZE+getDisplayMachine().inMM(getDisplayMachine().getWidth())+","+getDisplayMachine().inMM(getDisplayMachine().getHeight())+",END";
   commandQueue.add(command);
-  command = CMD_CHANGEMACHINEMMPERREV+getDisplayMachine().getMMPerRev()+",END";
+  command = CMD_CHANGEMACHINEMMPERREV+int(getDisplayMachine().getMMPerRev())+",END";
   commandQueue.add(command);
-  command = CMD_CHANGEMACHINESTEPSPERREV+getDisplayMachine().getStepsPerRev()+",END";
+  command = CMD_CHANGEMACHINESTEPSPERREV+int(getDisplayMachine().getStepsPerRev())+",END";
   commandQueue.add(command);
 }
 
@@ -645,6 +646,10 @@ void sendMachineExecMode()
   sendMachineLiveMode();
   if (storeFilename != null && !"".equals(storeFilename))
     commandQueue.add(CMD_MACHINE_MODE_EXEC_FROM_STORE + getStoreFilename() + ",END");
+}
+void sendRandomDraw()
+{
+  commandQueue.add(CMD_RANDOM_DRAW+"END");
 }
   
 
