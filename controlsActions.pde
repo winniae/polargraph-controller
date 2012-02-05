@@ -672,12 +672,15 @@ void button_mode_drawPixelsDialog()
   rStyle.add("Variable size square wave", PIXEL_STYLE_SQ_SIZE);
   rStyle.add("Solid square wave", PIXEL_STYLE_SQ_SOLID);
   rStyle.add("Scribble", PIXEL_STYLE_SCRIBBLE);
-  rStyle.add("Circles", PIXEL_STYLE_CIRCLE);
-  rStyle.add("Sawtooth", PIXEL_STYLE_SAW);
+  if (currentHardware >= HARDWARE_VER_MEGA)
+  {
+    rStyle.add("Circles", PIXEL_STYLE_CIRCLE);
+    rStyle.add("Sawtooth", PIXEL_STYLE_SAW);
+  }
   rStyle.setWindow(dialogWindow);
 
-  Button submitButton = cp5.addButton("submitDrawWindow",0,280,10,60,20);
-  submitButton.setLabel("Draw");
+  Button submitButton = cp5.addButton("submitDrawWindow",0,280,10,120,20);
+  submitButton.setLabel("Generate commands");
   submitButton.setWindow(dialogWindow);
 
 }
