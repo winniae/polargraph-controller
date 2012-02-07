@@ -283,6 +283,14 @@ void button_mode_saveProperties()
   props = null;
   loadFromPropertiesFile();
 }
+void button_mode_saveAsProperties()
+{
+  saveNewPropertiesFileWithFileChooser();
+}
+void button_mode_loadProperties()
+{
+  loadNewPropertiesFilenameWithFileChooser();
+}
 void toggle_mode_moveImage(boolean flag)
 {
   if (flag)

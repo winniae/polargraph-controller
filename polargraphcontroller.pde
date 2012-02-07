@@ -179,7 +179,11 @@ static final String MODE_RENDER_SCRIBBLE_PIXELS = "button_mode_renderScribblePix
 static final String MODE_CHANGE_MACHINE_SPEC = "button_mode_changeMachineSpec";
 static final String MODE_REQUEST_MACHINE_SIZE = "button_mode_requestMachineSize";
 static final String MODE_RESET_MACHINE = "button_mode_resetMachine";
+
 static final String MODE_SAVE_PROPERTIES = "button_mode_saveProperties";
+static final String MODE_SAVE_AS_PROPERTIES = "button_mode_saveAsProperties";
+static final String MODE_LOAD_PROPERTIES = "button_mode_loadProperties";
+
 static final String MODE_INC_SAMPLE_AREA = "button_mode_incSampleArea";
 static final String MODE_DEC_SAMPLE_AREA = "button_mode_decSampleArea";
 static final String MODE_INPUT_IMAGE = "button_mode_inputImage";
@@ -248,6 +252,7 @@ static final String MODE_RESIZE_VECTOR = "numberbox_mode_resizeVector";
 static final String MODE_MOVE_VECTOR = "numberbox_mode_moveVector";
 
 
+
 static String currentMode = MODE_BEGIN;
 static String lastMode = MODE_BEGIN;
 
@@ -304,7 +309,8 @@ public static Integer serialPortNumber = -1;
 
 
 Properties props = null;
-public static String propertiesFilename = "polargraph.properties.txt";
+public static String propertiesFilename = "default.properties.txt";
+public static String newPropertiesFilename = null;
 
 public static final String TAB_NAME_INPUT= "default";
 public static final String TAB_LABEL_INPUT = "input";
@@ -328,7 +334,7 @@ public static final String PANEL_NAME_GENERAL = "panel_general";
 
 public final PVector DEFAULT_CONTROL_SIZE = new PVector(100.0, 20.0);
 public final PVector CONTROL_SPACING = new PVector(2.0, 2.0);
-public PVector mainPanelPosition = new PVector(10.0, 55.0);
+public PVector mainPanelPosition = new PVector(10.0, 85.0);
 
 public final Integer PANEL_MIN_HEIGHT = 400;
 
@@ -460,6 +466,8 @@ void preLoadCommandQueue()
 
 void windowResized()
 {
+  windowWidth = frame.getWidth();
+  windowHeight = frame.getHeight();
   for (String key : getPanels().keySet())
   {
     Panel p = getPanels().get(key);
@@ -584,6 +592,8 @@ void drawImagePage()
   {
     panel.draw();
   }
+  stroke(200,200);
+  text(propertiesFilename, getPanel(PANEL_NAME_GENERAL).getOutline().getLeft(), getPanel(PANEL_NAME_GENERAL).getOutline().getTop()-7);
 
   showGroupBox();
   showCurrentMachinePosition();
@@ -616,6 +626,7 @@ void drawDetailsPage()
   {
     panel.draw();
   }
+  text(propertiesFilename, getPanel(PANEL_NAME_GENERAL).getOutline().getLeft(), getPanel(PANEL_NAME_GENERAL).getOutline().getTop()-7);
 
 //  showCurrentMachinePosition();
   if (displayingInfoTextOnInputPage)
@@ -640,12 +651,12 @@ void drawCommandQueuePage()
   int right = 0;
   for (Panel panel : getPanelsForTab(TAB_NAME_QUEUE))
   {
-    
     panel.draw();
     float r = panel.getOutline().getRight();
     if (r > right)
       right = (int) r;
   }
+  text(propertiesFilename, getPanel(PANEL_NAME_GENERAL).getOutline().getLeft(), getPanel(PANEL_NAME_GENERAL).getOutline().getTop()-7);
   showCommandQueue(right, (int)mainPanelPosition.y);
   
   drawStatusText(245, 12);
@@ -823,6 +834,83 @@ class VectorFileFilter extends javax.swing.filechooser.FileFilter
       return "Vector graphic files (SVG)";
   }
 }
+
+void loadNewPropertiesFilenameWithFileChooser()
+{
+  SwingUtilities.invokeLater(new Runnable() 
+  {
+    public void run() 
+    {
+      JFileChooser fc = new JFileChooser();
+      fc.setFileFilter(new PropertiesFileFilter());
+      
+      fc.setDialogTitle("Choose a config file...");
+
+      int returned = fc.showOpenDialog(frame);
+      if (returned == JFileChooser.APPROVE_OPTION) 
+      {
+        File file = fc.getSelectedFile();
+        if (file.exists())
+        {
+          println("New properties file exists.");
+          newPropertiesFilename = file.toString();
+          println("new propertiesFilename: "+  newPropertiesFilename);
+          propertiesFilename = newPropertiesFilename;
+          // clear old properties.
+          props = null;
+          loadFromPropertiesFile();
+        }   
+      }
+    }
+  });
+}
+
+class PropertiesFileFilter extends javax.swing.filechooser.FileFilter 
+{
+  public boolean accept(File file) {
+      String filename = file.getName();
+      filename.toLowerCase();
+      if (file.isDirectory() || filename.endsWith(".properties.txt")) 
+        return true;
+      else
+        return false;
+  }
+  public String getDescription() {
+      return "Properties files (*.properties.txt)";
+  }
+}
+
+void saveNewPropertiesFileWithFileChooser()
+{
+  SwingUtilities.invokeLater(new Runnable() 
+  {
+    public void run() 
+    {
+      JFileChooser fc = new JFileChooser();
+      fc.setFileFilter(new PropertiesFileFilter());
+      
+      fc.setDialogTitle("Enter a config file name...");
+
+      int returned = fc.showSaveDialog(frame);
+      if (returned == JFileChooser.APPROVE_OPTION) 
+      {
+        File file = fc.getSelectedFile();
+        newPropertiesFilename = file.toString();
+        newPropertiesFilename.toLowerCase();
+        if (!newPropertiesFilename.endsWith(".properties.txt"))
+          newPropertiesFilename+=".properties.txt";
+          
+        println("new propertiesFilename: "+  newPropertiesFilename);
+        propertiesFilename = newPropertiesFilename;
+        savePropertiesFile();
+        // clear old properties.
+        props = null;
+        loadFromPropertiesFile();
+      }
+    }
+  });
+}
+
 
 
 void setPictureFrameDimensionsToBox()
@@ -1880,6 +1968,7 @@ void changeHardwareVersionTo(int newVer)
     default   :  
       currentSram = HARDWARE_ATMEGA328_SRAM;
   }
+//  windowResized();
 }
 
 void setHardwareVersionFromIncoming(String readyString)
@@ -1939,6 +2028,10 @@ void serialEvent(Serial myPort)
     readMachineName(incoming);
   else if (incoming.startsWith("PGSIZE"))
     readMachineSize(incoming);
+  else if (incoming.startsWith("PGMMPERREV"))
+    readMmPerRev(incoming);
+  else if (incoming.startsWith("PGSTEPSPERREV"))
+    readStepsPerRev(incoming);
   else if (incoming.startsWith("ACK"))
     respondToAckCommand(incoming);
   else if ("RESEND".equals(incoming))
@@ -1992,9 +2085,36 @@ void readCartesianMachinePosition(String sync)
   }
 }
 
-void readMachineSize(String sync)
+void readMmPerRev(String in)
 {
-  String[] splitted = split(sync, ",");
+  String[] splitted = split(in, ",");
+  if (splitted.length == 3)
+  {
+    String mmStr = splitted[1];
+    
+    float mmPerRev = Float.parseFloat(mmStr);
+    getDisplayMachine().setMMPerRev(mmPerRev);
+    updateNumberboxValues();
+  }
+}
+
+void readStepsPerRev(String in)
+{
+  String[] splitted = split(in, ",");
+  if (splitted.length == 3)
+  {
+    String stepsStr = splitted[1];
+    
+    Float stepsPerRev = Float.parseFloat(stepsStr);
+    getDisplayMachine().setStepsPerRev(stepsPerRev);
+    updateNumberboxValues();
+  }
+}
+
+
+void readMachineSize(String in)
+{
+  String[] splitted = split(in, ",");
   if (splitted.length == 4)
   {
     String mWidth = splitted[1];
@@ -2198,7 +2318,7 @@ void loadFromPropertiesFile()
     println("Loading default homepoint.");
   }
   this.homePointCartesian = new PVector(getDisplayMachine().inSteps(homePointX), getDisplayMachine().inSteps(homePointY));
-  println("home point loaded: " + homePointCartesian + ", " + getHomePoint());
+//  println("home point loaded: " + homePointCartesian + ", " + getHomePoint());
   
   setVectorFilename(getStringProperty("controller.vector.filename", null));
   if (getVectorFilename() != null)

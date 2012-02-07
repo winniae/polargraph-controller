@@ -107,7 +107,9 @@ Map<String, Panel> buildPanels()
 {
   Map<String, Panel> panels = new HashMap<String, Panel>();
 
-  Rectangle panelOutline = new Rectangle(getMainPanelPosition(), new PVector((DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x)*2, 300.0));
+  float panelHeight = frame.getHeight() - getMainPanelPosition().y - (DEFAULT_CONTROL_SIZE.y*3);
+  Rectangle panelOutline = new Rectangle(getMainPanelPosition(), 
+  new PVector((DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x)*2, panelHeight));
   Panel inputPanel = new Panel(PANEL_NAME_INPUT, panelOutline);
   inputPanel.setResizable(true);
   inputPanel.setOutlineColour(color(200, 200, 200));
@@ -148,7 +150,9 @@ Map<String, Panel> buildPanels()
   queuePanel.setControlSizes(buildControlSizesForPanel(queuePanel));
   panels.put(PANEL_NAME_QUEUE, queuePanel);
 
-  panelOutline = new Rectangle(new PVector(getMainPanelPosition().x, getMainPanelPosition().y-(DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y)), new PVector(DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x, DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y));
+  panelOutline = new Rectangle(
+    new PVector(getMainPanelPosition().x, getMainPanelPosition().y-((DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y)*2)), 
+    new PVector((DEFAULT_CONTROL_SIZE.x+CONTROL_SPACING.x)*2, (DEFAULT_CONTROL_SIZE.y+CONTROL_SPACING.y)*2));
   Panel generalPanel = new Panel(PANEL_NAME_GENERAL, panelOutline);
   generalPanel.setResizable(false);
   generalPanel.setOutlineColour(color(200, 200, 200));
@@ -519,7 +523,7 @@ Map<String, PVector> buildControlSizesForPanel(Panel panel)
 
 Map<String, List<Controller>> buildControlsForPanels()
 {
-  println("build controls for panels.");
+//  println("build controls for panels.");
   Map<String, List<Controller>> map = new HashMap<String, List<Controller>>();
   map.put(PANEL_NAME_INPUT, getControllersForControllerNames(getControlNamesForInputPanel()));
   //  map.put(PANEL_NAME_PREVIEW, getControllersForControllerNames(getControlNamesForPreviewPanel()));
@@ -666,6 +670,8 @@ List<String> getControlNamesForGeneralPanel()
 {
   List<String> controlNames = new ArrayList<String>();
   controlNames.add(MODE_SAVE_PROPERTIES);
+  controlNames.add(MODE_SAVE_AS_PROPERTIES);
+  controlNames.add(MODE_LOAD_PROPERTIES);
   return controlNames;
 }
 
@@ -705,7 +711,9 @@ Map<String, String> buildControlLabels()
   result.put(MODE_CHANGE_MACHINE_SPEC, "Upload machine spec");
   result.put(MODE_REQUEST_MACHINE_SIZE, "Download size spec");
   result.put(MODE_RESET_MACHINE, "Reset machine to factory");
-  result.put(MODE_SAVE_PROPERTIES, "Save properties");
+  result.put(MODE_SAVE_PROPERTIES, "Save");
+  result.put(MODE_SAVE_AS_PROPERTIES, "Save as");
+  result.put(MODE_LOAD_PROPERTIES, "Load config");
 
   result.put(MODE_INC_SAMPLE_AREA, "Inc sample size");
   result.put(MODE_DEC_SAMPLE_AREA, "Dec sample size");
@@ -808,7 +816,11 @@ Set<String> buildControlNames()
   result.add(MODE_CHANGE_MACHINE_SPEC);
   result.add(MODE_REQUEST_MACHINE_SIZE);
   result.add(MODE_RESET_MACHINE);
+
   result.add(MODE_SAVE_PROPERTIES);
+  result.add(MODE_SAVE_AS_PROPERTIES);
+  result.add(MODE_LOAD_PROPERTIES);
+  
   result.add(MODE_INC_SAMPLE_AREA);
   result.add(MODE_DEC_SAMPLE_AREA);
   result.add(MODE_MOVE_IMAGE);

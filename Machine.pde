@@ -396,7 +396,7 @@ class Machine
     Float offsetX = getFloatProperty("controller.image.position.x", 0.0);
     Float offsetY = getFloatProperty("controller.image.position.y", 0.0);
     PVector imagePos = new PVector(offsetX, offsetY);
-    println("image pos: " + imagePos);
+//    println("image pos: " + imagePos);
     
     // image size
     Float imageWidth = getFloatProperty("controller.image.width", 500);
@@ -495,7 +495,7 @@ class Machine
     props.setProperty("controller.pictureframe.position.x", Integer.toString((int) inMM(framePosX)));
     props.setProperty("controller.pictureframe.position.y", Integer.toString((int) inMM(framePosY)));
 
-    println("framesize: " + inMM(frameSizeX));
+//    println("framesize: " + inMM(frameSizeX));
     
     return props;
   }
