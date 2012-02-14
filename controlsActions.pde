@@ -203,7 +203,10 @@ void button_mode_loadImage()
 void button_mode_loadVectorFile()
 {
   if (getVectorShape() == null)
+  {
     loadVectorWithFileChooser();
+    minitoggle_mode_showVector(true);
+  }
   else
   {
     vectorShape = null;
@@ -347,6 +350,24 @@ void numberbox_mode_resizeImage(float value)
     getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), getSampleArea());
 }
 
+void numberbox_mode_resizeVector(float value)
+{
+  vectorScaling = value;
+}
+void toggle_mode_moveVector(boolean flag)
+{
+  // unset other toggles
+  if (flag)
+  {
+    unsetOtherToggles(MODE_MOVE_VECTOR);
+    setMode(MODE_MOVE_VECTOR);
+  }
+  else
+  {
+    setMode("");
+  }
+}
+
 void numberbox_mode_changeMachineWidth(float value)
 {
   clearBoxVectors();
@@ -461,6 +482,21 @@ void button_mode_sendMachineSpeed()
   df.applyPattern("###.##");
   realtimeCommandQueue.add(CMD_SETMOTORACCEL+df.format(currentMachineAccel)+",END");
 }
+
+void setMode(String m)
+{
+  lastMode = currentMode;
+  currentMode = m;
+}
+void revertToLastMode()
+{
+  currentMode = lastMode;
+}
+
+/*------------------------------------------------------------------------
+    Details about the "serial port" subwindow
+------------------------------------------------------------------------*/
+
 void button_mode_serialPortDialog()
 {
   ControlWindow serialPortWindow = cp5.addControlWindow("changeSerialPortWindow",100,100,150,150);
@@ -554,6 +590,11 @@ void radio_serialPort(int newSerialPort)
   }
 }
 
+
+/*------------------------------------------------------------------------
+    Details about the "machine store" subwindow
+------------------------------------------------------------------------*/
+
 ControlWindow dialogWindow = null;
 
 void button_mode_machineStoreDialog()
@@ -643,15 +684,7 @@ void button_mode_sendMachineLiveMode()
 
 
 
-void setMode(String m)
-{
-  lastMode = currentMode;
-  currentMode = m;
-}
-void revertToLastMode()
-{
-  currentMode = lastMode;
-}
+
 
 /*------------------------------------------------------------------------
     Details about the "drawing" subwindow

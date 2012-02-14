@@ -413,6 +413,14 @@ Map<String, Controller> initialiseNumberboxValues(Map<String, Controller> map)
         n.setMax(255);
         n.setMultiplier(0.5);
       }
+      else if (MODE_RESIZE_VECTOR.equals(key))
+      {
+        n.setDecimalPrecision(0);
+        n.setValue(vectorScaling);
+        n.setMin(1);
+        n.setMax(1000);
+        n.setMultiplier(0.5);
+      }      
     }
   }
   return map;
@@ -879,7 +887,7 @@ Set<String> buildControlNames()
   result.add(MODE_SEND_MACHINE_EXEC_MODE);
   
   result.add(MODE_RESIZE_VECTOR);
-  result.add(MODE_MOVE_IMAGE);
+  result.add(MODE_MOVE_VECTOR);
   
   return result;
 }

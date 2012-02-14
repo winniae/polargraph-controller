@@ -37,7 +37,7 @@ import java.awt.event.*;
 
 int majorVersionNo = 1;
 int minorVersionNo = 1;
-int buildNo = 2;
+int buildNo = 3;
 
 String programTitle = "Polargraph Controller v" + majorVersionNo + "." + minorVersionNo + " build " + buildNo;
 ControlP5 cp5;
@@ -249,7 +249,7 @@ static final String MODE_SEND_MACHINE_LIVE_MODE = "button_mode_sendMachineLiveMo
 static final String MODE_SEND_MACHINE_EXEC_MODE = "button_mode_machineExecDialog";
 
 static final String MODE_RESIZE_VECTOR = "numberbox_mode_resizeVector";
-static final String MODE_MOVE_VECTOR = "numberbox_mode_moveVector";
+static final String MODE_MOVE_VECTOR = "toggle_mode_moveVector";
 
 
 
@@ -355,10 +355,12 @@ public Map<String, Panel> panels = null;
 PVector machineDragOffset = new PVector (0.0, 0.0);
 PVector lastMachineDragPosition = new PVector (0.0, 0.0);
 public final float MIN_SCALING = 0.1;
-public final float MAX_SCALING = 4.0;
+public final float MAX_SCALING = 5.0;
 
 RShape vectorShape = null;
 String vectorFilename = null;
+float vectorScaling = 100;
+PVector vectorPosition = new PVector(0.0,0.0);
 
 String storeFilename = "comm.txt";
 boolean overwriteExistingStoreFile = true;
@@ -690,6 +692,33 @@ void drawMoveImageOutline()
     noTint();
     // decorate image
     noFill();
+  }
+  else if (MODE_MOVE_VECTOR == currentMode && getVectorShape() != null)
+  {
+    RPoint[][] pointPaths = getVectorShape().getPointsInPaths();
+    RG.ignoreStyles();
+    stroke(1);
+    strokeWeight(1);
+    if (pointPaths != null)
+    {
+      for (int i = 0; i<pointPaths.length; i++)
+      {
+        if (pointPaths[i] != null) 
+        {
+          beginShape();
+          for (int j = 0; j<pointPaths[i].length; j++)
+          {
+            PVector p = new PVector(pointPaths[i][j].x, pointPaths[i][j].y);
+            p = PVector.mult(p, (vectorScaling/100));
+            p = PVector.add(p, getDisplayMachine().scaleToDisplayMachine(getMouseVector()));
+            p = getDisplayMachine().scaleToScreen(p);
+            stroke(0);
+            vertex(p.x, p.y);
+          }
+          endShape();
+        }
+      }
+    }
   }
 }
 
@@ -1086,11 +1115,18 @@ boolean mouseOverQueue()
 
 void changeMachineScaling(int delta)
 {
+  boolean scalingChanged = true;
   machineScaling += (delta * 0.1);
   if (machineScaling <  MIN_SCALING)
+  {
     machineScaling = MIN_SCALING;
+    scalingChanged = false;
+  }
   else if (machineScaling > MAX_SCALING)
+  {
     machineScaling = MAX_SCALING;
+    scalingChanged = false;
+  }
 }
 
 void keyPressed()
@@ -1254,6 +1290,11 @@ void mouseClicked()
       if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
         getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
     }
+    else if (currentMode.equals(MODE_MOVE_VECTOR))
+    {
+      PVector mVect = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
+      vectorPosition = mVect;
+    }
     else if (mouseOverQueue())
     {
       // stopping or starting 
@@ -1289,6 +1330,9 @@ void machineClicked()
 }
 void mousePressed()
 {
+//  println("mouse pressed");
+//  println("mouse button: "+mouseButton);
+//  println("Current mode: " +currentMode);
   if (mouseButton == CENTER)
   {
     middleButtonMachinePress();
@@ -1296,7 +1340,7 @@ void mousePressed()
   }
   else if (mouseButton == LEFT)
   {
-    if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT) && mouseOverMachine())
+    if (MODE_INPUT_BOX_TOP_LEFT.equals(currentMode) && mouseOverMachine())
     {
       minitoggle_mode_showImage(true);
       minitoggle_mode_showDensityPreview(false);
@@ -1309,6 +1353,10 @@ void mousePressed()
 //        minitoggle_mode_showDensityPreview(true);
       }
     }
+    else
+    {
+//      println("Do nothing.");
+    }
   }
 }
 
@@ -1316,7 +1364,7 @@ void mouseReleased()
 {
   if (mouseButton == LEFT)
   {
-    if (currentMode.equals(MODE_INPUT_BOX_TOP_LEFT) && mouseOverMachine())
+    if (MODE_INPUT_BOX_TOP_LEFT.equals(currentMode) && mouseOverMachine())
     {
       PVector pos = getDisplayMachine().scaleToDisplayMachine(getMouseVector());
       setBoxVector2(pos);
@@ -2333,6 +2381,10 @@ void loadFromPropertiesFile()
       println("File not found (" + getVectorFilename() + ")");
     }
   }
+  vectorScaling = getFloatProperty("controller.vector.scaling", 100.0);
+  getVectorPosition().x = getFloatProperty("controller.vector.position.x", 0.0);
+  getVectorPosition().y = getFloatProperty("controller.vector.position.y", 0.0);
+
   
   println("Finished loading configuration from properties file.");
 }
@@ -2387,6 +2439,10 @@ void savePropertiesFile()
   
   if (getVectorFilename() != null)
     props.setProperty("controller.vector.filename", getVectorFilename());
+    
+  props.setProperty("controller.vector.scaling", new Float(vectorScaling).toString());
+  props.setProperty("controller.vector.position.x", new Float(getVectorPosition().x).toString());
+  props.setProperty("controller.vector.position.y", new Float(getVectorPosition().y).toString());
  
   FileOutputStream propertiesOutput = null;
 
@@ -2512,6 +2568,11 @@ void setOverwriteExistingStoreFile(boolean over)
 void initProperties()
 {
   getProperties();
+}
+
+PVector getVectorPosition()
+{
+  return vectorPosition;
 }
 
 

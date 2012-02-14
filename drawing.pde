@@ -588,11 +588,23 @@ void sendVectorShapes()
       {
         PVector p = null;
         // look for the first point that's actually on the page
+
+//        PVector p = new PVector(pointPaths[i][j].x, pointPaths[i][j].y);
+//        if (getPage().surrounds(inSteps(p)))
+//        {
+//          p = scaleToScreen(p);
+//          stroke(0);
+//          vertex(p.x, p.y);
+//          ellipse(p.x, p.y, 3, 3);
+//        }
+
         if (!firstPointFound)
         {
           // get the first point
           RPoint firstPoint = pointPaths[i][j];
           p = new PVector(firstPoint.x, firstPoint.y);
+          p = PVector.mult(p, (vectorScaling/100));
+          p = PVector.add(p, getVectorPosition());
           p = getDisplayMachine().inSteps(p);
           if (getDisplayMachine().getPage().surrounds(p))
           {
@@ -611,6 +623,8 @@ void sendVectorShapes()
         {
           RPoint point = pointPaths[i][j];
           p = new PVector(point.x, point.y);
+          p = PVector.mult(p, (vectorScaling/100));
+          p = PVector.add(p, getVectorPosition());
           p = getDisplayMachine().inSteps(p);
           if (getDisplayMachine().getPage().surrounds(p))
           {

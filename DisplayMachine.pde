@@ -348,8 +348,9 @@ class DisplayMachine extends Machine
   
   public void displayVectorImage()
   {
-    RPoint[][] pointPaths = getVectorShape().getPointsInPaths();      
+    RPoint[][] pointPaths = getVectorShape().getPointsInPaths();
     RG.ignoreStyles();
+    stroke(1);
     if (pointPaths != null)
     {
       for(int i = 0; i<pointPaths.length; i++)
@@ -360,6 +361,8 @@ class DisplayMachine extends Machine
           for (int j = 0; j<pointPaths[i].length; j++)
           {
             PVector p = new PVector(pointPaths[i][j].x, pointPaths[i][j].y);
+            p = PVector.mult(p, (vectorScaling/100));
+            p = PVector.add(p, getVectorPosition());
             if (getPage().surrounds(inSteps(p)))
             {
               p = scaleToScreen(p);
