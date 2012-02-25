@@ -264,18 +264,18 @@ class Machine
     return averageBrightness;
   }
 
-  boolean isChromaKey(PVector o)
+  boolean isChromaKey(PVector pos, float scalingFactor)
   {
-    if (getImageFrame().surrounds(o))
+    if (getImageFrame().surrounds(pos))
     {
       // offset it by image position to get position over image
-      PVector offsetPos = PVector.sub(o, getImageFrame().getPosition());
+      PVector offsetPos = PVector.sub(pos, getImageFrame().getPosition());
       int originX = (int) offsetPos.x;
       int originY = (int) offsetPos.y;
       
       PImage centrePixel = null;
 
-      centrePixel = getImage().get(originX, originY, 1, 1);
+      centrePixel = getImage().get(int(originX*scalingFactor), int(originY*scalingFactor), 1, 1);
       centrePixel.loadPixels();
 
       // get pixels from the vector coords
@@ -283,9 +283,9 @@ class Machine
       float g = green(centrePixel.pixels[0]);
       float b = blue(centrePixel.pixels[0]);
       
-      if (g > 253.0 
-      && r != g 
-      && b != g)
+      if (g == 255.0 
+      && r == 0.0 
+      && b == 0.0)
       {
         println("is chroma key " + r + ", "+g+","+b);
         return true;
@@ -593,11 +593,10 @@ class Machine
       {
         PVector nativeCoord = new PVector(a, b);
         PVector cartesianCoord = asCartesianCoords(nativeCoord);
-        if (selectedArea.surrounds(cartesianCoord))
+        if (!isChromaKey(cartesianCoord, scalingFactor) && selectedArea.surrounds(cartesianCoord))
         {
           if (sampleSize >= 1.0)
           {
-            
             float brightness = getPixelBrightness(cartesianCoord, sampleSize, scalingFactor);
             nativeCoord.z = brightness;
           }
