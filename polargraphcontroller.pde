@@ -251,6 +251,8 @@ static final String MODE_SEND_MACHINE_EXEC_MODE = "button_mode_machineExecDialog
 static final String MODE_RESIZE_VECTOR = "numberbox_mode_resizeVector";
 static final String MODE_MOVE_VECTOR = "toggle_mode_moveVector";
 
+static final String MODE_CHOOSE_CHROMA_KEY_COLOUR = "toggle_mode_chooseChromaKeyColour";
+
 
 
 static String currentMode = MODE_BEGIN;
@@ -289,6 +291,7 @@ static final char BITMAP_BACKGROUND_COLOUR = 0x0F;
 
 PVector homePointCartesian = null;
 
+public color chromaKeyColour = color(0,255,0);
 
 // used in the preview page
 public color pageColour = color(220);
@@ -1404,15 +1407,15 @@ void middleButtonMachinePress()
 void leftButtonMachineClick()
 {
   if (currentMode.equals(MODE_BEGIN))
-  {
     currentMode = MODE_INPUT_BOX_TOP_LEFT;
-  }
   else if (currentMode.equals(MODE_SET_POSITION))
     sendSetPosition();
   else if (currentMode.equals(MODE_DRAW_DIRECT))
     sendMoveToPosition(true);
   else if (currentMode.equals(MODE_DRAW_TO_POSITION))
     sendMoveToPosition(false);
+  else if (currentMode.equals(MODE_CHOOSE_CHROMA_KEY_COLOUR))
+    setChromaKey(getMouseVector());
   
 }
 
@@ -1420,6 +1423,16 @@ void mouseWheel(int delta)
 {
   changeMachineScaling(delta);
 } 
+
+void setChromaKey(PVector p)
+{
+  color col = getDisplayMachine().getPixelAtScreenCoords(p);
+  chromaKeyColour = col;
+  if (getDisplayMachine().pixelsCanBeExtracted() && isBoxSpecified())
+  {
+    getDisplayMachine().extractPixelsFromArea(getBoxVector1(), getBoxVectorSize(), getGridSize(), sampleArea);
+  }
+}
 
 boolean isPreviewable(String command)
 {
@@ -1673,7 +1686,7 @@ void showText(int xPosOrigin, int yPosOrigin)
 {
   noStroke();
   fill(0, 0, 0, 80);
-  rect(xPosOrigin, yPosOrigin, 220, 450);
+  rect(xPosOrigin, yPosOrigin, 220, 550);
   
   
   textSize(12);
@@ -1746,6 +1759,16 @@ void showText(int xPosOrigin, int yPosOrigin)
   text("Last sent pen width: " + currentPenWidth, textPositionX, textPositionY+(tRow*tRowNo++));
   text("Last sent speed: " + currentMachineMaxSpeed, textPositionX, textPositionY+(tRow*tRowNo++));
   text("Last sent accel: " + currentMachineAccel, textPositionX, textPositionY+(tRow*tRowNo++));
+
+  tRowNo++;
+  text("Chroma key colour: ", textPositionX, textPositionY+(tRow*tRowNo));
+  fill(chromaKeyColour);
+  stroke(255);
+  strokeWeight(1);
+  rect(textPositionX+120, textPositionY+(tRow*tRowNo)-15, 25, 15);
+  noFill();
+  noStroke();
+  tRowNo++;
 
 }
 
@@ -2331,6 +2354,7 @@ void loadFromPropertiesFile()
   this.guideColour = getColourProperty("controller.guide.colour", color(255));
   this.backgroundColour = getColourProperty("controller.background.colour", color(100));
   this.densityPreviewColour = getColourProperty("controller.densitypreview.colour", color(0));
+  this.chromaKeyColour = getColourProperty("controller.pixel.mask.color", color(0,255,0));
 
   // pen size
   this.currentPenWidth = getFloatProperty("machine.pen.size", 0.8);
@@ -2384,6 +2408,7 @@ void loadFromPropertiesFile()
   vectorScaling = getFloatProperty("controller.vector.scaling", 100.0);
   getVectorPosition().x = getFloatProperty("controller.vector.position.x", 0.0);
   getVectorPosition().y = getFloatProperty("controller.vector.position.y", 0.0);
+  
 
   
   println("Finished loading configuration from properties file.");
@@ -2423,6 +2448,8 @@ void savePropertiesFile()
   
   props.setProperty("machine.motors.maxSpeed", new Float(currentMachineMaxSpeed).toString());
   props.setProperty("machine.motors.accel", new Float(currentMachineAccel).toString());
+  
+  props.setProperty("controller.pixel.mask.color", hex(this.chromaKeyColour, 6));
 
   PVector hp = null;  
   if (getHomePoint() != null)

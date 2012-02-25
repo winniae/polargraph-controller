@@ -544,6 +544,15 @@ class DisplayMachine extends Machine
     }
     noFill();
   }
+  
+  color getPixelAtScreenCoords(PVector pos)
+  {
+    pos = scaleToDisplayMachine(pos);
+    pos = inSteps(pos);
+    float scalingFactor = getImage().width / getImageFrame().getWidth();
+    color col = super.getPixelAtMachineCoords(pos, scalingFactor);
+    return col;
+  }
 
   Set<PVector> getExtractedPixels()
   {

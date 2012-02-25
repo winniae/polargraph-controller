@@ -192,7 +192,6 @@ class Machine
     return mm;
   }
   
-  
   float getPixelBrightness(PVector pos, float dim, float scalingFactor)
   {
     float averageBrightness = 255.0;
@@ -264,7 +263,7 @@ class Machine
     return averageBrightness;
   }
 
-  boolean isChromaKey(PVector pos, float scalingFactor)
+  color getPixelAtMachineCoords(PVector pos, float scalingFactor)
   {
     if (getImageFrame().surrounds(pos))
     {
@@ -277,22 +276,31 @@ class Machine
 
       centrePixel = getImage().get(int(originX*scalingFactor), int(originY*scalingFactor), 1, 1);
       centrePixel.loadPixels();
+      
+      color col = centrePixel.pixels[0];
+      return col;
+    }
+    else 
+    {
+      return 0;
+    }
+  }
+
+  boolean isChromaKey(PVector pos, float scalingFactor)
+  {
+    if (getImageFrame().surrounds(pos))
+    {
+      color col = getPixelAtMachineCoords(pos, scalingFactor);
 
       // get pixels from the vector coords
-      float r = red(centrePixel.pixels[0]);
-      float g = green(centrePixel.pixels[0]);
-      float b = blue(centrePixel.pixels[0]);
-      
-      if (g == 255.0 
-      && r == 0.0 
-      && b == 0.0)
+      if (col == chromaKeyColour)
       {
-        println("is chroma key " + r + ", "+g+","+b);
+        println("is chroma key " + red(col) + ", "+green(col)+","+blue(col));
         return true;
       }
       else
       {
-        println("isn't chroma key " + r + ", "+g+","+b);
+        println("isn't chroma key " + red(col) + ", "+green(col)+","+blue(col));
         return false;
       }
     }

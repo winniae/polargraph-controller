@@ -573,6 +573,7 @@ List<String> getControlNamesForInputPanel()
   controlNames.add(MODE_IMAGE_PIXEL_DARK_THRESHOLD);
   controlNames.add(MODE_CHANGE_GRID_SIZE);
   controlNames.add(MODE_CHANGE_SAMPLE_AREA);
+  controlNames.add(MODE_CHOOSE_CHROMA_KEY_COLOUR);
 //  controlNames.add(MODE_RENDER_SQUARE_PIXELS);
 //  controlNames.add(MODE_RENDER_SCALED_SQUARE_PIXELS);
 //  controlNames.add(MODE_RENDER_SOLID_SQUARE_PIXELS);
@@ -785,6 +786,7 @@ Map<String, String> buildControlLabels()
   result.put(MODE_RESIZE_VECTOR, "Resize vector");
   result.put(MODE_MOVE_VECTOR, "Move vector");
   result.put(MODE_RENDER_PIXEL_DIALOG, "Render pixels...");
+  result.put(MODE_CHOOSE_CHROMA_KEY_COLOUR, "Choose mask colour");
 
   return result;
 }
@@ -888,6 +890,8 @@ Set<String> buildControlNames()
   
   result.add(MODE_RESIZE_VECTOR);
   result.add(MODE_MOVE_VECTOR);
+  
+  result.add(MODE_CHOOSE_CHROMA_KEY_COLOUR);
   
   return result;
 }

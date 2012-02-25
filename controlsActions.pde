@@ -306,6 +306,18 @@ void toggle_mode_moveImage(boolean flag)
     setMode("");
   }
 }
+
+void toggle_mode_chooseChromaKeyColour(boolean flag)
+{
+  if (flag)
+  {
+    unsetOtherToggles(MODE_CHOOSE_CHROMA_KEY_COLOUR);
+    setMode(MODE_CHOOSE_CHROMA_KEY_COLOUR);
+  }
+  else
+    setMode("");
+}
+
 void button_mode_convertBoxToPictureframe()
 {
   setPictureFrameDimensionsToBox();
