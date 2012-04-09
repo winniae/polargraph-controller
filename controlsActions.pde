@@ -715,6 +715,11 @@ void button_mode_drawPixelsDialog()
   rPos.add("Top-left", DRAW_DIR_NW);
   rPos.setWindow(dialogWindow);
 
+  Radio rSkip = cp5.addRadio("radio_pixelSkipStyle",10,80);
+  rSkip.add("Lift pen over masked pixels", 1);
+  rSkip.add("Draw masked pixels as blanks", 2);
+  rSkip.setWindow(dialogWindow);
+
 //  Radio rDir = cp5.addRadio("radio_rowStartDirection",100,10);
 //  rDir.add("Upwards", 0);
 //  rDir.add("Downwards", 1);
@@ -735,6 +740,7 @@ void button_mode_drawPixelsDialog()
   Button submitButton = cp5.addButton("submitDrawWindow",0,280,10,120,20);
   submitButton.setLabel("Generate commands");
   submitButton.setWindow(dialogWindow);
+  
 
 }
 
@@ -756,6 +762,13 @@ void radio_rowStartDirection(int dir)
 void radio_pixelStyle(int style)
 {
   renderStyle = style;
+}
+void radio_pixelSkipStyle(int style)
+{
+  if (style == 1)
+    liftPenOnMaskedPixels = true;
+  else if (style == 2)
+    liftPenOnMaskedPixels = false;
 }
 void submitDrawWindow(int theValue) 
 {

@@ -308,21 +308,6 @@ void sortPixelsInRows(SortedMap<Float, List<PVector>> inRows, int initialDirecti
 
 void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, int startCorner, float maxPixelSize, boolean scaleSizeToDensity)
 {
-  // remove pixels outside of thresholds
-  Set<PVector> pixelsToSkip = new HashSet<PVector>();
-  for (PVector p : pixels)
-  {
-    if (isHiddenPixel(p))
-    {
-      pixelsToSkip.add(p);
-    }
-  }
-  
-  for (PVector p : pixelsToSkip)
-  {
-    if (pixels.contains(p))
-      pixels.remove(p);
-  }
   
   // sort it into a map of rows, keyed by y coordinate value
   SortedMap<Float, List<PVector>> inRows = divideIntoRows(pixels, initialDirection);
@@ -388,6 +373,8 @@ void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, 
     commandQueue.add(CMD_PENDOWN+"END");
   }
   
+  boolean penLifted = false;
+
   // so for each row
   for (Float key : rowKeys)
   {
@@ -397,19 +384,58 @@ void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, 
       
     for (PVector v : row)
     {
-      // now convert to ints 
-      int inX = int(v.x);
-      int inY = int(v.y);
-      Integer density = int(v.z);
-      int pixelSize = int(maxPixelSize);
-      if (scaleSizeToDensity)
+      if (isHiddenPixel(v)) // check for masked pixels,
       {
-        pixelSize = scaleDensity(density, 255, int(maxPixelSize));
-        density = 0;
+        //println("It's outside the bright/dark threshold.");
+        if (liftPenOnMaskedPixels)
+        {
+          if (!penLifted) // if the pen isn't already up
+          {
+            String raisePen = CMD_PENUP + "END";
+            commandQueue.add(raisePen);
+            penLifted = true;
+          }
+          else
+          {
+           // println("Pen is already lifted.");
+          }
+          // now convert to ints 
+          int inX = int(v.x);
+          int inY = int(v.y);
+          int pixelSize = int(maxPixelSize);
+          String command = pixelCommand+inX+","+inY+","+int(pixelSize+0.5)+",255,END";
+          commandQueue.add(command);
+        }
+        else
+        {
+          //println("liftPenOnMaskedPixels is not selected.");
+        }
+        // so this pixel doesn't get added to the queue.
       }
-      String command = pixelCommand+inX+","+inY+","+int(pixelSize+0.5)+","+density+",END";
-
-      commandQueue.add(command);
+      else // pixel wasn't masked - render it up
+      {
+        // now convert to ints 
+        int inX = int(v.x);
+        int inY = int(v.y);
+        Integer density = int(v.z);
+        int pixelSize = int(maxPixelSize);
+        if (scaleSizeToDensity)
+        {
+          pixelSize = scaleDensity(density, 255, int(maxPixelSize));
+          density = 0;
+        }
+        String command = pixelCommand+inX+","+inY+","+int(pixelSize+0.5)+","+density+",END";
+  
+        // put the pen down if lifting over masked pixels is on
+        if (liftPenOnMaskedPixels && penLifted)
+        {
+//          println("Pen down.");
+          String lowerPen = CMD_PENDOWN + "END";
+          commandQueue.add(lowerPen);
+          penLifted = false;
+        }
+        commandQueue.add(command);
+      }
     }
 
     drawDirection = flipDrawDirection(drawDirection);
@@ -421,6 +447,7 @@ void sendPixels(Set<PVector> pixels, String pixelCommand, int initialDirection, 
   numberOfPixelsTotal = commandQueue.size();
   startPixelTimer();
 }
+
 
 int flipDrawDirection(int curr)
 {
@@ -460,7 +487,8 @@ void sendSolidSquarePixels(Set<PVector> pixels)
 {
   for (PVector p : pixels)
   {
-    p.z = 0.0;
+    if (p.z != MASKED_PIXEL_BRIGHTNESS)
+      p.z = 0.0;
   }
   sendPixels(pixels, CMD_DRAWPIXEL, renderStartDirection, renderStartPosition, getGridSize(), false);
 }
@@ -587,17 +615,8 @@ void sendVectorShapes()
       for (int j = 0; j<pointPaths[i].length; j++)
       {
         PVector p = null;
+
         // look for the first point that's actually on the page
-
-//        PVector p = new PVector(pointPaths[i][j].x, pointPaths[i][j].y);
-//        if (getPage().surrounds(inSteps(p)))
-//        {
-//          p = scaleToScreen(p);
-//          stroke(0);
-//          vertex(p.x, p.y);
-//          ellipse(p.x, p.y, 3, 3);
-//        }
-
         if (!firstPointFound)
         {
           // get the first point
@@ -631,6 +650,10 @@ void sendVectorShapes()
             p = getDisplayMachine().asNativeCoords(p);
             command = CMD_CHANGELENGTHDIRECT+(int)p.x+","+(int)p.y+","+getMaxSegmentLength()+",END";
             commandQueue.add(command);
+          }
+          else
+          {
+            firstPointFound = false;
           }
         }
       }

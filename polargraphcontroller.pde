@@ -1,6 +1,7 @@
 import geomerative.*;
 import org.apache.batik.svggen.font.table.*;
 import org.apache.batik.svggen.font.*;
+import java.util.zip.CRC32;
 
 /**
   Polargraph controller
@@ -29,6 +30,9 @@ import org.apache.batik.svggen.font.*;
   sandy.noble@gmail.com
   http://www.polargraph.co.uk/
   http://code.google.com/p/polargraph/
+
+  2012-04-08 Changed serial comms to use a checksum CRC to verify instead of repeat-and-confirm.  
+  2012-04-09 Added feature to lift pen while moving over skipped pixels.
 */
 import javax.swing.*;
 import processing.serial.*;
@@ -37,7 +41,7 @@ import java.awt.event.*;
 
 int majorVersionNo = 1;
 int minorVersionNo = 1;
-int buildNo = 4;
+int buildNo = 6;
 
 String programTitle = "Polargraph Controller v" + majorVersionNo + "." + minorVersionNo + " build " + buildNo;
 ControlP5 cp5;
@@ -149,7 +153,7 @@ float testPenWidthStartSize = 0.5;
 float testPenWidthEndSize = 2.0;
 float testPenWidthIncrementSize = 0.5;
 
-int maxSegmentLength = 20;
+int maxSegmentLength = 2;
 
 static final String MODE_BEGIN = "button_mode_begin";
 static final String MODE_DRAW_OUTLINE_BOX = "button_mode_drawOutlineBox";
@@ -264,9 +268,10 @@ static PVector boxVector2 = null;
 static PVector rowsVector1 = null;
 static PVector rowsVector2 = null;
 
-
+static final float MASKED_PIXEL_BRIGHTNESS = -1.0;
 static int pixelExtractBrightThreshold = 255;
 static int pixelExtractDarkThreshold = 0;
+static boolean liftPenOnMaskedPixels = true;
 int numberOfPixelsTotal = 0;
 int numberOfPixelsCompleted = 0;
 
@@ -1504,7 +1509,10 @@ void previewQueue()
       noFill();
     }
     
-    stroke(0);
+    if (command.startsWith(CMD_CHANGELENGTHDIRECT))
+      stroke(0);
+    else 
+      stroke(200,0,0);
     line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
     startPoint = endPoint;
   }
@@ -1524,7 +1532,7 @@ void previewQueue()
 
 boolean isHiddenPixel(PVector p)
 {
-  if ((p.z > pixelExtractBrightThreshold) || (p.z < pixelExtractDarkThreshold))
+  if ((p.z == MASKED_PIXEL_BRIGHTNESS) || (p.z > pixelExtractBrightThreshold) || (p.z < pixelExtractDarkThreshold))
     return true;
   else
     return false;
@@ -2103,8 +2111,8 @@ void serialEvent(Serial myPort)
     readMmPerRev(incoming);
   else if (incoming.startsWith("PGSTEPSPERREV"))
     readStepsPerRev(incoming);
-  else if (incoming.startsWith("ACK"))
-    respondToAckCommand(incoming);
+//  else if (incoming.startsWith("ACK"))
+//    respondToAckCommand(incoming);
   else if ("RESEND".equals(incoming))
     resendLastCommand();
   else if ("DRAWING".equals(incoming))
@@ -2212,33 +2220,33 @@ void readMachineName(String sync)
   }
 }
 
-void respondToAckCommand(String ack)
-{
-  String commandOnly = ack.substring(4);
-  if (lastCommand.equals(commandOnly))
-  {
-    // that means the bot got the message!! huspag!!
-    // signal the EXECUTION
-    commandHistory.add(lastCommand);
-    String command = "EXEC";
-    lastCommand = "";
-    println("Dispatching confirmation command: " + command);
-    myPort.write(command);
-  }
-  else
-  {
-    // oh dear, the message got mangled!
-    // try again!!!!
-    if (lastCommand == null || lastCommand.equals(""))
-    {
-      println("Apparently the last command has been badly acknowledged, but there isn't one!!");
-    }
-    else
-    {
-      resendLastCommand();
-    }
-  }
-}
+//void respondToAckCommand(String ack)
+//{
+//  String commandOnly = ack.substring(4);
+//  if (lastCommand.equals(commandOnly))
+//  {
+//    // that means the bot got the message!! huspag!!
+//    // signal the EXECUTION
+//    commandHistory.add(lastCommand);
+//    String command = "EXEC";
+//    lastCommand = "";
+//    println("Dispatching confirmation command: " + command);
+//    myPort.write(command);
+//  }
+//  else
+//  {
+//    // oh dear, the message got mangled!
+//    // try again!!!!
+//    if (lastCommand == null || lastCommand.equals(""))
+//    {
+//      println("Apparently the last command has been badly acknowledged, but there isn't one!!");
+//    }
+//    else
+//    {
+//      resendLastCommand();
+//    }
+//  }
+//}
 
 void resendLastCommand()
 {
@@ -2273,7 +2281,10 @@ void dispatchCommandQueue()
       commandQueue.remove(0);
       println("Dispatching command: " + command);
     }
-
+    Checksum crc = new CRC32();
+    crc.update(lastCommand.getBytes(), 0, lastCommand.length());
+    lastCommand = lastCommand+":"+crc.getValue();
+    println("Last command:" + lastCommand);
     myPort.write(lastCommand);
     drawbotReady = false;
   }

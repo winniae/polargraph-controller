@@ -601,14 +601,22 @@ class Machine
       {
         PVector nativeCoord = new PVector(a, b);
         PVector cartesianCoord = asCartesianCoords(nativeCoord);
-        if (!isChromaKey(cartesianCoord, scalingFactor) && selectedArea.surrounds(cartesianCoord))
+        if (selectedArea.surrounds(cartesianCoord))
         {
-          if (sampleSize >= 1.0)
+          if (isChromaKey(cartesianCoord, scalingFactor))
           {
-            float brightness = getPixelBrightness(cartesianCoord, sampleSize, scalingFactor);
-            nativeCoord.z = brightness;
+            nativeCoord.z = MASKED_PIXEL_BRIGHTNESS; // magic number
+            nativeCoords.add(nativeCoord);
           }
-          nativeCoords.add(nativeCoord);
+          else
+          {
+            if (sampleSize >= 1.0)
+            {
+              float brightness = getPixelBrightness(cartesianCoord, sampleSize, scalingFactor);
+              nativeCoord.z = brightness;
+            }
+            nativeCoords.add(nativeCoord);
+          }
         }
       }
     }
